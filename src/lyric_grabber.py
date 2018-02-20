@@ -4,11 +4,6 @@ import urllib.request
 import random
 
 try:
-  import requests
-except ImportError:
-  raise ImportError('Can\'t find requests; please install it via "pip install requests"')
-
-try:
   from BeautifulSoup import BeautifulSoup, Comment
 except:
   try:
@@ -16,8 +11,20 @@ except:
   except ImportError:
     raise ImportError('Can\'t find BeautifulSoup; please install it via "pip install BeautifulSoup4"')
 
+try:
+  import requests
+except ImportError:
+  raise ImportError('Can\'t find requests; please install it via "pip install requests"')
+
+try:
+  import unidecode
+except ImportError:
+  raise ImportError('Can\'t find unidecode; please install it via "pip install unidecode"')
+
 LYRICWIKI_URL_BASE = 'http://lyrics.wikia.com/api.php?'
 AZLYRICS_URL_BASE = 'https://search.azlyrics.com/search.php?'
+METROLYRICS_URL_BASE = 'http://www.metrolyrics.com/'
+MUSIXMATCH_URL_BASE = 'https://www.musixmatch.com'
 
 USER_AGENTS = [
   'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0',
@@ -93,15 +100,15 @@ def LyricWiki_get_lyrics(artist, title):
 
   try:
     returned = r.text
-    returned = returned.replace("\"", "\\\"")                                                     # Make sure that quotes are properly escaped
-    returned = returned.replace("\'", "\"")                                                       # LyricWiki returns strings surrounded by single quotes
-    returned = returned.replace("song = ", "")                                                    # LyricWiki prepends song = to JSON, screwing with decoders
+    returned = returned.replace('\"', '\\\"')                                                     # Make sure that quotes are properly escaped
+    returned = returned.replace('\'', '\"')                                                       # LyricWiki returns strings surrounded by single quotes
+    returned = returned.replace('song = ', '')                                                    # LyricWiki prepends song = to JSON, screwing with decoders
     returned = json.loads(returned)
-    # print(returned["lyrics"])
+    # print(returned['lyrics'])
   except:
     print('[ERROR] Could not parse search results from LyricWiki')
 
-  if returned["lyrics"] != "Not found":
+  if returned['lyrics'] != 'Not found':
     r = requests.get(returned['url'], timeout=10, proxies=proxy)
     try:
       document = BeautifulSoup(r.text, 'html.parser')
@@ -120,10 +127,37 @@ def LyricWiki_get_lyrics(artist, title):
     print('[INFO] No results for song from LyricWiki')
     return False
 
+def Metrolyrics_get_lyrics(artist, title):                                                      # Mildly crippled because Metrolyrics uses Angular
+  proxy = urllib.request.getproxies()                                                           # And Requests doesn't support loading pages w/ JS
+  artist = unidecode.unidecode(artist)                                                          # Remove accents
+  artist = artist.replace(' ', '-').lower()                                                     # Replace spaces with en-dashes and formats to lowercase
+  title = unidecode.unidecode(title)
+  title = title.replace(' ', '-').lower()
+  url = METROLYRICS_URL_BASE + '{title}-lyrics-{artist}.html'.format(title=title, artist=artist)
+  # print(url)
+
+  r = requests.get(url, timeout=10, proxies=proxy)
+  r.encoding = 'utf-8'
+
+  try:
+    document = BeautifulSoup(r.text, 'html.parser')
+    lyrics_div = document.find('div', id='lyrics-body-text')
+
+    verses = []
+    [verses.append(elem.get_text()) for elem in lyrics_div.find_all('p')]
+    
+    lyrics = '\n\n'.join(verses)
+    return lyrics.strip()
+  except:
+    print('[INFO] No results for song from LyricWiki')
+    return False
+
+  return False
+
 def Musixmatch_get_lyrics(title):
   proxy = urllib.request.getproxies()
   title = urllib.parse.quote_plus(title)
-  search_url = 'https://www.musixmatch.com/search/{title}'.format(title=title)
+  search_url = MUSIXMATCH_URL_BASE + '/search/{title}'.format(title=title)
   # print(search_url)
 
   headers = requests.utils.default_headers()                                                  # Musixmatch filters against bots by inspecting user-agent
@@ -137,7 +171,7 @@ def Musixmatch_get_lyrics(title):
     document = BeautifulSoup(r.text, 'html.parser')
     search_result = document.find('div', class_='box-style-plain')
     search_result = search_result.find_all('a', href=True)
-    url = 'https://www.musixmatch.com' + search_result[0]['href']
+    url = MUSIXMATCH_URL_BASE + search_result[0]['href']
     # print(url)
   except:
     print('[INFO] No results for song from Musixmatch')
