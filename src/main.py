@@ -32,6 +32,12 @@ except ImportError:
 #   else:
 #     print('[INFO] No lyrics found for file: {file}'.format(file=title)) 
 
+  # lyrics = lyric_grabber.LyricsFreak_get_lyrics(title)
+  # if lyrics:
+  #   file_writer.write_lyrics_to_txt(title + '_lyricsfreak.txt', lyrics)
+  # else:
+  #   print('[INFO] No lyrics found for file: {file}'.format(file=title))
+
 #   lyrics = lyric_grabber.LyricWiki_get_lyrics(artist, title)
 #   if lyrics:
 #     file_writer.write_lyrics_to_txt(title + '_lyricwiki.txt', lyrics)

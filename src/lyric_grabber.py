@@ -25,6 +25,7 @@ except ImportError:
 
 AZLYRICS_URL_BASE = 'https://search.azlyrics.com/search.php?'
 GENIUS_URL_BASE = 'https://api.genius.com/search?'
+LYRICSFREAK_URL_BASE = 'http://www.lyricsfreak.com'
 LYRICWIKI_URL_BASE = 'http://lyrics.wikia.com/api.php?'
 METROLYRICS_URL_BASE = 'http://www.metrolyrics.com/'
 MUSIXMATCH_URL_BASE = 'https://www.musixmatch.com'
@@ -90,6 +91,10 @@ def AZLyrics_get_lyrics(title):
   return False
 
 def Genius_get_lyrics(title):
+  if (genius_key == ''):
+    print('[ERROR] No Genius key set? Please check keys.py!')
+    return False
+
   proxy = urllib.request.getproxies()
   payload = {'q': title}
   search_url = GENIUS_URL_BASE + urlencode(payload, quote_via=quote_plus)
@@ -126,6 +131,40 @@ def Genius_get_lyrics(title):
     
     return lyrics.strip()
   except:
+    return False
+
+  return False
+
+def LyricsFreak_get_lyrics(title):
+  proxy = urllib.request.getproxies()
+  payload = {'a':       'search', \
+             'type':    'song', \
+             'q':       title}
+  search_url = LYRICSFREAK_URL_BASE + '/search.php?' + urlencode(payload, quote_via=quote_plus)
+  # print(url)
+
+  r = requests.get(search_url, timeout=10, proxies=proxy)
+
+  try:
+    document = BeautifulSoup(r.text, 'html.parser')
+    search_results = document.find_all('a', class_='song')
+
+    url = LYRICSFREAK_URL_BASE + search_results[0]['href']
+    # print(url)
+  except:
+    print('[ERROR] Could not parse search results from LyricsFreak')
+    return False
+
+  r = requests.get(url, timeout=10, proxies=proxy)
+
+  try:
+    document = BeautifulSoup(r.text, 'html.parser')
+    lyrics = document.find('div', id='content_h')
+
+    [elem.replace_with('\n') for elem in lyrics.find_all('br')]                               # Remove <br> tags and reformat them into \n line breaks 
+    return lyrics.get_text()
+  except:
+    print('[ERROR] Could not parse lyrics from LyricsFreak')
     return False
 
   return False
