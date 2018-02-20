@@ -1,3 +1,5 @@
+from keys import genius_key
+
 import json
 from urllib.parse import urlencode, quote_plus
 import urllib.request
@@ -21,8 +23,9 @@ try:
 except ImportError:
   raise ImportError('Can\'t find unidecode; please install it via "pip install unidecode"')
 
-LYRICWIKI_URL_BASE = 'http://lyrics.wikia.com/api.php?'
 AZLYRICS_URL_BASE = 'https://search.azlyrics.com/search.php?'
+GENIUS_URL_BASE = 'https://api.genius.com/search?'
+LYRICWIKI_URL_BASE = 'http://lyrics.wikia.com/api.php?'
 METROLYRICS_URL_BASE = 'http://www.metrolyrics.com/'
 MUSIXMATCH_URL_BASE = 'https://www.musixmatch.com'
 
@@ -86,6 +89,47 @@ def AZLyrics_get_lyrics(title):
 
   return False
 
+def Genius_get_lyrics(title):
+  proxy = urllib.request.getproxies()
+  payload = {'q': title}
+  search_url = GENIUS_URL_BASE + urlencode(payload, quote_via=quote_plus)
+  # print(url)
+
+  headers = requests.utils.default_headers()                                                  # Genius requires an authorization token to get JSON search results
+  headers.update({                                                                            # Can't scrape results page because uses Angular :(
+      'Authorization': 'Bearer ' + genius_key,
+  })
+
+  r = requests.get(search_url, timeout=10, proxies=proxy, headers=headers)
+
+  search_results = json.loads(r.text)
+
+  try:
+    if search_results['meta']['status'] == 200:
+      url = search_results['response']['hits'][0]['result']['url']
+    else:
+      print('[INFO] Could not reach Genius; check your Internet connection and Genius key')
+  except:
+    print('[ERROR] Could not parse search results from Genius; check your Genius key')
+    return False
+
+  r = requests.get(url, timeout=10, proxies=proxy)
+
+  try:
+    document = BeautifulSoup(r.text, 'html.parser')
+    lyrics_div = document.find('div', class_='lyrics')
+    
+    lyrics_paragraphs = []
+    [lyrics_paragraphs.append(elem.get_text()) for elem in lyrics_div.find_all('p')]
+
+    lyrics = ''.join(lyrics_paragraphs)
+    
+    return lyrics.strip()
+  except:
+    return False
+
+  return False
+
 def LyricWiki_get_lyrics(artist, title):
   proxy = urllib.request.getproxies()
   payload = {'action':  'lyrics', \
@@ -99,17 +143,17 @@ def LyricWiki_get_lyrics(artist, title):
   r = requests.get(url, timeout=10, proxies=proxy)
 
   try:
-    returned = r.text
-    returned = returned.replace('\"', '\\\"')                                                     # Make sure that quotes are properly escaped
-    returned = returned.replace('\'', '\"')                                                       # LyricWiki returns strings surrounded by single quotes
-    returned = returned.replace('song = ', '')                                                    # LyricWiki prepends song = to JSON, screwing with decoders
-    returned = json.loads(returned)
-    # print(returned['lyrics'])
+    search_results = r.text
+    search_results = search_results.replace('\"', '\\\"')                                                     # Make sure that quotes are properly escaped
+    search_results = search_results.replace('\'', '\"')                                                       # LyricWiki returns strings surrounded by single quotes
+    search_results = search_results.replace('song = ', '')                                                    # LyricWiki prepends song = to JSON, screwing with decoders
+    search_results = json.loads(search_results)
+    # print(search_results['lyrics'])
   except:
     print('[ERROR] Could not parse search results from LyricWiki')
 
-  if returned['lyrics'] != 'Not found':
-    r = requests.get(returned['url'], timeout=10, proxies=proxy)
+  if search_results['lyrics'] != 'Not found':
+    r = requests.get(search_results['url'], timeout=10, proxies=proxy)
     try:
       document = BeautifulSoup(r.text, 'html.parser')
       lyrics = document.find('div', class_='lyricbox')                                          # Find all divs with class lyricbox
