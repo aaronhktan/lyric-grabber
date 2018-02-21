@@ -105,7 +105,7 @@ venv.bak/
 .mypy_cache/
 
 # For testing purposes
-/test_songs
+/src/test_songs
 
 # Pesky Mac things
 .DS_Store

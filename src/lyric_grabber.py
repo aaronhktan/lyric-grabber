@@ -1,3 +1,4 @@
+from colours import colours
 from keys import genius_key
 
 import json
@@ -61,10 +62,10 @@ def AZLyrics_get_lyrics(title):
 
     url = search_results[0]['href']
   except:
-    print('[INFO] No results for song from AZLyrics')
+    print(colours.INFO + '[INFO]' + colours.INFO + ' No results for song from AZLyrics')
     return False
 
-  headers = requests.utils.default_headers()                                                  # AZLyrics filters against bots by inspecting user-agent
+  headers = requests.utils.default_headers()                                                    # AZLyrics filters against bots by inspecting user-agent
   headers.update({
       'User-Agent': random.choice(USER_AGENTS),
   })
@@ -77,31 +78,32 @@ def AZLyrics_get_lyrics(title):
     document = BeautifulSoup(r.text, 'html.parser')
     lyrics = document.find('div', class_='', id='')
 
-    [elem.extract() for elem in lyrics.find_all(text=lambda text:isinstance(text, Comment))]  # Remove all text that is a comment in lyrics
-    [elem.extract() for elem in lyrics.find_all('div')]                                       # Remove any sub-divs in lyrics
-    [elem.extract() for elem in lyrics.find_all('script')]                                    # Remove any scripts in lyrics
-    [elem.extract() for elem in lyrics.find_all('i')]                                         # Remove any italics in lyrics
-    [elem.extract() for elem in lyrics.find_all('br')]                                        # Remove <br> tags
+    [elem.extract() for elem in lyrics.find_all(text=lambda text:isinstance(text, Comment))]    # Remove all text that is a comment in lyrics
+    [elem.extract() for elem in lyrics.find_all('div')]                                         # Remove any sub-divs in lyrics
+    [elem.extract() for elem in lyrics.find_all('script')]                                      # Remove any scripts in lyrics
+    [elem.extract() for elem in lyrics.find_all('i')]                                           # Remove any italics in lyrics
+    [elem.extract() for elem in lyrics.find_all('br')]                                          # Remove <br> tags
 
     return lyrics.get_text().strip()
   except:
-    print('[ERROR] Could not parse lyrics from AZLyrics')
+    print(colours.ERROR + '[ERROR]' + colours.RESET + ' Could not parse lyrics from AZLyrics')
     return False
 
   return False
 
-def Genius_get_lyrics(title):
+def Genius_get_lyrics(artist, title):
   if (genius_key == ''):
-    print('[ERROR] No Genius key set? Please check keys.py!')
+    print(colours.ERROR + '[ERROR]' + colours.RESET + ' No Genius key set? Please check keys.py!')
     return False
 
   proxy = urllib.request.getproxies()
-  payload = {'q': title}
+  query = title + ' ' + artist
+  payload = {'q': query}
   search_url = GENIUS_URL_BASE + urlencode(payload, quote_via=quote_plus)
   # print(url)
 
-  headers = requests.utils.default_headers()                                                  # Genius requires an authorization token to get JSON search results
-  headers.update({                                                                            # Can't scrape results page because uses Angular :(
+  headers = requests.utils.default_headers()                                                    # Genius requires an authorization token to get JSON search results
+  headers.update({                                                                              # Can't scrape results page because uses Angular :(
       'Authorization': 'Bearer ' + genius_key,
   })
 
@@ -113,9 +115,9 @@ def Genius_get_lyrics(title):
     if search_results['meta']['status'] == 200:
       url = search_results['response']['hits'][0]['result']['url']
     else:
-      print('[INFO] Could not reach Genius; check your Internet connection and Genius key')
+      print(colours.INFO + '[INFO]' + colours.INFO + ' Could not reach Genius; check your Internet connection and Genius key')
   except:
-    print('[ERROR] Could not parse search results from Genius; check your Genius key')
+    print(colours.ERROR + '[ERROR]' + colours.RESET + ' Could not parse search results from Genius; check your Genius key')
     return False
 
   r = requests.get(url, timeout=10, proxies=proxy)
@@ -152,7 +154,7 @@ def LyricsFreak_get_lyrics(title):
     url = LYRICSFREAK_URL_BASE + search_results[0]['href']
     # print(url)
   except:
-    print('[ERROR] Could not parse search results from LyricsFreak')
+    print(colours.ERROR + '[ERROR]' + colours.RESET + ' Could not parse search results from LyricsFreak')
     return False
 
   r = requests.get(url, timeout=10, proxies=proxy)
@@ -161,10 +163,10 @@ def LyricsFreak_get_lyrics(title):
     document = BeautifulSoup(r.text, 'html.parser')
     lyrics = document.find('div', id='content_h')
 
-    [elem.replace_with('\n') for elem in lyrics.find_all('br')]                               # Remove <br> tags and reformat them into \n line breaks 
+    [elem.replace_with('\n') for elem in lyrics.find_all('br')]                                 # Remove <br> tags and reformat them into \n line breaks 
     return lyrics.get_text()
   except:
-    print('[ERROR] Could not parse lyrics from LyricsFreak')
+    print(colours.ERROR + '[ERROR]' + colours.RESET + ' Could not parse lyrics from LyricsFreak')
     return False
 
   return False
@@ -183,13 +185,13 @@ def LyricWiki_get_lyrics(artist, title):
 
   try:
     search_results = r.text
-    search_results = search_results.replace('\"', '\\\"')                                                     # Make sure that quotes are properly escaped
-    search_results = search_results.replace('\'', '\"')                                                       # LyricWiki returns strings surrounded by single quotes
-    search_results = search_results.replace('song = ', '')                                                    # LyricWiki prepends song = to JSON, screwing with decoders
+    search_results = search_results.replace('\"', '\\\"')                                       # Make sure that quotes are properly escaped
+    search_results = search_results.replace('\'', '\"')                                         # LyricWiki returns strings surrounded by single quotes
+    search_results = search_results.replace('song = ', '')                                      # LyricWiki prepends song = to JSON, screwing with decoders
     search_results = json.loads(search_results)
     # print(search_results['lyrics'])
   except:
-    print('[ERROR] Could not parse search results from LyricWiki')
+    print(colours.ERROR + '[ERROR]' + colours.RESET + ' Could not parse search results from LyricWiki')
 
   if search_results['lyrics'] != 'Not found':
     r = requests.get(search_results['url'], timeout=10, proxies=proxy)
@@ -204,10 +206,10 @@ def LyricWiki_get_lyrics(artist, title):
 
       return lyrics.get_text().strip()
     except:
-      print('[ERROR] Could not parse lyrics from LyricWiki')
+      print(colours.ERROR + '[ERROR]' + colours.RESET + ' Could not parse lyrics from LyricWiki')
       return False
   else:
-    print('[INFO] No results for song from LyricWiki')
+    print(colours.INFO + '[INFO]' + colours.INFO + ' No results for song from LyricWiki')
     return False
 
 def Metrolyrics_get_lyrics(artist, title):                                                      # Mildly crippled because Metrolyrics uses Angular
@@ -232,7 +234,7 @@ def Metrolyrics_get_lyrics(artist, title):                                      
     lyrics = '\n\n'.join(verses)
     return lyrics.strip()
   except:
-    print('[INFO] No results for song from LyricWiki')
+    print(colours.INFO + '[INFO]' + colours.INFO + ' No results for song from LyricWiki')
     return False
 
   return False
@@ -243,7 +245,7 @@ def Musixmatch_get_lyrics(title):
   search_url = MUSIXMATCH_URL_BASE + '/search/{title}'.format(title=title)
   # print(search_url)
 
-  headers = requests.utils.default_headers()                                                  # Musixmatch filters against bots by inspecting user-agent
+  headers = requests.utils.default_headers()                                                    # Musixmatch filters against bots by inspecting user-agent
   headers.update({
       'User-Agent': random.choice(USER_AGENTS),
   })
@@ -257,30 +259,30 @@ def Musixmatch_get_lyrics(title):
     url = MUSIXMATCH_URL_BASE + search_result[0]['href']
     # print(url)
   except:
-    print('[INFO] No results for song from Musixmatch')
+    print(colours.INFO + '[INFO]' + colours.INFO + ' No results for song from Musixmatch')
     return False
 
-  headers = requests.utils.default_headers()                                                  # Musixmatch filters against bots by inspecting user-agent
+  headers = requests.utils.default_headers()                                                    # Musixmatch filters against bots by inspecting user-agent
   headers.update({
       'User-Agent': random.choice(USER_AGENTS),
   })
 
   r = requests.get(url, timeout=10, proxies=proxy, headers=headers)
 
-  try:                                                                                        # Lyrics are located in the scripts section of the site
-    start_index = r.text.find('"body":"')                                                     # And are preceded with the string "body":
-    end_index = r.text.find('","language"')                                                   # And are succeeded with the string "language"
+  try:                                                                                          # Lyrics are located in the scripts section of the site
+    start_index = r.text.find('"body":"')                                                       # And are preceded with the string "body":
+    end_index = r.text.find('","language"')                                                     # And are succeeded with the string "language"
 
     lyrics = r.text[start_index+len('"body":"'):end_index]
 
-    lyrics = lyrics.replace('<i>', '')                                                        # Remove any italics in lyrics
-    lyrics = lyrics.replace('<br>', '\n')                                                     # Remove <br> tags and reformat them into \n line breaks
-    lyrics = lyrics.replace('\\"', '"')                                                       # Replace escaped quotes with just quotes
-    lyrics = lyrics.replace('\\n', '\n')                                                      # Replace \n string with \n line breaks
+    lyrics = lyrics.replace('<i>', '')                                                          # Remove any italics in lyrics
+    lyrics = lyrics.replace('<br>', '\n')                                                       # Remove <br> tags and reformat them into \n line breaks
+    lyrics = lyrics.replace('\\"', '"')                                                         # Replace escaped quotes with just quotes
+    lyrics = lyrics.replace('\\n', '\n')                                                        # Replace \n string with \n line breaks
 
     return lyrics.strip()
   except:
-    print('[ERROR] Could not parse lyrics from Musixmatch')
+    print(colours.ERROR + '[ERROR]' + colours.RESET + ' Could not parse lyrics from Musixmatch')
     return False
 
   return False
