@@ -1,4 +1,5 @@
-beautifulsoup4==4.6.0
-pytaglib==1.4.1
+Unidecode==1.0.22
 requests==2.18.4
-urllib3==1.22
+mutagen==1.40.0
+BeautifulSoup==3.2.1
+beautifulsoup4==4.6.0

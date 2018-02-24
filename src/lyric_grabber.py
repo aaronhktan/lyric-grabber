@@ -31,6 +31,9 @@ LYRICWIKI_URL_BASE = 'http://lyrics.wikia.com/api.php?'
 METROLYRICS_URL_BASE = 'http://www.metrolyrics.com/'
 MUSIXMATCH_URL_BASE = 'https://www.musixmatch.com'
 
+SEARCH_ERROR = ' No results from {source} for song {file}'
+PARSE_ERROR = ' Could not parse lyrics from {source} for song {file}'
+
 USER_AGENTS = [
   'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0',
   'Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0',
@@ -62,7 +65,7 @@ def AZLyrics_get_lyrics(title):
 
     url = search_results[0]['href']
   except:
-    print(colours.INFO + '[INFO]' + colours.INFO + ' No results for song from AZLyrics')
+    print(colours.INFO + '[INFO]' + colours.RESET + SEARCH_ERROR.format(source='AZLyrics', file=title))
     return False
 
   headers = requests.utils.default_headers()                                                    # AZLyrics filters against bots by inspecting user-agent
@@ -86,7 +89,7 @@ def AZLyrics_get_lyrics(title):
 
     return lyrics.get_text().strip()
   except:
-    print(colours.ERROR + '[ERROR]' + colours.RESET + ' Could not parse lyrics from AZLyrics')
+    print(colours.ERROR + '[ERROR]' + colours.RESET + PARSE_ERROR.format(source='AZLyrics', tile=title))
     return False
 
   return False
@@ -109,15 +112,15 @@ def Genius_get_lyrics(artist, title):
 
   r = requests.get(search_url, timeout=10, proxies=proxy, headers=headers)
 
-  search_results = json.loads(r.text)
-
   try:
+    search_results = json.loads(r.text)
     if search_results['meta']['status'] == 200:
       url = search_results['response']['hits'][0]['result']['url']
     else:
-      print(colours.INFO + '[INFO]' + colours.INFO + ' Could not reach Genius; check your Internet connection and Genius key')
+      print(colours.INFO + '[INFO]' + colours.RESET + ' Could not reach Genius; got code {code} check your Internet connection and Genius key'.format(code=search_results['meta']['status']))
+      return False
   except:
-    print(colours.ERROR + '[ERROR]' + colours.RESET + ' Could not parse search results from Genius; check your Genius key')
+    print(colours.INFO + '[INFO]' + colours.RESET + SEARCH_ERROR.format(source='Genius', file=title))
     return False
 
   r = requests.get(url, timeout=10, proxies=proxy)
@@ -133,6 +136,7 @@ def Genius_get_lyrics(artist, title):
     
     return lyrics.strip()
   except:
+    print(colours.ERROR + '[ERROR]' + colours.RESET + PARSE_ERROR.format(source='Genius', tile=title))
     return False
 
   return False
@@ -154,7 +158,7 @@ def LyricsFreak_get_lyrics(title):
     url = LYRICSFREAK_URL_BASE + search_results[0]['href']
     # print(url)
   except:
-    print(colours.ERROR + '[ERROR]' + colours.RESET + ' Could not parse search results from LyricsFreak')
+    print(colours.ERROR + '[ERROR]' + colours.RESET + SEARCH_ERROR.format(source='LyricsFreak', file=title))
     return False
 
   r = requests.get(url, timeout=10, proxies=proxy)
@@ -166,7 +170,7 @@ def LyricsFreak_get_lyrics(title):
     [elem.replace_with('\n') for elem in lyrics.find_all('br')]                                 # Remove <br> tags and reformat them into \n line breaks 
     return lyrics.get_text()
   except:
-    print(colours.ERROR + '[ERROR]' + colours.RESET + ' Could not parse lyrics from LyricsFreak')
+    print(colours.ERROR + '[ERROR]' + colours.RESET + PARSE_ERROR.format(source='LyricsFreak', file=title))
     return False
 
   return False
@@ -191,7 +195,7 @@ def LyricWiki_get_lyrics(artist, title):
     search_results = json.loads(search_results)
     # print(search_results['lyrics'])
   except:
-    print(colours.ERROR + '[ERROR]' + colours.RESET + ' Could not parse search results from LyricWiki')
+    print(colours.ERROR + '[ERROR]' + colours.RESET + SEARCH_ERROR.format(source='LyricWiki', file=title))
 
   if search_results['lyrics'] != 'Not found':
     r = requests.get(search_results['url'], timeout=10, proxies=proxy)
@@ -206,19 +210,19 @@ def LyricWiki_get_lyrics(artist, title):
 
       return lyrics.get_text().strip()
     except:
-      print(colours.ERROR + '[ERROR]' + colours.RESET + ' Could not parse lyrics from LyricWiki')
+      print(colours.ERROR + '[ERROR]' + colours.RESET + PARSE_ERROR.format(source='LyricWiki', file=title))
       return False
   else:
-    print(colours.INFO + '[INFO]' + colours.INFO + ' No results for song from LyricWiki')
+    print(colours.INFO + '[INFO]' + colours.RESET + SEARCH_ERROR.format(source='LyricWiki', file=title))
     return False
 
 def Metrolyrics_get_lyrics(artist, title):                                                      # Mildly crippled because Metrolyrics uses Angular
   proxy = urllib.request.getproxies()                                                           # And Requests doesn't support loading pages w/ JS
-  artist = unidecode.unidecode(artist)                                                          # Remove accents
-  artist = artist.replace(' ', '-').lower()                                                     # Replace spaces with en-dashes and formats to lowercase
-  title = unidecode.unidecode(title)
-  title = title.replace(' ', '-').lower()
-  url = METROLYRICS_URL_BASE + '{title}-lyrics-{artist}.html'.format(title=title, artist=artist)
+  url_artist = unidecode.unidecode(artist)                                                          # Remove accents
+  url_artist = artist.replace(' ', '-').lower()                                                 # Replace spaces with en-dashes and formats to lowercase
+  url_title = unidecode.unidecode(title)
+  url_title = title.replace(' ', '-').lower()
+  url = METROLYRICS_URL_BASE + '{title}-lyrics-{artist}.html'.format(title=url_title, artist=url_artist)
   # print(url)
 
   r = requests.get(url, timeout=10, proxies=proxy)
@@ -234,15 +238,15 @@ def Metrolyrics_get_lyrics(artist, title):                                      
     lyrics = '\n\n'.join(verses)
     return lyrics.strip()
   except:
-    print(colours.INFO + '[INFO]' + colours.INFO + ' No results for song from LyricWiki')
+    print(colours.INFO + '[INFO]' + colours.RESET + PARSE_ERROR.format(source='Metrolyrics', file=title))
     return False
 
   return False
 
 def Musixmatch_get_lyrics(title):
   proxy = urllib.request.getproxies()
-  title = urllib.parse.quote_plus(title)
-  search_url = MUSIXMATCH_URL_BASE + '/search/{title}'.format(title=title)
+  url_title = urllib.parse.quote_plus(title)
+  search_url = MUSIXMATCH_URL_BASE + '/search/{title}'.format(title=url_title)
   # print(search_url)
 
   headers = requests.utils.default_headers()                                                    # Musixmatch filters against bots by inspecting user-agent
@@ -259,7 +263,7 @@ def Musixmatch_get_lyrics(title):
     url = MUSIXMATCH_URL_BASE + search_result[0]['href']
     # print(url)
   except:
-    print(colours.INFO + '[INFO]' + colours.INFO + ' No results for song from Musixmatch')
+    print(colours.INFO + '[INFO]' + colours.RESET + SEARCH_ERROR.format(source='Musixmatch', file=title))
     return False
 
   headers = requests.utils.default_headers()                                                    # Musixmatch filters against bots by inspecting user-agent
@@ -282,7 +286,7 @@ def Musixmatch_get_lyrics(title):
 
     return lyrics.strip()
   except:
-    print(colours.ERROR + '[ERROR]' + colours.RESET + ' Could not parse lyrics from Musixmatch')
+    print(colours.ERROR + '[ERROR]' + colours.RESET + PARSE_ERROR.format(source='Musixmatch', file=title))
     return False
 
   return False
