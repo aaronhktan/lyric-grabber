@@ -5,6 +5,7 @@ import json
 from urllib.parse import urlencode, quote_plus
 import urllib.request
 import random
+import re
 
 try:
   from BeautifulSoup import BeautifulSoup, Comment
@@ -106,33 +107,39 @@ def AZLyrics_get_lyrics(artist, title):
   return False
 
 def Genius_get_lyrics(artist, title):
-  if (genius_key == ''):
-    print(colours.ERROR + '[ERROR]' + colours.RESET + ' No Genius key set? Please check keys.py!')
-    return False
-
   proxy = urllib.request.getproxies()
-  query = title + ' ' + artist
-  payload = {'q': query}
-  search_url = GENIUS_URL_BASE + urlencode(payload, quote_via=quote_plus)
-  # print(url)
+  if (genius_key == ''):
+    url_artist = unidecode.unidecode(artist)   
+    url_artist = url_artist.replace(' ', '-').lower()
+    url_artist = re.sub('[^a-zA-z-]', '', url_artist)
+    url_title = unidecode.unidecode(title)
+    url_title = url_title.replace(' ', '-').lower()
+    url_title = re.sub('[^a-zA-z-]', '', url_title)
+    url = 'https://genius.com/' + url_artist + '-' + url_title + '-lyrics'
+    # print(url)
+  else:
+    query = title + ' ' + artist
+    payload = {'q': query}
+    search_url = GENIUS_URL_BASE + urlencode(payload, quote_via=quote_plus)
+    # print(url)
 
-  headers = requests.utils.default_headers()                                                    # Genius requires an authorization token to get JSON search results
-  headers.update({                                                                              # Can't scrape results page because uses Angular :(
-      'Authorization': 'Bearer ' + genius_key,
-  })
+    headers = requests.utils.default_headers()                                                    # Genius requires an authorization token to get JSON search results
+    headers.update({                                                                              # Can't scrape results page because uses Angular :(
+        'Authorization': 'Bearer ' + genius_key,
+    })
 
-  r = requests.get(search_url, timeout=10, proxies=proxy, headers=headers)
+    r = requests.get(search_url, timeout=10, proxies=proxy, headers=headers)
 
-  try:
-    search_results = json.loads(r.text)
-    if search_results['meta']['status'] == 200:
-      url = search_results['response']['hits'][0]['result']['url']
-    else:
-      print(colours.INFO + '[INFO]' + colours.RESET + ' Could not reach Genius; got code {code} check your Internet connection and Genius key'.format(code=search_results['meta']['status']))
+    try:
+      search_results = json.loads(r.text)
+      if search_results['meta']['status'] == 200:
+        url = search_results['response']['hits'][0]['result']['url']
+      else:
+        print(colours.INFO + '[INFO]' + colours.RESET + ' Could not reach Genius; got code {code} check your Internet connection and Genius key'.format(code=search_results['meta']['status']))
+        return False
+    except:
+      print(colours.INFO + '[INFO]' + colours.RESET + SEARCH_ERROR.format(source='Genius', file=title))
       return False
-  except:
-    print(colours.INFO + '[INFO]' + colours.RESET + SEARCH_ERROR.format(source='Genius', file=title))
-    return False
 
   r = requests.get(url, timeout=10, proxies=proxy)
 
@@ -147,7 +154,10 @@ def Genius_get_lyrics(artist, title):
     
     return lyrics.strip()
   except:
-    print(colours.ERROR + '[ERROR]' + colours.RESET + PARSE_ERROR.format(source='Genius', tile=title))
+    if genius_key == '':
+      print(colours.INFO + '[INFO]' + colours.RESET + SEARCH_ERROR.format(source='Genius', file=title))
+    else:
+      print(colours.ERROR + '[ERROR]' + colours.RESET + PARSE_ERROR.format(source='Genius', file=title))
     return False
 
   return False
@@ -230,9 +240,9 @@ def LyricWiki_get_lyrics(artist, title):
 def Metrolyrics_get_lyrics(artist, title):                                                      # Mildly crippled because Metrolyrics uses Angular
   proxy = urllib.request.getproxies()                                                           # And Requests doesn't support loading pages w/ JS
   url_artist = unidecode.unidecode(artist)                                                          # Remove accents
-  url_artist = artist.replace(' ', '-').lower()                                                 # Replace spaces with en-dashes and formats to lowercase
+  url_artist = url_artist.replace(' ', '-').lower()                                                 # Replace spaces with en-dashes and formats to lowercase
   url_title = unidecode.unidecode(title)
-  url_title = title.replace(' ', '-').lower()
+  url_title = url_title.replace(' ', '-').lower()
   url = METROLYRICS_URL_BASE + '{title}-lyrics-{artist}.html'.format(title=url_title, artist=url_artist)
   # print(url)
 

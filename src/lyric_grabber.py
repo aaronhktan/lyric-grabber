@@ -1,5 +1,6 @@
 from colours import colours
 import file_writer
+from keys import genius_key
 import lyric_fetcher
 
 import argparse
@@ -133,19 +134,27 @@ def main():
                /\___/                                            Version 0.5 by cheeseisdigusting
                \/__/                                      Grabs song lyrics so you don't need to!''',
                formatter_class=argparse.RawDescriptionHelpFormatter)
-  parser.add_argument('-v', '--version', action='version', version='Lyric Grabber 0.5')
+  parser.add_argument('-v', '--version', action='version', version='''
+/\ \                     __            /\  _`\                /\ \     /\ \                     
+\ \ \      __  __  _ __ /\_\    ___    \ \ \L\_\  _ __    __  \ \ \____\ \ \____     __   _ __  
+ \ \ \  __/\ \/\ \/\`'__\/\ \  /'___\   \ \ \L_L /\`'__\/'__`\ \ \ '__`\\ \ '__`\  /'__`\/\`'__\\
+  \ \ \L\ \ \ \_\ \ \ \/ \ \ \/\ \__/    \ \ \/, \ \ \//\ \L\.\_\ \ \L\ \\ \ \L\ \/\  __/\ \ \/ 
+   \ \____/\/`____ \ \_\  \ \_\ \____\    \ \____/\ \_\\ \__/.\_\\ \_,__/ \ \_,__/\ \____\\ \_\ 
+    \/___/  `/___/> \/_/   \/_/\/____/     \/___/  \/_/ \/__/\/_/ \/___/   \/___/  \/____/ \/_/ 
+               /\___/                                            Version 0.5 by cheeseisdigusting
+               \/__/                                      Grabs song lyrics so you don't need to!''')
   parser.add_argument('-a', '--approximate',
                       action='store_true',
                       help='approximate searching; search only by song title (default: search by both title and artist in full)')
-  parser.add_argument('-b', '--brackets'
+  parser.add_argument('-b', '--brackets',
                       action='store_false',
                       help='remove parts of song titles and artists in brackets (default: keeps titles and artists as they are)')
   parser.add_argument('-f', '--filepath', '--file', metavar='filepath',
                       nargs='?', default='default',
                       help='file/filepath to scan (default: scans current directory)')
   parser.add_argument('-s', '--source', metavar='source',
-                      nargs='?', choices=SUPPORTED_SOURCES, default='musixmatch',
-                      help='which lyrics source to use (default: \'musixmatch\')')
+                      nargs='?', choices=SUPPORTED_SOURCES, default='genius',
+                      help='which lyrics source to use (default: \'genius\')')
   parser.add_argument('-r', '--recursive', 
                       action='store_true',
                       help='scan all subdirectories for files (default: scans specified filepath only)')
@@ -166,6 +175,11 @@ def main():
   if args.source == 'azlyrics':
     print(colours.INFO + '[WARNING]' + colours.RESET + ' AZLyrics rate-limiting in effect; lyric fetching per song will take up to 30 seconds!')
     executor = futures.ThreadPoolExecutor(max_workers=3)
+  elif args.source == 'genius':
+    if genius_key == '':
+      print(colours.INFO + '[INFO]' + colours.RESET + ' No Genius key set; results will be less accurate. Please check keys.py!')
+      args.brackets = False
+    executor = futures.ThreadPoolExecutor(max_workers=10)
   elif args.source == 'musixmatch':
     print(colours.INFO + '[WARNING]' + colours.RESET + ' Musixmatch rate-limiting in effect; lyric fetching per song will take up to 30 seconds!')
     executor = futures.ThreadPoolExecutor(max_workers=3)
