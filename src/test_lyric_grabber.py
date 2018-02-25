@@ -1,45 +1,47 @@
-import lyric_grabber
+# tracks = [
+#   {'Artist': 'Boy',                 'Title': 'Little Numbers'},
+#   {'Artist': 'Natalia Lafourcade',  'Title': 'Tú sí sabes quererme'},
+#   {'Artist': 'Pierre Lapointe',     'Title': 'Au bar des suicidés'},
+#   {'Artist': '曲婉婷',               'Title': '我的歌声里'},
+#   {'Artist': '方皓玟',               'Title': '你是我本身的傅奇'}
+# ]
 
-import unittest
+# for item in tracks:
+#   artist = item['Artist']
+#   title = item['Title']
 
-class TestAZLyrics(unittest.TestCase):
-  def test_azlyrics_get_lyrics(self):
-    result = lyric_grabber.AZLyrics_get_lyrics('Shake It Off')
-    self.assertNotEqual(result, False)
+#   lyrics = lyric_grabber.AZLyrics_get_lyrics(title)
+#   if lyrics:
+#     file_writer.write_lyrics_to_txt(title + '_azlyrics.txt', lyrics)
+#   else:
+#     print('[INFO] No lyrics found for file: {file}'.format(file=title))
 
-  def test_azlyrics_incorrect_parameters(self):
-    with self.assertRaises(TypeError):
-      result = lyric_grabber.AZLyrics_get_lyrics('Artist', 'Title')
+#   lyrics = lyric_grabber.Genius_get_lyrics(title)
+#   if lyrics:
+#     file_writer.write_lyrics_to_txt(title + '_genius.txt', lyrics)
+#   else:
+#     print('[INFO] No lyrics found for file: {file}'.format(file=title)) 
 
-  def test_azlyrics_nonexistent_title(self):
-    result = lyric_grabber.AZLyrics_get_lyrics('thissongshouldn\'texist')
-    self.assertEqual(result, False)
+  # lyrics = lyric_grabber.LyricsFreak_get_lyrics(title)
+  # if lyrics:
+  #   file_writer.write_lyrics_to_txt(title + '_lyricsfreak.txt', lyrics)
+  # else:
+  #   print('[INFO] No lyrics found for file: {file}'.format(file=title))
 
-class TestLyricWiki(unittest.TestCase):
-  def test_lyricwiki_get_lyrics(self):
-    result = lyric_grabber.LyricWiki_get_lyrics('Taylor Swift', 'Shake It Off')
-    self.assertNotEqual(result, False)
+#   lyrics = lyric_grabber.LyricWiki_get_lyrics(artist, title)
+#   if lyrics:
+#     file_writer.write_lyrics_to_txt(title + '_lyricwiki.txt', lyrics)
+#   else:
+#     print('[INFO] No lyrics found for file: {file}'.format(file=title))
 
-  def test_lyricwiki_incorrect_parameters(self):
-    with self.assertRaises(TypeError):
-      result = lyric_grabber.LyricWiki_get_lyrics('Shake It Off')
+#   lyrics = lyric_grabber.Metrolyrics_get_lyrics(artist, title)
+#   if lyrics:
+#     file_writer.write_lyrics_to_txt(title + '_metrolyrics.txt', lyrics)
+#   else:
+#     print('[INFO] No lyrics found for file: {file}'.format(file=title))
 
-  def test_azlyrics_nonexistent_title(self):
-    result = lyric_grabber.LyricWiki_get_lyrics('Aaron', 'thissongshouldn\'texist')
-    self.assertEqual(result, False)
-
-class TestMusixmatch(unittest.TestCase):
-  def test_musixmatch_get_lyrics(self):
-    result = lyric_grabber.Musixmatch_get_lyrics('Shake It Off')
-    self.assertNotEqual(result, False)
-
-  def test_musixmatch_incorrect_parameters(self):
-    with self.assertRaises(TypeError):
-      result = lyric_grabber.Musixmatch_get_lyrics('Artist', 'Title')
-
-  def test_musixmatch_nonexistent_title(self):
-    result = lyric_grabber.Musixmatch_get_lyrics('thissongshouldn\'texist')
-    self.assertEqual(result, False)
-
-if __name__ == '__main__':
-    unittest.main()
+#   lyrics = lyric_grabber.Musixmatch_get_lyrics(title)
+#   if lyrics:
+#     file_writer.write_lyrics_to_txt(title + '_musixmatch.txt', lyrics)
+#   else:
+#     print('[INFO] No lyrics found for file: {file}'.format(file=title))

@@ -1,292 +1,204 @@
 from colours import colours
-from keys import genius_key
+import file_writer
+import lyric_fetcher
 
-import json
-from urllib.parse import urlencode, quote_plus
-import urllib.request
+import argparse
+from concurrent import futures
+import mutagen
+import os
 import random
+import re
+import time
 
-try:
-  from BeautifulSoup import BeautifulSoup, Comment
-except:
-  try:
-    from bs4 import BeautifulSoup, Comment
-  except ImportError:
-    raise ImportError('Can\'t find BeautifulSoup; please install it via "pip install BeautifulSoup4"')
+SUPPORTED_FILETYPES = (
+  '.mp3', '.mp4', '.m4a', '.m4v', '.aac', \
+  '.ape', '.wav', '.wma', '.aiff', '.wv', \
+  '.flac', '.ogg', '.oga', '.opus', '.tta'
+)
 
-try:
-  import requests
-except ImportError:
-  raise ImportError('Can\'t find requests; please install it via "pip install requests"')
+SUPPORTED_SOURCES = (
+  'azlyrics', 'genius', 'lyricsfreak', \
+  'lyricwiki', 'metrolyrics', 'musixmatch'
+)
 
-try:
-  import unidecode
-except ImportError:
-  raise ImportError('Can\'t find unidecode; please install it via "pip install unidecode"')
+def get_lyrics(approximate, brackets, source, song_filepath):
 
-AZLYRICS_URL_BASE = 'https://search.azlyrics.com/search.php?'
-GENIUS_URL_BASE = 'https://api.genius.com/search?'
-LYRICSFREAK_URL_BASE = 'http://www.lyricsfreak.com'
-LYRICWIKI_URL_BASE = 'http://lyrics.wikia.com/api.php?'
-METROLYRICS_URL_BASE = 'http://www.metrolyrics.com/'
-MUSIXMATCH_URL_BASE = 'https://www.musixmatch.com'
-
-SEARCH_ERROR = ' No results from {source} for song {file}'
-PARSE_ERROR = ' Could not parse lyrics from {source} for song {file}'
-
-USER_AGENTS = [
-  'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0',
-  'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',
-  'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.1 Safari/537.36',
-  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.0 Safari/537.36',
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246',
-  'Opera/9.80 (X11; Linux i686; Ubuntu/14.10) Presto/2.12.388 Version/12.16',
-  'Opera/9.80 (Windows NT 6.0) Presto/2.12.388 Version/12.14',
-  'Opera/9.80 (Macintosh; Intel Mac OS X 10.6.8; U; fr) Presto/2.9.168 Version/11.52',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.75.14 (KHTML, like Gecko) Version/7.0.3 Safari/7046A194A',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.13+ (KHTML, like Gecko) Version/5.1.7 Safari/534.57.2'
-  ]
-
-def AZLyrics_get_lyrics(title):
-  proxy = urllib.request.getproxies()
-  payload = {'q': title}
-  search_url = AZLYRICS_URL_BASE + urlencode(payload, quote_via=quote_plus)
-  # print(search_url)
-
-  r = requests.get(search_url, timeout=10, proxies=proxy)
+  artist = ''
+  title = ''
 
   try:
-    document = BeautifulSoup(r.text, 'html.parser')
-    search_results = document.find_all('td', class_='visitedlyr')
-    search_results = search_results[0].find_all('a', href=True)
-    # print(search_results[0]['href'])
-
-    url = search_results[0]['href']
-  except:
-    print(colours.INFO + '[INFO]' + colours.RESET + SEARCH_ERROR.format(source='AZLyrics', file=title))
-    return False
-
-  headers = requests.utils.default_headers()                                                    # AZLyrics filters against bots by inspecting user-agent
-  headers.update({
-      'User-Agent': random.choice(USER_AGENTS),
-  })
-
-  r = requests.get(url, timeout=10, proxies=proxy, headers=headers)
-
-  r.encoding = 'utf-8'
-
-  try:
-    document = BeautifulSoup(r.text, 'html.parser')
-    lyrics = document.find('div', class_='', id='')
-
-    [elem.extract() for elem in lyrics.find_all(text=lambda text:isinstance(text, Comment))]    # Remove all text that is a comment in lyrics
-    [elem.extract() for elem in lyrics.find_all('div')]                                         # Remove any sub-divs in lyrics
-    [elem.extract() for elem in lyrics.find_all('script')]                                      # Remove any scripts in lyrics
-    [elem.extract() for elem in lyrics.find_all('i')]                                           # Remove any italics in lyrics
-    [elem.extract() for elem in lyrics.find_all('br')]                                          # Remove <br> tags
-
-    return lyrics.get_text().strip()
-  except:
-    print(colours.ERROR + '[ERROR]' + colours.RESET + PARSE_ERROR.format(source='AZLyrics', tile=title))
-    return False
-
-  return False
-
-def Genius_get_lyrics(artist, title):
-  if (genius_key == ''):
-    print(colours.ERROR + '[ERROR]' + colours.RESET + ' No Genius key set? Please check keys.py!')
-    return False
-
-  proxy = urllib.request.getproxies()
-  query = title + ' ' + artist
-  payload = {'q': query}
-  search_url = GENIUS_URL_BASE + urlencode(payload, quote_via=quote_plus)
-  # print(url)
-
-  headers = requests.utils.default_headers()                                                    # Genius requires an authorization token to get JSON search results
-  headers.update({                                                                              # Can't scrape results page because uses Angular :(
-      'Authorization': 'Bearer ' + genius_key,
-  })
-
-  r = requests.get(search_url, timeout=10, proxies=proxy, headers=headers)
-
-  try:
-    search_results = json.loads(r.text)
-    if search_results['meta']['status'] == 200:
-      url = search_results['response']['hits'][0]['result']['url']
+    if song_filepath.endswith('.flac'):
+      m = mutagen.flac.FLAC(song_filepath)
+      artist = m['artist'][0]
+      title = m['title'][0]
+    elif song_filepath.endswith('.ogg') or song_filepath.endswith('.oga'):
+      m = mutagen.oggvorbis.OggVorbis(song_filepath)
+      artist = m['Artist'][0]
+      title = m['Title'][0]
+    elif song_filepath.endswith('.opus'):
+      m = mutagen.oggopus.OggOpus(song_filepath)
+      artist = m['artist'][0]
+      title = m['title'][0]
+    elif song_filepath.endswith('.mp4'):
+      m = mutagen.mp4.MP4(song_filepath)
+      artist = m['\xa9ART'][0]
+      title = m['\xa9nam'][0]
+    elif song_filepath.endswith('.aac'):
+      message = colours.ERROR + '[ERROR]' + colours.RESET + ' AAC files not supported;' \
+      ' consider converting {file} to another format'.format(file=song_filepath)
+      return message
+    elif song_filepath.endswith('.wav'):
+      message = colours.ERROR + '[ERROR]' + colours.RESET + ' WAV files not supported;' \
+      ' consider converting {file} to another format'.format(file=song_filepath)
+      return message
+    elif song_filepath.endswith('.wv'):
+      message = colours.ERROR + '[ERROR]' + colours.RESET + ' WV files not supported;' \
+      ' consider converting {file} to another format'.format(file=song_filepath)
+      return message
+    elif song_filepath.endswith(SUPPORTED_FILETYPES):
+      m = mutagen.File(song_filepath)
+      for tag in ('TPE1', u'©ART', 'Author', 'Artist', 'ARTIST', 'artist'):
+        try:
+          artist = str(m[tag][0])
+          break
+        except KeyError:
+          pass
+      
+      for tag in ('TIT2', u'©nam', 'Title', 'TITLE', 'title'):
+        try:
+          title = str(m[tag][0])
+          break
+        except KeyError:
+          pass
     else:
-      print(colours.INFO + '[INFO]' + colours.RESET + ' Could not reach Genius; got code {code} check your Internet connection and Genius key'.format(code=search_results['meta']['status']))
-      return False
+      message = colours.ERROR + '[ERROR]' + colours.RESET + ' File format not supported for: {file}'.format(file=song_filepath)
+      return message      
+    # print(str(title) + ' ' + str(artist))
   except:
-    print(colours.INFO + '[INFO]' + colours.RESET + SEARCH_ERROR.format(source='Genius', file=title))
-    return False
+    message = colours.ERROR + '[ERROR]' + colours.RESET + ' Metadata reading error for file: {file}'.format(file=song_filepath)
+    return message
 
-  r = requests.get(url, timeout=10, proxies=proxy)
+  if artist == '' and title == '':
+    message = colours.ERROR + '[ERROR]' + colours.RESET + ' Metadata empty for {file}'.format(file=song_filepath)
+    return message
+
+  if approximate and source != 'lyricwiki' and source != 'metrolyrics':
+    artist = ''
+  if not brackets:
+    artist = re.sub(r'\((.+)\)', '', artist).strip()
+    title = re.sub(r'\((.+)\)', '', title).strip()
+
+    # print(artist + ' ' + title)
 
   try:
-    document = BeautifulSoup(r.text, 'html.parser')
-    lyrics_div = document.find('div', class_='lyrics')
-    
-    lyrics_paragraphs = []
-    [lyrics_paragraphs.append(elem.get_text()) for elem in lyrics_div.find_all('p')]
+    if source == 'azlyrics':
+      time_to_sleep = random.randrange(10, 30)
+      time.sleep(time_to_sleep)
+      lyrics = lyric_fetcher.AZLyrics_get_lyrics(artist, title)
+    elif source == 'genius':
+      lyrics = lyric_fetcher.Genius_get_lyrics(artist, title)
+    elif source == 'lyricsfreak':
+      lyrics = lyric_fetcher.LyricsFreak_get_lyrics(title)
+    elif source == 'lyricwiki':
+      lyrics = lyric_fetcher.LyricWiki_get_lyrics(artist, title)
+    elif source == 'metrolyrics':
+      lyrics = lyric_fetcher.Metrolyrics_get_lyrics(artist, title)
+    elif source == 'musixmatch':
+      time_to_sleep = random.randrange(10, 30)
+      time.sleep(time_to_sleep)
+      lyrics = lyric_fetcher.Musixmatch_get_lyrics(artist, title)
+    # time.sleep(time_to_sleep)
+    # print(lyrics)
 
-    lyrics = ''.join(lyrics_paragraphs)
-    
-    return lyrics.strip()
+    if lyrics:
+      file_writer.write_lyrics_to_txt(song_filepath, lyrics)
+    else:
+      message = colours.INFO + '[INFO]' + colours.RESET + ' No lyrics found for file: {file}'.format(file=title)
+      return message
   except:
-    print(colours.ERROR + '[ERROR]' + colours.RESET + PARSE_ERROR.format(source='Genius', tile=title))
-    return False
+    message = colours.ERROR + '[ERROR]' + colours.RESET + ' Something went horribly wrong getting lyrics for {file}!'.format(file=title)
+    return message
 
-  return False
+  message = colours.SUCCESS + '[SUCCESS]' + colours.RESET + ' Got lyrics for file: {file}'.format(file=title)
+  return message
 
-def LyricsFreak_get_lyrics(title):
-  proxy = urllib.request.getproxies()
-  payload = {'a':       'search', \
-             'type':    'song', \
-             'q':       title}
-  search_url = LYRICSFREAK_URL_BASE + '/search.php?' + urlencode(payload, quote_via=quote_plus)
-  # print(url)
+def main():
+  parser = argparse.ArgumentParser(description='''
+/\ \                     __            /\  _`\                /\ \     /\ \                     
+\ \ \      __  __  _ __ /\_\    ___    \ \ \L\_\  _ __    __  \ \ \____\ \ \____     __   _ __  
+ \ \ \  __/\ \/\ \/\`'__\/\ \  /'___\   \ \ \L_L /\`'__\/'__`\ \ \ '__`\\ \ '__`\  /'__`\/\`'__\\
+  \ \ \L\ \ \ \_\ \ \ \/ \ \ \/\ \__/    \ \ \/, \ \ \//\ \L\.\_\ \ \L\ \\ \ \L\ \/\  __/\ \ \/ 
+   \ \____/\/`____ \ \_\  \ \_\ \____\    \ \____/\ \_\\ \__/.\_\\ \_,__/ \ \_,__/\ \____\\ \_\ 
+    \/___/  `/___/> \/_/   \/_/\/____/     \/___/  \/_/ \/__/\/_/ \/___/   \/___/  \/____/ \/_/ 
+               /\___/                                            Version 0.5 by cheeseisdigusting
+               \/__/                                      Grabs song lyrics so you don't need to!''',
+               formatter_class=argparse.RawDescriptionHelpFormatter)
+  parser.add_argument('-v', '--version', action='version', version='Lyric Grabber 0.5')
+  parser.add_argument('-a', '--approximate',
+                      action='store_true',
+                      help='approximate searching; search only by song title (default: search by both title and artist in full)')
+  parser.add_argument('-b', '--brackets'
+                      action='store_false',
+                      help='remove parts of song titles and artists in brackets (default: keeps titles and artists as they are)')
+  parser.add_argument('-f', '--filepath', '--file', metavar='filepath',
+                      nargs='?', default='default',
+                      help='file/filepath to scan (default: scans current directory)')
+  parser.add_argument('-s', '--source', metavar='source',
+                      nargs='?', choices=SUPPORTED_SOURCES, default='musixmatch',
+                      help='which lyrics source to use (default: \'musixmatch\')')
+  parser.add_argument('-r', '--recursive', 
+                      action='store_true',
+                      help='scan all subdirectories for files (default: scans specified filepath only)')
 
-  r = requests.get(search_url, timeout=10, proxies=proxy)
+  args = parser.parse_args()
 
-  try:
-    document = BeautifulSoup(r.text, 'html.parser')
-    search_results = document.find_all('a', class_='song')
+  # print(args.approximate)
+  # print(args.brackets)
+  # print(args.filepath)
+  # print(args.source)
+  # print(args.recursive)
 
-    url = LYRICSFREAK_URL_BASE + search_results[0]['href']
-    # print(url)
-  except:
-    print(colours.ERROR + '[ERROR]' + colours.RESET + SEARCH_ERROR.format(source='LyricsFreak', file=title))
-    return False
-
-  r = requests.get(url, timeout=10, proxies=proxy)
-
-  try:
-    document = BeautifulSoup(r.text, 'html.parser')
-    lyrics = document.find('div', id='content_h')
-
-    [elem.replace_with('\n') for elem in lyrics.find_all('br')]                                 # Remove <br> tags and reformat them into \n line breaks 
-    return lyrics.get_text()
-  except:
-    print(colours.ERROR + '[ERROR]' + colours.RESET + PARSE_ERROR.format(source='LyricsFreak', file=title))
-    return False
-
-  return False
-
-def LyricWiki_get_lyrics(artist, title):
-  proxy = urllib.request.getproxies()
-  payload = {'action':  'lyrics', \
-             'artist':  artist, \
-             'song':    title, \
-             'fmt':     'json', \
-             'func':    'getSong'}
-  url = LYRICWIKI_URL_BASE + urlencode(payload, quote_via=quote_plus)
-  # print(url)
-
-  r = requests.get(url, timeout=10, proxies=proxy)
-
-  try:
-    search_results = r.text
-    search_results = search_results.replace('\"', '\\\"')                                       # Make sure that quotes are properly escaped
-    search_results = search_results.replace('\'', '\"')                                         # LyricWiki returns strings surrounded by single quotes
-    search_results = search_results.replace('song = ', '')                                      # LyricWiki prepends song = to JSON, screwing with decoders
-    search_results = json.loads(search_results)
-    # print(search_results['lyrics'])
-  except:
-    print(colours.ERROR + '[ERROR]' + colours.RESET + SEARCH_ERROR.format(source='LyricWiki', file=title))
-
-  if search_results['lyrics'] != 'Not found':
-    r = requests.get(search_results['url'], timeout=10, proxies=proxy)
-    try:
-      document = BeautifulSoup(r.text, 'html.parser')
-      lyrics = document.find('div', class_='lyricbox')                                          # Find all divs with class lyricbox
-
-      [elem.extract() for elem in lyrics.find_all(text=lambda text:isinstance(text, Comment))]  # Remove all text that is a comment in lyrics
-      [elem.extract() for elem in lyrics.find_all('div')]                                       # Remove any sub-divs in lyrics
-      [elem.extract() for elem in lyrics.find_all('script')]                                    # Remove any scripts in lyrics
-      [elem.replace_with('\n') for elem in lyrics.find_all('br')]                               # Remove <br> tags and reformat them into \n line breaks 
-
-      return lyrics.get_text().strip()
-    except:
-      print(colours.ERROR + '[ERROR]' + colours.RESET + PARSE_ERROR.format(source='LyricWiki', file=title))
-      return False
+  if args.filepath == 'default':
+    filepath = os.curdir
   else:
-    print(colours.INFO + '[INFO]' + colours.RESET + SEARCH_ERROR.format(source='LyricWiki', file=title))
-    return False
+    filepath = args.filepath
 
-def Metrolyrics_get_lyrics(artist, title):                                                      # Mildly crippled because Metrolyrics uses Angular
-  proxy = urllib.request.getproxies()                                                           # And Requests doesn't support loading pages w/ JS
-  url_artist = unidecode.unidecode(artist)                                                          # Remove accents
-  url_artist = artist.replace(' ', '-').lower()                                                 # Replace spaces with en-dashes and formats to lowercase
-  url_title = unidecode.unidecode(title)
-  url_title = title.replace(' ', '-').lower()
-  url = METROLYRICS_URL_BASE + '{title}-lyrics-{artist}.html'.format(title=url_title, artist=url_artist)
-  # print(url)
+  if args.source == 'azlyrics':
+    print(colours.INFO + '[WARNING]' + colours.RESET + ' AZLyrics rate-limiting in effect; lyric fetching per song will take up to 30 seconds!')
+    executor = futures.ThreadPoolExecutor(max_workers=3)
+  elif args.source == 'musixmatch':
+    print(colours.INFO + '[WARNING]' + colours.RESET + ' Musixmatch rate-limiting in effect; lyric fetching per song will take up to 30 seconds!')
+    executor = futures.ThreadPoolExecutor(max_workers=3)
+  else:
+    executor = futures.ThreadPoolExecutor(max_workers=10)
 
-  r = requests.get(url, timeout=10, proxies=proxy)
-  r.encoding = 'utf-8'
+  start = time.time()
 
-  try:
-    document = BeautifulSoup(r.text, 'html.parser')
-    lyrics_div = document.find('div', id='lyrics-body-text')
+  results = []
 
-    verses = []
-    [verses.append(elem.get_text()) for elem in lyrics_div.find_all('p')]
-    
-    lyrics = '\n\n'.join(verses)
-    return lyrics.strip()
-  except:
-    print(colours.INFO + '[INFO]' + colours.RESET + PARSE_ERROR.format(source='Metrolyrics', file=title))
-    return False
+  if filepath.endswith(SUPPORTED_FILETYPES):
+    results.append(executor.submit(get_lyrics, args.approximate, args.brackets, args.source, filepath))
+  elif args.recursive:
+    for root, dirs, files in os.walk(filepath):
+      for file in files:
+        if file.endswith(SUPPORTED_FILETYPES):
+          results.append(executor.submit(get_lyrics, args.approximate, args.brackets, args.source, os.path.join(root, file)))
+  else:
+    for file in os.listdir(filepath):
+      if file.endswith(SUPPORTED_FILETYPES):
+        results.append(executor.submit(get_lyrics, args.approximate, args.brackets, args.source, '{filepath}/{file}'.format(filepath=filepath, file=file)))
 
-  return False
+  for result in futures.as_completed(results):
+    print(result.result())
 
-def Musixmatch_get_lyrics(title):
-  proxy = urllib.request.getproxies()
-  url_title = urllib.parse.quote_plus(title)
-  search_url = MUSIXMATCH_URL_BASE + '/search/{title}'.format(title=url_title)
-  # print(search_url)
+  end = time.time()
+  print('Grabbed lyrics for {number} songs in {seconds} seconds.'.format(number=len(results), seconds=end-start))
 
-  headers = requests.utils.default_headers()                                                    # Musixmatch filters against bots by inspecting user-agent
-  headers.update({
-      'User-Agent': random.choice(USER_AGENTS),
-  })
+  # Clean up by deleting all text files
+  # for root, dirs, files in os.walk(filepath):
+  #   for file in files:
+  #     if file.endswith('.txt'):
+  #       os.remove(os.path.join(root, file))
 
-  r = requests.get(search_url, timeout=10, proxies=proxy, headers=headers)
-
-  try:
-    document = BeautifulSoup(r.text, 'html.parser')
-    search_result = document.find('div', class_='box-style-plain')
-    search_result = search_result.find_all('a', href=True)
-    url = MUSIXMATCH_URL_BASE + search_result[0]['href']
-    # print(url)
-  except:
-    print(colours.INFO + '[INFO]' + colours.RESET + SEARCH_ERROR.format(source='Musixmatch', file=title))
-    return False
-
-  headers = requests.utils.default_headers()                                                    # Musixmatch filters against bots by inspecting user-agent
-  headers.update({
-      'User-Agent': random.choice(USER_AGENTS),
-  })
-
-  r = requests.get(url, timeout=10, proxies=proxy, headers=headers)
-
-  try:                                                                                          # Lyrics are located in the scripts section of the site
-    start_index = r.text.find('"body":"')                                                       # And are preceded with the string "body":
-    end_index = r.text.find('","language"')                                                     # And are succeeded with the string "language"
-
-    lyrics = r.text[start_index+len('"body":"'):end_index]
-
-    lyrics = lyrics.replace('<i>', '')                                                          # Remove any italics in lyrics
-    lyrics = lyrics.replace('<br>', '\n')                                                       # Remove <br> tags and reformat them into \n line breaks
-    lyrics = lyrics.replace('\\"', '"')                                                         # Replace escaped quotes with just quotes
-    lyrics = lyrics.replace('\\n', '\n')                                                        # Replace \n string with \n line breaks
-
-    return lyrics.strip()
-  except:
-    print(colours.ERROR + '[ERROR]' + colours.RESET + PARSE_ERROR.format(source='Musixmatch', file=title))
-    return False
-
-  return False
+if __name__ == '__main__':
+    main()
