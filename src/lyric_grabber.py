@@ -4,6 +4,7 @@ from keys import genius_key
 import lyric_fetcher
 
 import argparse
+from collections import namedtuple
 from concurrent import futures
 import mutagen
 import os
@@ -22,75 +23,75 @@ SUPPORTED_SOURCES = (
   'lyricwiki', 'metrolyrics', 'musixmatch'
 )
 
-def get_lyrics(approximate, brackets, source, song_filepath):
-
+def get_metadata(approximate, keep_brackets, get_art, song_filepath):
   artist = ''
   title = ''
+  art = None
 
   try:
-    if song_filepath.endswith('.flac'):
-      m = mutagen.flac.FLAC(song_filepath)
-      artist = m['artist'][0]
-      title = m['title'][0]
-    elif song_filepath.endswith('.ogg') or song_filepath.endswith('.oga'):
-      m = mutagen.oggvorbis.OggVorbis(song_filepath)
-      artist = m['Artist'][0]
-      title = m['Title'][0]
-    elif song_filepath.endswith('.opus'):
-      m = mutagen.oggopus.OggOpus(song_filepath)
-      artist = m['artist'][0]
-      title = m['title'][0]
-    elif song_filepath.endswith('.mp4'):
-      m = mutagen.mp4.MP4(song_filepath)
-      artist = m['\xa9ART'][0]
-      title = m['\xa9nam'][0]
-    elif song_filepath.endswith('.aac'):
+    if song_filepath.endswith('.aac'):
       message = colours.ERROR + '[ERROR]' + colours.RESET + ' AAC files not supported;' \
       ' consider converting {file} to another format'.format(file=song_filepath)
-      return message
-    elif song_filepath.endswith('.wav'):
+      return (None, message, song_filepath)
+    if song_filepath.endswith('.wav'):
       message = colours.ERROR + '[ERROR]' + colours.RESET + ' WAV files not supported;' \
       ' consider converting {file} to another format'.format(file=song_filepath)
-      return message
+      return (None, message, song_filepath)
     elif song_filepath.endswith('.wv'):
       message = colours.ERROR + '[ERROR]' + colours.RESET + ' WV files not supported;' \
       ' consider converting {file} to another format'.format(file=song_filepath)
-      return message
+      return (None, message, song_filepath)
     elif song_filepath.endswith(SUPPORTED_FILETYPES):
       m = mutagen.File(song_filepath)
-      for tag in ('TPE1', u'©ART', 'Author', 'Artist', 'ARTIST', 'artist'):
+      for tag in ('TPE1', u'\xa9ART', 'Author', 'Artist', 'ARTIST', 'artist'):
         try:
           artist = str(m[tag][0])
           break
-        except KeyError:
+        except:
           pass
       
-      for tag in ('TIT2', u'©nam', 'Title', 'TITLE', 'title'):
+      for tag in ('TIT2', u'\xa9nam', 'Title', 'TITLE', 'title'):
         try:
           title = str(m[tag][0])
           break
-        except KeyError:
+        except:
           pass
+
+      if get_art:
+        for tag in ('covr', 'APIC:', 'pictures'):
+          try:
+            if tag == 'covr':
+              art = m[tag][0]
+            elif tag == 'APIC:':
+              art = m['APIC:'].data
+            elif tag == 'pictures':
+              art = m.pictures[0].data
+            break
+          except:
+            pass
+
     else:
       message = colours.ERROR + '[ERROR]' + colours.RESET + ' File format not supported for: {file}'.format(file=song_filepath)
-      return message      
+      return (None, message, song_filepath)
     # print(str(title) + ' ' + str(artist))
   except:
     message = colours.ERROR + '[ERROR]' + colours.RESET + ' Metadata reading error for file: {file}'.format(file=song_filepath)
-    return message
+    return (None, message, song_filepath)
 
   if artist == '' and title == '':
     message = colours.ERROR + '[ERROR]' + colours.RESET + ' Metadata empty for {file}'.format(file=song_filepath)
-    return message
+    return (None, message, song_filepath)
 
   if approximate and source != 'lyricwiki' and source != 'metrolyrics':
     artist = ''
-  if not brackets:
+  if not keep_brackets:
     artist = re.sub(r'\((.+)\)', '', artist).strip()
     title = re.sub(r'\((.+)\)', '', title).strip()
 
-    # print(artist + ' ' + title)
+  metadata_tuple = namedtuple("metadata", ["artist", "title", "art", "filepath"])
+  return metadata_tuple(artist, title, art, song_filepath)
 
+def get_lyrics(artist, title, source, song_filepath):
   try:
     if source == 'azlyrics':
       time_to_sleep = random.randrange(10, 30)
@@ -108,20 +109,28 @@ def get_lyrics(approximate, brackets, source, song_filepath):
       time_to_sleep = random.randrange(10, 30)
       time.sleep(time_to_sleep)
       lyrics = lyric_fetcher.Musixmatch_get_lyrics(artist, title)
-    # time.sleep(time_to_sleep)
-    # print(lyrics)
-
-    if lyrics:
-      file_writer.write_lyrics_to_txt(song_filepath, lyrics)
     else:
-      message = colours.INFO + '[INFO]' + colours.RESET + ' No lyrics found for file: {file}'.format(file=title)
-      return message
+      message = colours.ERROR + '[ERROR]' + colours.RESET + ' Source not valid! (choose from \'azlyrics\', \'genius\', \'lyricsfreak\', \'lyricwiki\', \'metrolyrics\', \'musixmatch\')'
+      return (None, message)
+
+    lyrics_tuple = namedtuple("lyrics", ["artist", "title", "lyrics", "filepath"])
+    return lyrics_tuple(artist, title, lyrics, song_filepath)
   except:
     message = colours.ERROR + '[ERROR]' + colours.RESET + ' Something went horribly wrong getting lyrics for {file}!'.format(file=title)
-    return message
+    return (None, message)
+
+def write_file(artist, title, write_info, lyrics, song_filepath):
+  file_tuple = namedtuple('state', ['filepath', 'message'])
+  if lyrics and write_info:
+    file_writer.write_lyrics_to_txt(song_filepath, artist + ' - ' + title + '\n\n' + lyrics)
+  elif lyrics and not write_info:
+    file_writer.write_lyrics_to_txt(song_filepath, lyrics)
+  else:
+    message = colours.INFO + '[INFO]' + colours.RESET + ' No lyrics found for file: {file}'.format(file=title)
+    return file_tuple(song_filepath, message)
 
   message = colours.SUCCESS + '[SUCCESS]' + colours.RESET + ' Got lyrics for file: {file}'.format(file=title)
-  return message
+  return file_tuple(song_filepath, message)
 
 def main():
   parser = argparse.ArgumentParser(description='''
@@ -152,13 +161,18 @@ def main():
   parser.add_argument('-f', '--filepath', '--file', metavar='filepath',
                       nargs='?', default='default',
                       help='file/filepath to scan (default: scans current directory)')
-  parser.add_argument('-s', '--source', metavar='source',
-                      nargs='?', choices=SUPPORTED_SOURCES, default='genius',
-                      help='which lyrics source to use (default: \'genius\')')
+  parser.add_argument('-i', '--info',
+                      action='store_true',
+                      help='add song title and artist to top of file (default: lyrics only)')
   parser.add_argument('-r', '--recursive', 
                       action='store_true',
                       help='scan all subdirectories for files (default: scans specified filepath only)')
-
+  parser.add_argument('-s', '--source', metavar='source',
+                      nargs='?', choices=SUPPORTED_SOURCES, default='genius',
+                      help='which lyrics source to use (default: \'genius\')')
+  parser.add_argument('-t', '--tag', 
+                      action='store_true',
+                      help='save lyrics directly to file (default: saves them as a text file with the same name)')
   args = parser.parse_args()
 
   # print(args.approximate)
@@ -172,41 +186,65 @@ def main():
   else:
     filepath = args.filepath
 
+  start = time.time()
+
+  metadata_executor = futures.ThreadPoolExecutor(max_workers=20)
+
   if args.source == 'azlyrics':
     print(colours.INFO + '[WARNING]' + colours.RESET + ' AZLyrics rate-limiting in effect; lyric fetching per song will take up to 30 seconds!')
-    executor = futures.ThreadPoolExecutor(max_workers=3)
+    lyrics_executor = futures.ThreadPoolExecutor(max_workers=3)
   elif args.source == 'genius':
     if genius_key == '':
       print(colours.INFO + '[INFO]' + colours.RESET + ' No Genius key set; results will be less accurate. Please check keys.py!')
       args.brackets = False
-    executor = futures.ThreadPoolExecutor(max_workers=10)
+    lyrics_executor = futures.ThreadPoolExecutor(max_workers=10)
   elif args.source == 'musixmatch':
     print(colours.INFO + '[WARNING]' + colours.RESET + ' Musixmatch rate-limiting in effect; lyric fetching per song will take up to 30 seconds!')
-    executor = futures.ThreadPoolExecutor(max_workers=3)
+    lyrics_executor = futures.ThreadPoolExecutor(max_workers=3)
   else:
-    executor = futures.ThreadPoolExecutor(max_workers=10)
+    lyrics_executor = futures.ThreadPoolExecutor(max_workers=10)
 
-  start = time.time()
+  file_writing_executor = futures.ThreadPoolExecutor(max_workers=10)
 
-  results = []
+  metadata_results = []
+  lyrics_results = []
+  file_writing_results = []
 
   if filepath.endswith(SUPPORTED_FILETYPES):
-    results.append(executor.submit(get_lyrics, args.approximate, args.brackets, args.source, filepath))
+    metadata_results.append(metadata_executor.submit(get_metadata, args.approximate, args.brackets, False, filepath))
   elif args.recursive:
     for root, dirs, files in os.walk(filepath):
       for file in files:
         if file.endswith(SUPPORTED_FILETYPES):
-          results.append(executor.submit(get_lyrics, args.approximate, args.brackets, args.source, os.path.join(root, file)))
+          metadata_results.append(metadata_executor.submit(get_metadata, args.approximate, args.brackets, False, os.path.join(root, file)))
   else:
     for file in os.listdir(filepath):
       if file.endswith(SUPPORTED_FILETYPES):
-        results.append(executor.submit(get_lyrics, args.approximate, args.brackets, args.source, '{filepath}/{file}'.format(filepath=filepath, file=file)))
+        metadata_results.append(metadata_executor.submit(get_metadata, args.approximate, args.brackets, False, '{filepath}/{file}'.format(filepath=filepath, file=file)))
 
-  for result in futures.as_completed(results):
-    print(result.result())
+  for result in futures.as_completed(metadata_results):
+    try:
+      if result.result()[0] is None:
+        print(result.result()[1])
+      else:
+        lyrics_results.append(lyrics_executor.submit(get_lyrics, result.result().artist, result.result().title, args.source, result.result().filepath))
+    except:
+      print(result.result())
+
+  for result in futures.as_completed(lyrics_results):
+    try:
+      if result.result()[0] is None:
+        print(result.result()[1])
+      else:
+        file_writing_results.append(file_writing_executor.submit(write_file, result.result().artist, result.result().title, args.info, result.result().lyrics, result.result().filepath))
+    except:
+      print(result.result())
+
+  for result in futures.as_completed(file_writing_results):
+    print(result.result().message)
 
   end = time.time()
-  print('Grabbed lyrics for {number} songs in {seconds} seconds.'.format(number=len(results), seconds=end-start))
+  print('Grabbed lyrics for {number} songs in {seconds} seconds.'.format(number=len(metadata_results), seconds=end-start))
 
   # Clean up by deleting all text files
   # for root, dirs, files in os.walk(filepath):

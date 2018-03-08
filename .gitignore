@@ -106,6 +106,7 @@ venv.bak/
 
 # For testing purposes
 /src/test_songs
+/screenshots
 
 # Pesky Mac things
 .DS_Store

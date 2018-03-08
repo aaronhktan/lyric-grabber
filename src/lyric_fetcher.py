@@ -239,8 +239,8 @@ def LyricWiki_get_lyrics(artist, title):
 
 def Metrolyrics_get_lyrics(artist, title):                                                      # Mildly crippled because Metrolyrics uses Angular
   proxy = urllib.request.getproxies()                                                           # And Requests doesn't support loading pages w/ JS
-  url_artist = unidecode.unidecode(artist)                                                          # Remove accents
-  url_artist = url_artist.replace(' ', '-').lower()                                                 # Replace spaces with en-dashes and formats to lowercase
+  url_artist = unidecode.unidecode(artist)                                                      # Remove accents
+  url_artist = url_artist.replace(' ', '-').lower()                                             # Replace spaces with en-dashes and formats to lowercase
   url_title = unidecode.unidecode(title)
   url_title = url_title.replace(' ', '-').lower()
   url = METROLYRICS_URL_BASE + '{title}-lyrics-{artist}.html'.format(title=url_title, artist=url_artist)
