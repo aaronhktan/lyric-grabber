@@ -27,15 +27,15 @@ def get_metadata(get_art, song_filepath):
 
   try:
     if song_filepath.endswith('.aac'):
-      message = logger.create_message(logger.LOG_LEVEL_ERROR, ' AAC files not supported;' \
+      message = logger.create_message(logger.LOG_LEVEL_ERROR, 'AAC files not supported;' \
       ' consider converting {file} to another format'.format(file=song_filepath))
       return ERROR_TUPLE(False, message, song_filepath)
     if song_filepath.endswith('.wav'):
-      message = logger.create_message(logger.LOG_LEVEL_ERROR, ' WAV files not supported;' \
+      message = logger.create_message(logger.LOG_LEVEL_ERROR, 'WAV files not supported;' \
       ' consider converting {file} to another format'.format(file=song_filepath))
       return ERROR_TUPLE(False, message, song_filepath)
     elif song_filepath.endswith('.wv'):
-      message = logger.create_message(logger.LOG_LEVEL_ERROR, ' WV files not supported;' \
+      message = logger.create_message(logger.LOG_LEVEL_ERROR, 'WV files not supported;' \
       ' consider converting {file} to another format'.format(file=song_filepath))
       return ERROR_TUPLE(False, message, song_filepath)
     elif song_filepath.endswith(SUPPORTED_FILETYPES):
@@ -60,7 +60,15 @@ def get_metadata(get_art, song_filepath):
             if tag == 'covr':
               art = m[tag][0]
             elif tag == 'APIC:':
-              art = m['APIC:'].data
+              try:
+                art = m['APIC:'].data
+              except:
+                pass
+
+              try:
+                art = m['APIC:Album cover'].data
+              except:
+                pass
             elif tag == 'pictures':
               art = m.pictures[0].data
             break
@@ -68,15 +76,15 @@ def get_metadata(get_art, song_filepath):
             pass
 
     else:
-      message = logger.create_message(logger.LOG_LEVEL_ERROR, ' File format not supported for: {file}'.format(file=song_filepath))
+      message = logger.create_message(logger.LOG_LEVEL_ERROR, 'File format not supported for: {file}'.format(file=song_filepath))
       return ERROR_TUPLE(False, message, song_filepath)
     # print(str(title) + ' ' + str(artist))
   except:
-    message = logger.create_message(logger.LOG_LEVEL_ERROR, ' Metadata reading error for file: {file}'.format(file=song_filepath))
+    message = logger.create_message(logger.LOG_LEVEL_ERROR, 'Metadata reading error for file: {file}'.format(file=song_filepath))
     return ERROR_TUPLE(False, message, song_filepath)
 
   if artist == '' and title == '':
-    message = logger.create_message(logger.LOG_LEVEL_ERROR, ' Metadata empty for {file}'.format(file=song_filepath))
+    message = logger.create_message(logger.LOG_LEVEL_ERROR, 'Metadata empty for {file}'.format(file=song_filepath))
     return ERROR_TUPLE(False, message, song_filepath)
 
   return METADATA_TUPLE(True, artist, title, art, song_filepath)
@@ -110,12 +118,12 @@ def get_lyrics(approximate, keep_brackets, artist, title, source, song_filepath)
       time.sleep(time_to_sleep)
       lyrics = lyric_fetcher.Musixmatch_get_lyrics(request_artist, request_title)
     else:
-      message = logger.create_message(logger.LOG_LEVEL_ERROR, ' Source not valid! (choose from \'azlyrics\', \'genius\', \'lyricsfreak\', \'lyricwiki\', \'metrolyrics\', \'musixmatch\')')
+      message = logger.create_message(logger.LOG_LEVEL_ERROR, 'Source not valid! (choose from \'azlyrics\', \'genius\', \'lyricsfreak\', \'lyricwiki\', \'metrolyrics\', \'musixmatch\')')
       return ERROR_TUPLE(False, message, song_filepath)
 
     return LYRICS_TUPLE(True, artist, title, lyrics, song_filepath)
   except Exception as e:
-    message = logger.create_message(logger.LOG_LEVEL_ERROR, ' Something went horribly wrong getting lyrics for {file}! Error: {error}'.format(file=title, error=e))
+    message = logger.create_message(logger.LOG_LEVEL_ERROR, 'Something went horribly wrong getting lyrics for {file}! Error: {error}'.format(file=title, error=e))
     return ERROR_TUPLE(False, message, song_filepath)
 
 def write_file(artist, title, write_info, lyrics, song_filepath):
@@ -124,8 +132,8 @@ def write_file(artist, title, write_info, lyrics, song_filepath):
   elif lyrics and not write_info:
     file_writer.write_lyrics_to_txt(song_filepath, lyrics)
   else:
-    message = logger.create_message(logger.LOG_LEVEL_INFO, ' No lyrics found for file: {file}'.format(file=title))
+    message = logger.create_message(logger.LOG_LEVEL_INFO, 'No lyrics found for file: {file}'.format(file=title))
     return FILE_TUPLE(True, song_filepath, message)
 
-  message = logger.create_message(logger.LOG_LEVEL_SUCCESS, ' Got lyrics for file: {file}'.format(file=title))
+  message = logger.create_message(logger.LOG_LEVEL_SUCCESS, 'Got lyrics for file: {file}'.format(file=title))
   return FILE_TUPLE(True, song_filepath, message)

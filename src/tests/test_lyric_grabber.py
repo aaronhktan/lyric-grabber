@@ -1,47 +1,81 @@
-# tracks = [
-#   {'Artist': 'Boy',                 'Title': 'Little Numbers'},
-#   {'Artist': 'Natalia Lafourcade',  'Title': 'Tú sí sabes quererme'},
-#   {'Artist': 'Pierre Lapointe',     'Title': 'Au bar des suicidés'},
-#   {'Artist': '曲婉婷',               'Title': '我的歌声里'},
-#   {'Artist': '方皓玟',               'Title': '你是我本身的傅奇'}
-# ]
+from modules import lyric_grabber
 
-# for item in tracks:
-#   artist = item['Artist']
-#   title = item['Title']
+import unittest
+from collections import namedtuple
+import os
 
-#   lyrics = lyric_grabber.AZLyrics_get_lyrics(title)
-#   if lyrics:
-#     file_writer.write_lyrics_to_txt(title + '_azlyrics.txt', lyrics)
-#   else:
-#     print('[INFO] No lyrics found for file: {file}'.format(file=title))
+class TestMetadata(unittest.TestCase):
 
-#   lyrics = lyric_grabber.Genius_get_lyrics(title)
-#   if lyrics:
-#     file_writer.write_lyrics_to_txt(title + '_genius.txt', lyrics)
-#   else:
-#     print('[INFO] No lyrics found for file: {file}'.format(file=title)) 
+  def test_valid_mp3(self):
+    get_art = True
+    filepath = 'tests/test_files/Re_Your_Brains.mp3'
+    result = lyric_grabber.get_metadata(get_art, filepath)
+    self.assertTrue(result.succeeded)
+    self.assertEqual(result.artist, 'Jonathan Coulton')
+    self.assertEqual(result.title, 'Re: Your Brains')
+    self.assertIsNotNone(result.art)
+    self.assertEqual(result.filepath, filepath)
 
-  # lyrics = lyric_grabber.LyricsFreak_get_lyrics(title)
-  # if lyrics:
-  #   file_writer.write_lyrics_to_txt(title + '_lyricsfreak.txt', lyrics)
-  # else:
-  #   print('[INFO] No lyrics found for file: {file}'.format(file=title))
+class TestGetLyrics(unittest.TestCase):
+  approximate = False
+  keep_brackets = True
 
-#   lyrics = lyric_grabber.LyricWiki_get_lyrics(artist, title)
-#   if lyrics:
-#     file_writer.write_lyrics_to_txt(title + '_lyricwiki.txt', lyrics)
-#   else:
-#     print('[INFO] No lyrics found for file: {file}'.format(file=title))
+  def test_invalid_source(self):
+    result = lyric_grabber.get_lyrics(self.approximate, self.keep_brackets, 'Aaron', 'A Song', 'A source that doesn\'t exist', 'filepath.mp3')
+    self.assertFalse(result.succeeded)
+    self.assertEqual(result.message, '\033[31;1m' + '[ERROR] ' + '\033[0m' + 'Source not valid! (choose from \'azlyrics\', \'genius\', \'lyricsfreak\', \'lyricwiki\', \'metrolyrics\', \'musixmatch\')')
+    self.assertEqual(result.filepath, 'filepath.mp3')
 
-#   lyrics = lyric_grabber.Metrolyrics_get_lyrics(artist, title)
-#   if lyrics:
-#     file_writer.write_lyrics_to_txt(title + '_metrolyrics.txt', lyrics)
-#   else:
-#     print('[INFO] No lyrics found for file: {file}'.format(file=title))
+  def test_get_lyrics(self):
+    result = lyric_grabber.get_lyrics(self.approximate, self.keep_brackets, 'Portugal. The Man', 'Feel It Still', 'genius', 'filepath.mp3')
+    self.assertTrue(result.succeeded)
+    self.assertEqual(result.artist, 'Portugal. The Man')
+    self.assertEqual(result.title, 'Feel It Still')
+    self.assertIsNotNone(result.lyrics)
+    self.assertIsNot(result.lyrics, False)
+    self.assertEqual(result.filepath ,'filepath.mp3')
 
-#   lyrics = lyric_grabber.Musixmatch_get_lyrics(title)
-#   if lyrics:
-#     file_writer.write_lyrics_to_txt(title + '_musixmatch.txt', lyrics)
-#   else:
-#     print('[INFO] No lyrics found for file: {file}'.format(file=title))
+class TestWriteFile(unittest.TestCase):
+  artist = 'Natalia Lafourcade'
+  title = 'Tú sí sabes quererme'
+  lyrics = 'Corazón, tú sí sabes / Quererme como a mí me gusta'
+  filepath = 'test_file.mp3'
+
+  def test_write_info(self):
+    write_info = True
+    result = lyric_grabber.write_file(self.artist, self.title, write_info, self.lyrics, self.filepath)
+    self.assertTrue(result.succeeded)
+    self.assertEqual(result.filepath, self.filepath)
+    self.assertEqual(result.message, '\033[32;1m' + '[SUCCESS] ' + '\033[0m' + 'Got lyrics for file: {file}'.format(file=self.title))
+
+    file = open('test_file.mp3'[:'test_file.mp3'.rfind('.')] + '.txt', 'r')
+    result = file.read()
+    file.close()
+    self.assertEqual(result, self.artist + ' - ' + self.title + '\n\n' + self.lyrics)
+
+    os.remove('test_file.txt')
+
+  def test_not_write_info(self):
+    write_info = False
+    result = lyric_grabber.write_file(self.artist, self.title, write_info, self.lyrics, self.filepath)
+    self.assertTrue(result.succeeded)
+    self.assertEqual(result.filepath, self.filepath)
+    self.assertEqual(result.message, '\033[32;1m' + '[SUCCESS] ' + '\033[0m' + 'Got lyrics for file: {file}'.format(file=self.title))
+
+    file = open('test_file.mp3'[:'test_file.mp3'.rfind('.')] + '.txt', 'r')
+    result = file.read()
+    file.close()
+    self.assertEqual(result, self.lyrics)
+
+    os.remove('test_file.txt')
+
+  def test_no_lyrics(self):
+    write_info = True
+    lyrics = False
+    result = lyric_grabber.write_file(self.artist, self.title, write_info, lyrics, self.filepath)
+    self.assertTrue(result.succeeded)
+    self.assertEqual(result.filepath, 'test_file.mp3')
+    self.assertEqual(result.message, '\033[93;1m' + '[INFO] ' + '\033[0m' + 'No lyrics found for file: {file}'.format(file=self.title))
+
+if __name__ == '__main__':
+  unittest.main()

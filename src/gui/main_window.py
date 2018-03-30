@@ -171,16 +171,17 @@ class QWidgetItem (QtWidgets.QWidget):
 
   def setAlbumArt(self, imageData, deviceRatio):
     try:
-      if imageData is not None:
-        if imageData == b'':
-          self._albumImage = QtGui.QImage('./assets/art_empty.png')
-        else:
-          self._albumImage = QtGui.QImage.fromData(imageData)
-        self._albumIcon = QtGui.QPixmap.fromImage(self._albumImage)
-        self._albumIcon.setDevicePixelRatio(deviceRatio)
-        self._iconWidth = deviceRatio * (self._albumArtLabel.width() - 10)
-        self._iconHeight = deviceRatio * (self._albumArtLabel.height() - 10)
-        self._albumArtLabel.setPixmap(self._albumIcon.scaled(self._iconWidth, self._iconHeight, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
+      if imageData == b'' or imageData is None:
+        self._albumImage = QtGui.QImage('./assets/art_empty.png')
+      else:
+        self._albumImage = QtGui.QImage.fromData(imageData)
+      if self._albumImage.isNull():
+        self._albumImage = QtGui.QImage('./assets/art_empty.png')
+      self._albumIcon = QtGui.QPixmap.fromImage(self._albumImage)
+      self._albumIcon.setDevicePixelRatio(deviceRatio)
+      self._iconWidth = deviceRatio * (self._albumArtLabel.width() - 10)
+      self._iconHeight = deviceRatio * (self._albumArtLabel.height() - 10)
+      self._albumArtLabel.setPixmap(self._albumIcon.scaled(self._iconWidth, self._iconHeight, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
     except:
       print('Error setting album art.')
 
