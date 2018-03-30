@@ -1,5 +1,5 @@
-from colours import colours
-from keys import genius_key
+from modules.keys import genius_key
+from modules.logger import logger
 
 import json
 from urllib.parse import urlencode, quote_plus
@@ -32,8 +32,8 @@ LYRICWIKI_URL_BASE = 'http://lyrics.wikia.com/api.php?'
 METROLYRICS_URL_BASE = 'http://www.metrolyrics.com/'
 MUSIXMATCH_URL_BASE = 'https://www.musixmatch.com'
 
-SEARCH_ERROR = ' No results from {source} for song {file}'
-PARSE_ERROR = ' Could not parse lyrics from {source} for song {file}'
+SEARCH_ERROR = 'No results from {source} for song {file}'
+PARSE_ERROR = 'Could not parse lyrics from {source} for song {file}'
 
 USER_AGENTS = [
   'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0',
@@ -73,11 +73,11 @@ def AZLyrics_get_lyrics(artist, title):
         break
 
     if url == '':
-      print(colours.INFO + '[INFO]' + colours.RESET + SEARCH_ERROR.format(source='AZLyrics', file=title))
+      logger.log(logger.LOG_LEVEL_INFO, SEARCH_ERROR.format(source='AZLyrics', file=title))
       return False
 
   except:
-    print(colours.INFO + '[INFO]' + colours.RESET + SEARCH_ERROR.format(source='AZLyrics', file=title))
+    logger.log(logger.LOG_LEVEL_INFO, SEARCH_ERROR.format(source='AZLyrics', file=title))
     return False
 
   headers = requests.utils.default_headers()                                                    # AZLyrics filters against bots by inspecting user-agent
@@ -101,7 +101,7 @@ def AZLyrics_get_lyrics(artist, title):
 
     return lyrics.get_text().strip()
   except:
-    print(colours.ERROR + '[ERROR]' + colours.RESET + PARSE_ERROR.format(source='AZLyrics', tile=title))
+    logger.log(logger.LOG_LEVEL_ERROR, PARSE_ERROR.format(source='AZLyrics', tile=title))
     return False
 
   return False
@@ -135,10 +135,10 @@ def Genius_get_lyrics(artist, title):
       if search_results['meta']['status'] == 200:
         url = search_results['response']['hits'][0]['result']['url']
       else:
-        print(colours.INFO + '[INFO]' + colours.RESET + ' Could not reach Genius; got code {code} check your Internet connection and Genius key'.format(code=search_results['meta']['status']))
+        logger.log(logger.LOG_LEVEL_INFO, ' Could not reach Genius; got code {code} check your Internet connection and Genius key'.format(code=search_results['meta']['status']))
         return False
     except:
-      print(colours.INFO + '[INFO]' + colours.RESET + SEARCH_ERROR.format(source='Genius', file=title))
+      logger.log(logger.LOG_LEVEL_INFO, SEARCH_ERROR.format(source='Genius', file=title))
       return False
 
   r = requests.get(url, timeout=10, proxies=proxy)
@@ -155,9 +155,9 @@ def Genius_get_lyrics(artist, title):
     return lyrics.strip()
   except:
     if genius_key == '':
-      print(colours.INFO + '[INFO]' + colours.RESET + SEARCH_ERROR.format(source='Genius', file=title))
+      logger.log(logger.LOG_LEVEL_INFO, SEARCH_ERROR.format(source='Genius', file=title))
     else:
-      print(colours.ERROR + '[ERROR]' + colours.RESET + PARSE_ERROR.format(source='Genius', file=title))
+      logger.log(logger.LOG_LEVEL_ERROR, PARSE_ERROR.format(source='Genius', file=title))
     return False
 
   return False
@@ -179,7 +179,7 @@ def LyricsFreak_get_lyrics(title):
     url = LYRICSFREAK_URL_BASE + search_results[0]['href']
     # print(url)
   except:
-    print(colours.INFO + '[INFO]' + colours.RESET + SEARCH_ERROR.format(source='LyricsFreak', file=title))
+    logger.log(logger.LOG_LEVEL_INFO, SEARCH_ERROR.format(source='LyricsFreak', file=title))
     return False
 
   r = requests.get(url, timeout=10, proxies=proxy)
@@ -191,7 +191,7 @@ def LyricsFreak_get_lyrics(title):
     [elem.replace_with('\n') for elem in lyrics.find_all('br')]                                 # Remove <br> tags and reformat them into \n line breaks 
     return lyrics.get_text()
   except:
-    print(colours.ERROR + '[ERROR]' + colours.RESET + PARSE_ERROR.format(source='LyricsFreak', file=title))
+    logger.log(logger.LOG_LEVEL_ERROR, PARSE_ERROR.format(source='LyricsFreak', file=title))
     return False
 
   return False
@@ -216,7 +216,7 @@ def LyricWiki_get_lyrics(artist, title):
     search_results = json.loads(search_results)
     # print(search_results['lyrics'])
   except:
-    print(colours.ERROR + '[ERROR]' + colours.RESET + SEARCH_ERROR.format(source='LyricWiki', file=title))
+    logger.log(logger.LOG_LEVEL_ERROR, SEARCH_ERROR.format(source='LyricWiki', file=title))
 
   if search_results['lyrics'] != 'Not found':
     r = requests.get(search_results['url'], timeout=10, proxies=proxy)
@@ -231,10 +231,10 @@ def LyricWiki_get_lyrics(artist, title):
 
       return lyrics.get_text().strip()
     except:
-      print(colours.ERROR + '[ERROR]' + colours.RESET + PARSE_ERROR.format(source='LyricWiki', file=title))
+      logger.log(logger.LOG_LEVEL_ERROR, PARSE_ERROR.format(source='LyricWiki', file=title))
       return False
   else:
-    print(colours.INFO + '[INFO]' + colours.RESET + SEARCH_ERROR.format(source='LyricWiki', file=title))
+    logger.log(logger.LOG_LEVEL_INFO, SEARCH_ERROR.format(source='LyricWiki', file=title))
     return False
 
 def Metrolyrics_get_lyrics(artist, title):                                                      # Mildly crippled because Metrolyrics uses Angular
@@ -259,7 +259,7 @@ def Metrolyrics_get_lyrics(artist, title):                                      
     lyrics = '\n\n'.join(verses)
     return lyrics.strip()
   except:
-    print(colours.INFO + '[INFO]' + colours.RESET + PARSE_ERROR.format(source='Metrolyrics', file=title))
+    logger.log(logger.LOG_LEVEL_INFO, PARSE_ERROR.format(source='Metrolyrics', file=title))
     return False
 
   return False
@@ -284,7 +284,7 @@ def Musixmatch_get_lyrics(artist, title):
     url = MUSIXMATCH_URL_BASE + search_result[0]['href']
     # print(url)
   except:
-    print(colours.INFO + '[INFO]' + colours.RESET + SEARCH_ERROR.format(source='Musixmatch', file=title))
+    logger.log(logger.LOG_LEVEL_INFO, SEARCH_ERROR.format(source='Musixmatch', file=title))
     return False
 
   headers = requests.utils.default_headers()                                                    # Musixmatch filters against bots by inspecting user-agent
@@ -308,7 +308,7 @@ def Musixmatch_get_lyrics(artist, title):
 
     return lyrics.strip()
   except:
-    print(colours.ERROR + '[ERROR]' + colours.RESET + PARSE_ERROR.format(source='Musixmatch', file=title))
+    logger.log(logger.LOG_LEVEL_ERROR, PARSE_ERROR.format(source='Musixmatch', file=title))
     return False
 
   return False

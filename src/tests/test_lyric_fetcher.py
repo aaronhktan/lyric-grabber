@@ -1,4 +1,4 @@
-import lyric_fetcher
+from modules import lyric_fetcher
 
 import unittest
 
