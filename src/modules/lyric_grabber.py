@@ -15,10 +15,10 @@ SUPPORTED_FILETYPES = ('.mp3', '.mp4', '.m4a', '.m4v', '.aac', \
 SUPPORTED_SOURCES = ('azlyrics', 'genius', 'lyricsfreak', \
                      'lyricwiki', 'metrolyrics', 'musixmatch')
 
-METADATA_TUPLE = namedtuple("metadata", ["succeeded", "artist", "title", "art", "filepath"])
-LYRICS_TUPLE = namedtuple("lyrics", ["succeeded", "artist", "title", "lyrics", "filepath"])
-FILE_TUPLE = namedtuple("state", ["succeeded", "filepath", "message"])
-ERROR_TUPLE = namedtuple("error", ["succeeded", "message", "filepath"])
+METADATA_TUPLE = namedtuple('metadata', ['succeeded', 'artist', 'title', 'art', 'filepath'])
+LYRICS_TUPLE = namedtuple('lyrics', ['succeeded', 'artist', 'title', 'lyrics', 'url', 'filepath'])
+FILE_TUPLE = namedtuple('state', ['succeeded', 'filepath', 'message'])
+ERROR_TUPLE = namedtuple('error', ['succeeded', 'message', 'filepath'])
 
 def get_metadata(get_art, song_filepath):
   artist = ''
@@ -104,24 +104,30 @@ def get_lyrics(approximate, keep_brackets, artist, title, source, song_filepath)
     if source == 'azlyrics':
       time_to_sleep = random.randrange(10, 30)
       time.sleep(time_to_sleep)
-      lyrics = lyric_fetcher.AZLyrics_get_lyrics(request_artist, request_title)
+      result = lyric_fetcher.AZLyrics_get_lyrics(request_artist, request_title)
     elif source == 'genius':
-      lyrics = lyric_fetcher.Genius_get_lyrics(request_artist, request_title)
+      result = lyric_fetcher.Genius_get_lyrics(request_artist, request_title)
     elif source == 'lyricsfreak':
-      lyrics = lyric_fetcher.LyricsFreak_get_lyrics(request_title)
+      result = lyric_fetcher.LyricsFreak_get_lyrics(request_title)
     elif source == 'lyricwiki':
-      lyrics = lyric_fetcher.LyricWiki_get_lyrics(request_artist, request_title)
+      result = lyric_fetcher.LyricWiki_get_lyrics(request_artist, request_title)
     elif source == 'metrolyrics':
-      lyrics = lyric_fetcher.Metrolyrics_get_lyrics(request_artist, request_title)
+      result = lyric_fetcher.Metrolyrics_get_lyrics(request_artist, request_title)
     elif source == 'musixmatch':
       time_to_sleep = random.randrange(10, 30)
       time.sleep(time_to_sleep)
-      lyrics = lyric_fetcher.Musixmatch_get_lyrics(request_artist, request_title)
+      result = lyric_fetcher.Musixmatch_get_lyrics(request_artist, request_title)
     else:
       message = logger.create_message(logger.LOG_LEVEL_ERROR, 'Source not valid! (choose from \'azlyrics\', \'genius\', \'lyricsfreak\', \'lyricwiki\', \'metrolyrics\', \'musixmatch\')')
       return ERROR_TUPLE(False, message, song_filepath)
 
-    return LYRICS_TUPLE(True, artist, title, lyrics, song_filepath)
+    if (result is not False):
+      lyrics = result.lyrics
+      url = result.url
+      return LYRICS_TUPLE(True, artist, title, lyrics, url, song_filepath)
+    else:
+      message = logger.create_message(logger.LOG_LEVEL_INFO, 'No lyrics found for {file}!'.format(file=title))
+      return ERROR_TUPLE(False, message, song_filepath)
   except Exception as e:
     message = logger.create_message(logger.LOG_LEVEL_ERROR, 'Something went horribly wrong getting lyrics for {file}! Error: {error}'.format(file=title, error=e))
     return ERROR_TUPLE(False, message, song_filepath)

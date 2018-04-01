@@ -7,7 +7,7 @@ SUPPORTED_SOURCES = (
 )
 
 class QLyricsDialog (QtWidgets.QDialog):
-  def __init__(self, artist, title, lyrics, filepath, parent=None):
+  def __init__(self, artist, title, lyrics, url, filepath, parent=None):
     super().__init__(parent)
 
     # Style lyrics dialog
@@ -65,14 +65,16 @@ class QLyricsDialog (QtWidgets.QDialog):
     self._urlLabel = QtWidgets.QLabel('Lyrics URL:')
     self._urlLineEdit = QtWidgets.QLineEdit()
 
-    self._urlLineEdit.setText('https://google.caa;oisdjfaoisjdfiopajwoipefjopiawjopiefjaoiwjepofaisdlhfaisdifhaisdhiofhapsodfais')
+    self._urlLineEdit.setText(url)
     self._urlLineEdit.setAttribute(QtCore.Qt.WA_MacShowFocusRect, False)
     self._urlLineEdit.setCursorPosition(0)
 
     self._viewUrlButton = QtWidgets.QPushButton('View online')
+    self._viewUrlButton.clicked.connect(lambda: self.openUrl())
     self._viewUrlButton.setFocusPolicy(QtCore.Qt.NoFocus)
     self._viewUrlButton.setMaximumWidth(100)
     self._copyUrlButton = QtWidgets.QPushButton('Copy URL')
+    self._copyUrlButton.clicked.connect(lambda: self.copyUrl())
     self._copyUrlButton.setFocusPolicy(QtCore.Qt.NoFocus)
     self._copyUrlButton.setMaximumWidth(100)
 
@@ -185,11 +187,23 @@ class QLyricsDialog (QtWidgets.QDialog):
 
   def updateLyrics(self, lyrics):
     self._lyricsQLabel.setText(lyrics)
+    self._lyricsQLabel.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
 
   def copyLyrics(self):
     clipboard = QtWidgets.QApplication.clipboard()
     clipboard.clear(mode=clipboard.Clipboard )
     clipboard.setText(self._lyricsQLabel.text(), mode=QtGui.QClipboard.Clipboard)
+
+  def updateUrl(self, url):
+    self._urlLineEdit.setText(url)
+
+  def openUrl(self):
+    QtGui.QDesktopServices.openUrl(QtCore.QUrl(self._urlLineEdit.text()))
+
+  def copyUrl(self):
+    clipboard = QtWidgets.QApplication.clipboard()
+    clipboard.clear(mode=clipboard.Clipboard )
+    clipboard.setText(self._urlLineEdit.text(), mode=QtGui.QClipboard.Clipboard)
 
   def getFilePath(self):
     return self._filepath

@@ -1,6 +1,7 @@
 from modules.keys import genius_key
 from modules.logger import logger
 
+from collections import namedtuple
 import json
 from urllib.parse import urlencode, quote_plus
 import urllib.request
@@ -31,6 +32,8 @@ LYRICSFREAK_URL_BASE = 'http://www.lyricsfreak.com'
 LYRICWIKI_URL_BASE = 'http://lyrics.wikia.com/api.php?'
 METROLYRICS_URL_BASE = 'http://www.metrolyrics.com/'
 MUSIXMATCH_URL_BASE = 'https://www.musixmatch.com'
+
+LYRICS_TUPLE = namedtuple('lyrics', ['lyrics', 'url'])
 
 SEARCH_ERROR = 'No results from {source} for song {file}'
 PARSE_ERROR = 'Could not parse lyrics from {source} for song {file}'
@@ -99,7 +102,7 @@ def AZLyrics_get_lyrics(artist, title):
     [elem.extract() for elem in lyrics.find_all('i')]                                           # Remove any italics in lyrics
     [elem.extract() for elem in lyrics.find_all('br')]                                          # Remove <br> tags
 
-    return lyrics.get_text().strip()
+    return LYRICS_TUPLE(lyrics.get_text().strip(), url)
   except:
     logger.log(logger.LOG_LEVEL_ERROR, PARSE_ERROR.format(source='AZLyrics', tile=title))
     return False
@@ -152,7 +155,7 @@ def Genius_get_lyrics(artist, title):
 
     lyrics = ''.join(lyrics_paragraphs)
     
-    return lyrics.strip()
+    return LYRICS_TUPLE(lyrics.strip(), url)
   except:
     if genius_key == '':
       logger.log(logger.LOG_LEVEL_INFO, SEARCH_ERROR.format(source='Genius', file=title))
@@ -189,7 +192,7 @@ def LyricsFreak_get_lyrics(title):
     lyrics = document.find('div', id='content_h')
 
     [elem.replace_with('\n') for elem in lyrics.find_all('br')]                                 # Remove <br> tags and reformat them into \n line breaks 
-    return lyrics.get_text()
+    return LYRICS_TUPLE(lyrics.get_text(), url)
   except:
     logger.log(logger.LOG_LEVEL_ERROR, PARSE_ERROR.format(source='LyricsFreak', file=title))
     return False
@@ -219,7 +222,8 @@ def LyricWiki_get_lyrics(artist, title):
     logger.log(logger.LOG_LEVEL_ERROR, SEARCH_ERROR.format(source='LyricWiki', file=title))
 
   if search_results['lyrics'] != 'Not found':
-    r = requests.get(search_results['url'], timeout=10, proxies=proxy)
+    url = search_results['url']
+    r = requests.get(url, timeout=10, proxies=proxy)
     try:
       document = BeautifulSoup(r.text, 'html.parser')
       lyrics = document.find('div', class_='lyricbox')                                          # Find all divs with class lyricbox
@@ -229,7 +233,7 @@ def LyricWiki_get_lyrics(artist, title):
       [elem.extract() for elem in lyrics.find_all('script')]                                    # Remove any scripts in lyrics
       [elem.replace_with('\n') for elem in lyrics.find_all('br')]                               # Remove <br> tags and reformat them into \n line breaks 
 
-      return lyrics.get_text().strip()
+      return LYRICS_TUPLE(lyrics.get_text().strip(), url)
     except:
       logger.log(logger.LOG_LEVEL_ERROR, PARSE_ERROR.format(source='LyricWiki', file=title))
       return False
@@ -257,7 +261,7 @@ def Metrolyrics_get_lyrics(artist, title):                                      
     [verses.append(elem.get_text()) for elem in lyrics_div.find_all('p')]
     
     lyrics = '\n\n'.join(verses)
-    return lyrics.strip()
+    return LYRICS_TUPLE(lyrics.strip(), url)
   except:
     logger.log(logger.LOG_LEVEL_INFO, PARSE_ERROR.format(source='Metrolyrics', file=title))
     return False
@@ -306,7 +310,7 @@ def Musixmatch_get_lyrics(artist, title):
     lyrics = lyrics.replace('\\"', '"')                                                         # Replace escaped quotes with just quotes
     lyrics = lyrics.replace('\\n', '\n')                                                        # Replace \n string with \n line breaks
 
-    return lyrics.strip()
+    return LYRICS_TUPLE(lyrics.strip(), url)
   except:
     logger.log(logger.LOG_LEVEL_ERROR, PARSE_ERROR.format(source='Musixmatch', file=title))
     return False
