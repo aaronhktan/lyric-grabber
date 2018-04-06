@@ -53,7 +53,7 @@ USER_AGENTS = [
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.13+ (KHTML, like Gecko) Version/5.1.7 Safari/534.57.2'
   ]
 
-def AZLyrics_get_lyrics(artist, title):
+def azlyrics_search_for_url(artist, title):
   proxy = urllib.request.getproxies()
   payload = {'q': title + ' ' + artist}
   search_url = AZLYRICS_URL_BASE + urlencode(payload, quote_via=quote_plus)
@@ -83,7 +83,11 @@ def AZLyrics_get_lyrics(artist, title):
     logger.log(logger.LOG_LEVEL_INFO, SEARCH_ERROR.format(source='AZLyrics', file=title))
     return False
 
-  headers = requests.utils.default_headers()                                                    # AZLyrics filters against bots by inspecting user-agent
+  return url
+
+def azlyrics_scrape_url(url, title):
+  proxy = urllib.request.getproxies()
+  headers = requests.utils.default_headers()                                                      # AZLyrics filters against bots by inspecting user-agent
   headers.update({
       'User-Agent': random.choice(USER_AGENTS),
   })
@@ -96,20 +100,28 @@ def AZLyrics_get_lyrics(artist, title):
     document = BeautifulSoup(r.text, 'html.parser')
     lyrics = document.find('div', class_='', id='')
 
-    [elem.extract() for elem in lyrics.find_all(text=lambda text:isinstance(text, Comment))]    # Remove all text that is a comment in lyrics
-    [elem.extract() for elem in lyrics.find_all('div')]                                         # Remove any sub-divs in lyrics
-    [elem.extract() for elem in lyrics.find_all('script')]                                      # Remove any scripts in lyrics
-    [elem.extract() for elem in lyrics.find_all('i')]                                           # Remove any italics in lyrics
-    [elem.extract() for elem in lyrics.find_all('br')]                                          # Remove <br> tags
+    [elem.extract() for elem in lyrics.find_all(text=lambda text:isinstance(text, Comment))]      # Remove all text that is a comment in lyrics
+    [elem.extract() for elem in lyrics.find_all('div')]                                           # Remove any sub-divs in lyrics
+    [elem.extract() for elem in lyrics.find_all('script')]                                        # Remove any scripts in lyrics
+    [elem.extract() for elem in lyrics.find_all('i')]                                             # Remove any italics in lyrics
+    [elem.extract() for elem in lyrics.find_all('br')]                                            # Remove <br> tags
 
     return LYRICS_TUPLE(lyrics.get_text().strip(), url)
   except:
-    logger.log(logger.LOG_LEVEL_ERROR, PARSE_ERROR.format(source='AZLyrics', tile=title))
+    logger.log(logger.LOG_LEVEL_ERROR, PARSE_ERROR.format(source='AZLyrics', file=title))
     return False
 
   return False
 
-def Genius_get_lyrics(artist, title):
+def azlyrics_search_and_scrape_url(artist, title):
+  url = azlyrics_search_for_url(artist, title)
+  if url == False:
+    return url
+
+  lyrics = azlyrics_scrape_url(url, title)
+  return lyrics
+
+def genius_search_for_url(artist, title):
   proxy = urllib.request.getproxies()
   if (genius_key == ''):
     url_artist = unidecode.unidecode(artist)   
@@ -144,6 +156,10 @@ def Genius_get_lyrics(artist, title):
       logger.log(logger.LOG_LEVEL_INFO, SEARCH_ERROR.format(source='Genius', file=title))
       return False
 
+  return url
+
+def genius_scrape_url(url, title):
+  proxy = urllib.request.getproxies()
   r = requests.get(url, timeout=10, proxies=proxy)
 
   try:
@@ -165,7 +181,15 @@ def Genius_get_lyrics(artist, title):
 
   return False
 
-def LyricsFreak_get_lyrics(title):
+def genius_search_and_scrape_url(artist, title):
+  url = genius_search_for_url(artist, title)
+  if url == False:
+    return url
+
+  lyrics = genius_scrape_url(url, title)
+  return lyrics
+
+def lyricsfreak_search_for_url(title):
   proxy = urllib.request.getproxies()
   payload = {'a':       'search', \
              'type':    'song', \
@@ -185,6 +209,10 @@ def LyricsFreak_get_lyrics(title):
     logger.log(logger.LOG_LEVEL_INFO, SEARCH_ERROR.format(source='LyricsFreak', file=title))
     return False
 
+  return url
+
+def lyricsfreak_scrape_url(url, title):
+  proxy = urllib.request.getproxies()
   r = requests.get(url, timeout=10, proxies=proxy)
 
   try:
@@ -199,7 +227,15 @@ def LyricsFreak_get_lyrics(title):
 
   return False
 
-def LyricWiki_get_lyrics(artist, title):
+def lyricsfreak_search_and_scrape_url(title):
+  url = lyricsfreak_search_for_url(title)
+  if url == False:
+    return url
+
+  lyrics = lyricsfreak_scrape_url(url, title)
+  return lyrics
+
+def lyricwiki_search_for_url(artist, title):
   proxy = urllib.request.getproxies()
   payload = {'action':  'lyrics', \
              'artist':  artist, \
@@ -223,33 +259,51 @@ def LyricWiki_get_lyrics(artist, title):
 
   if search_results['lyrics'] != 'Not found':
     url = search_results['url']
-    r = requests.get(url, timeout=10, proxies=proxy)
-    try:
-      document = BeautifulSoup(r.text, 'html.parser')
-      lyrics = document.find('div', class_='lyricbox')                                          # Find all divs with class lyricbox
-
-      [elem.extract() for elem in lyrics.find_all(text=lambda text:isinstance(text, Comment))]  # Remove all text that is a comment in lyrics
-      [elem.extract() for elem in lyrics.find_all('div')]                                       # Remove any sub-divs in lyrics
-      [elem.extract() for elem in lyrics.find_all('script')]                                    # Remove any scripts in lyrics
-      [elem.replace_with('\n') for elem in lyrics.find_all('br')]                               # Remove <br> tags and reformat them into \n line breaks 
-
-      return LYRICS_TUPLE(lyrics.get_text().strip(), url)
-    except:
-      logger.log(logger.LOG_LEVEL_ERROR, PARSE_ERROR.format(source='LyricWiki', file=title))
-      return False
   else:
     logger.log(logger.LOG_LEVEL_INFO, SEARCH_ERROR.format(source='LyricWiki', file=title))
+    url = False
+
+  return url
+
+def lyricwiki_scrape_url(url, title):
+  proxy = urllib.request.getproxies()
+  r = requests.get(url, timeout=10, proxies=proxy)
+  try:
+    document = BeautifulSoup(r.text, 'html.parser')
+    lyrics = document.find('div', class_='lyricbox')                                            # Find all divs with class lyricbox
+
+    [elem.extract() for elem in lyrics.find_all(text=lambda text:isinstance(text, Comment))]    # Remove all text that is a comment in lyrics
+    [elem.extract() for elem in lyrics.find_all('div')]                                         # Remove any sub-divs in lyrics
+    [elem.extract() for elem in lyrics.find_all('script')]                                      # Remove any scripts in lyrics
+    [elem.replace_with('\n') for elem in lyrics.find_all('br')]                                 # Remove <br> tags and reformat them into \n line breaks 
+
+    return LYRICS_TUPLE(lyrics.get_text().strip(), url)
+  except:
+    logger.log(logger.LOG_LEVEL_ERROR, PARSE_ERROR.format(source='LyricWiki', file=title))
     return False
 
-def Metrolyrics_get_lyrics(artist, title):                                                      # Mildly crippled because Metrolyrics uses Angular
-  proxy = urllib.request.getproxies()                                                           # And Requests doesn't support loading pages w/ JS
-  url_artist = unidecode.unidecode(artist)                                                      # Remove accents
-  url_artist = url_artist.replace(' ', '-').lower()                                             # Replace spaces with en-dashes and formats to lowercase
-  url_title = unidecode.unidecode(title)
+  return False
+
+def lyricwiki_search_and_scrape_url(artist, title):
+  url = lyricwiki_search_for_url(artist, title)
+  if url == False:
+    return url
+
+  lyrics = lyricwiki_scrape_url(url, title)
+  return lyrics
+
+def metrolyrics_search_for_url(artist, title):
+  proxy = urllib.request.getproxies()                                                           # Mildly crippled because Metrolyrics uses Angular
+  url_artist = unidecode.unidecode(artist)                                                      # And Requests doesn't support loading pages w/ JS
+  url_artist = url_artist.replace(' ', '-').lower()                                             # Remove accents
+  url_title = unidecode.unidecode(title)                                                        # Replace spaces with en-dashes and formats to lowercase
   url_title = url_title.replace(' ', '-').lower()
   url = METROLYRICS_URL_BASE + '{title}-lyrics-{artist}.html'.format(title=url_title, artist=url_artist)
-  # print(url)
 
+  return url
+
+def metrolyrics_scrape_url(url, title):
+  proxy = urllib.request.getproxies()
   r = requests.get(url, timeout=10, proxies=proxy)
   r.encoding = 'utf-8'
 
@@ -268,7 +322,13 @@ def Metrolyrics_get_lyrics(artist, title):                                      
 
   return False
 
-def Musixmatch_get_lyrics(artist, title):
+def metrolyrics_search_and_scrape_url(artist, title):
+  url = metrolyrics_search_for_url(artist, title)
+
+  lyrics = metrolyrics_scrape_url(url, title)
+  return lyrics
+
+def musixmatch_search_for_url(artist, title):
   proxy = urllib.request.getproxies()
   url_params = urllib.parse.quote_plus(artist + ' ' + title)
   search_url = MUSIXMATCH_URL_BASE + '/search/{params}'.format(params=url_params)
@@ -291,6 +351,10 @@ def Musixmatch_get_lyrics(artist, title):
     logger.log(logger.LOG_LEVEL_INFO, SEARCH_ERROR.format(source='Musixmatch', file=title))
     return False
 
+  return url
+
+def musixmatch_scrape_url(url, title):
+  proxy = urllib.request.getproxies()
   headers = requests.utils.default_headers()                                                    # Musixmatch filters against bots by inspecting user-agent
   headers.update({
       'User-Agent': random.choice(USER_AGENTS),
@@ -303,7 +367,7 @@ def Musixmatch_get_lyrics(artist, title):
     lyrics_paragraphs = []
     [lyrics_paragraphs.append(elem.get_text()) for elem in document.find_all('p', class_='mxm-lyrics__content')]
 
-    lyrics = ''.join(lyrics_paragraphs)
+    lyrics = '\n'.join(lyrics_paragraphs)
 
     lyrics = lyrics.replace('<i>', '')                                                          # Remove any italics in lyrics
     lyrics = lyrics.replace('<br>', '\n')                                                       # Remove <br> tags and reformat them into \n line breaks
@@ -316,3 +380,11 @@ def Musixmatch_get_lyrics(artist, title):
     return False
 
   return False
+
+def musixmatch_search_and_scrape_url(artist, title):
+  url = musixmatch_search_for_url(artist, title)
+  if url == False:
+    return url
+
+  lyrics = musixmatch_scrape_url(url, title)
+  return lyrics

@@ -2,6 +2,9 @@ import configparser
 
 current_version = 1
 
+SUPPORTED_SOURCES = ('AZLyrics', 'Genius', 'LyricsFreak', \
+                     'LyricWiki', 'Metrolyrics', 'Musixmatch')
+
 class Settings:
   source = 'genius'
   approximate = False

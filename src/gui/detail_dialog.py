@@ -1,64 +1,65 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from modules.settings import Settings
-
-SUPPORTED_SOURCES = (
-  'AZLyrics', 'Genius', 'LyricsFreak', \
-  'LyricWiki', 'Metrolyrics', 'Musixmatch'
-)
+from modules import settings
 
 class QLyricsDialog (QtWidgets.QDialog):
-  def __init__(self, artist, title, lyrics, url, filepath, parent=None):
+  # smallFont = QtGui.QFont('San Francisco', 12)
+
+  def __init__(self, parent, artist, title, lyrics, url, filepath):
     super().__init__(parent)
+
+    # Set parent object
+    self.parent = parent
+    self.parent.resetColours()
+    self.parent.setBackgroundColor(QtGui.QColor(170, 211, 255))
 
     # Style lyrics dialog
     # self.setFixedSize(QtCore.QSize(300, 700))
     self.setModal(False)
     self.setWindowTitle('{artist} - {title}'.format(artist=artist, title=title))
 
-    self._settings = Settings()
+    self._settings = settings.Settings()
 
     # Add filepath
     self._filepath = filepath
 
     # Add lyrics label and scroll area
-    self._lyricsQLabel = QtWidgets.QLabel()
+    self._lyricsQLabel = QtWidgets.QTextEdit()
     self._lyricsQLabel.setText(lyrics)
-    self._lyricsQLabel.setStyleSheet('background-color:white;');
+    # self._lyricsQLabel.setStyleSheet('background-color:white;');
     self._lyricsQLabel.setAlignment(QtCore.Qt.AlignTop)
     self._lyricsQLabel.setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
     self._lyricsQLabel.setContentsMargins(10, 10, 0, 10)
 
-    self._lyricsScrollArea = QtWidgets.QScrollArea()
-    self._lyricsScrollArea.setWidget(self._lyricsQLabel)
-    self._lyricsScrollArea.setWidgetResizable(True)
-    self._lyricsScrollArea.setMinimumHeight(400)
-    self._lyricsScrollArea.setStyleSheet('background:none;');
+    # self._lyricsScrollArea = QtWidgets.QScrollArea()
+    # self._lyricsScrollArea.setWidget(self._lyricsQLabel)
+    # self._lyricsScrollArea.setWidgetResizable(True)
+    # self._lyricsScrollArea.setMinimumHeight(400)
+    # self._lyricsScrollArea.setStyleSheet('background:none;');
 
     # Add buttons at bottom of screen
     self._lyricsCopyButton = QtWidgets.QPushButton('Copy lyrics')
+    self._lyricsCopyButton.setMaximumWidth(125)
     self._lyricsCopyButton.clicked.connect(lambda: self.copyLyrics())
     self._lyricsSaveButton = QtWidgets.QPushButton('Save lyrics')
+    self._lyricsSaveButton.setMaximumWidth(125)
     self._lyricsHorizontalSpacer = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+    self._lyricsSaveButton.clicked.connect(lambda: self.saveLyrics())
     self._lyricsClearButton = QtWidgets.QPushButton('Remove lyrics')
-
-    self._lyricsButtonContainerHBoxLayout = QtWidgets.QHBoxLayout()
-    self._lyricsButtonContainerHBoxLayout.addWidget(self._lyricsCopyButton)
-    self._lyricsButtonContainerHBoxLayout.addWidget(self._lyricsSaveButton)
-    self._lyricsButtonContainerHBoxLayout.addItem(self._lyricsHorizontalSpacer)
-    self._lyricsButtonContainerHBoxLayout.addWidget(self._lyricsClearButton)
-
-    self._lyricsButtonContainer = QtWidgets.QWidget()
-    self._lyricsButtonContainer.setLayout(self._lyricsButtonContainerHBoxLayout)
+    self._lyricsClearButton.setMaximumWidth(125)
+    self._lyricsClearButton.clicked.connect(lambda: self.removeLyrics())
 
     # Layout containing both scroll area and buttons
-    self._lyricsVBoxLayout = QtWidgets.QVBoxLayout()
-    self._lyricsVBoxLayout.addWidget(self._lyricsScrollArea)
-    self._lyricsVBoxLayout.addWidget(self._lyricsButtonContainer)
-    self._lyricsVBoxLayout.setContentsMargins(10, 10, 10, 10)
-    self._lyricsVBoxLayout.setSpacing(5)
+    self._lyricsGridLayout = QtWidgets.QGridLayout()
+    self._lyricsGridLayout.addWidget(self._lyricsQLabel, 0, 0, 1, -1)
+    self._lyricsGridLayout.addWidget(self._lyricsCopyButton, 1, 0, 1, 1)
+    self._lyricsGridLayout.addWidget(self._lyricsSaveButton, 1, 1, 1, 1)
+    self._lyricsGridLayout.addItem(self._lyricsHorizontalSpacer, 1, 2, 1, -1)
+    self._lyricsGridLayout.addWidget(self._lyricsClearButton, 1, 3, 1, 1)
+    self._lyricsGridLayout.setContentsMargins(10, 10, 10, 10)
+    self._lyricsGridLayout.setSpacing(10)
 
     self._lyricsWidget = QtWidgets.QWidget()
-    self._lyricsWidget.setLayout(self._lyricsVBoxLayout)
+    self._lyricsWidget.setLayout(self._lyricsGridLayout)
 
     # Add metadata editing tab
     # Lyrics URL sections
@@ -68,69 +69,50 @@ class QLyricsDialog (QtWidgets.QDialog):
     self._urlLineEdit.setText(url)
     self._urlLineEdit.setAttribute(QtCore.Qt.WA_MacShowFocusRect, False)
     self._urlLineEdit.setCursorPosition(0)
+    self._urlLineEdit.textEdited.connect(self.disableMetadataEditing)
+
+    self._urlExplanationLabel = QtWidgets.QLabel('If you input a valid link, Lyric Grabber can get lyrics from that page when you click the "Grab lyrics" button.')
+    self._urlExplanationLabel.setWordWrap(True)
 
     self._viewUrlButton = QtWidgets.QPushButton('View online')
     self._viewUrlButton.clicked.connect(lambda: self.openUrl())
     self._viewUrlButton.setFocusPolicy(QtCore.Qt.NoFocus)
-    self._viewUrlButton.setMaximumWidth(100)
-    self._copyUrlButton = QtWidgets.QPushButton('Copy URL')
+    self._viewUrlButton.setMaximumWidth(150)
+    self._copyUrlButton = QtWidgets.QPushButton(QtGui.QIcon('./assets/copy.png'), 'Copy URL')
     self._copyUrlButton.clicked.connect(lambda: self.copyUrl())
     self._copyUrlButton.setFocusPolicy(QtCore.Qt.NoFocus)
-    self._copyUrlButton.setMaximumWidth(100)
 
-    self._urlWidgetLayout = QtWidgets.QGridLayout()
-    self._urlWidgetLayout.addWidget(self._urlLabel, 0, 0, 1, -1)
-    self._urlWidgetLayout.addWidget(self._urlLineEdit, 1, 0, 1, -1)
-    self._urlWidgetLayout.addWidget(self._viewUrlButton, 2, 1)
-    self._urlWidgetLayout.addWidget(self._copyUrlButton, 2, 2)
-
-    self._urlWidget = QtWidgets.QWidget()
-    self._urlWidget.setLayout(self._urlWidgetLayout)
-    # For testing purposes
-    # self._urlWidget.setStyleSheet('''
-    #     background: rgb(255, 0, 0);
-    # ''')
+    # Separator Line
+    self._separatorLineFrame = QtWidgets.QFrame();
+    self._separatorLineFrame.setFrameShape(QtWidgets.QFrame.HLine)
+    self._separatorLineFrame.setFrameShadow(QtWidgets.QFrame.Raised)
 
     # Actual metadata
     self._titleLabel = QtWidgets.QLabel('Title:')
     self._titleLineEdit = QtWidgets.QLineEdit()
     self._titleLineEdit.setText(title);
     self._titleLineEdit.setAttribute(QtCore.Qt.WA_MacShowFocusRect, False)
-
-    self._titleWidgetLayout = QtWidgets.QVBoxLayout()
-    self._titleWidgetLayout.addWidget(self._titleLabel)
-    self._titleWidgetLayout.addWidget(self._titleLineEdit)
-
-    self._titleWidget = QtWidgets.QWidget()
-    self._titleWidget.setLayout(self._titleWidgetLayout)
+    self._titleLineEdit.textEdited.connect(self.disableUrlEditing)
 
     self._artistLabel = QtWidgets.QLabel('Artist:')
     self._artistLineEdit = QtWidgets.QLineEdit()
     self._artistLineEdit.setText(artist);
     self._artistLineEdit.setAttribute(QtCore.Qt.WA_MacShowFocusRect, False)
-
-    self._artistWidgetLayout = QtWidgets.QVBoxLayout()
-    self._artistWidgetLayout.addWidget(self._artistLabel)
-    self._artistWidgetLayout.addWidget(self._artistLineEdit)
-
-    self._artistWidget = QtWidgets.QWidget()
-    self._artistWidget.setLayout(self._artistWidgetLayout)
+    self._artistLineEdit.textEdited.connect(self.disableUrlEditing)
 
     # Source
     self._sourceLabel = QtWidgets.QLabel('Source:')
     self._sourceLabelComboBox = QtWidgets.QComboBox()
     self._sourceLabelComboBox.setMaximumWidth(150)
-    for source in SUPPORTED_SOURCES:
+    for source in settings.SUPPORTED_SOURCES:
       self._sourceLabelComboBox.addItem(source)
     index = self._sourceLabelComboBox.findText(self._settings.get_source(), QtCore.Qt.MatchFixedString)
     if index >= 0:
       self._sourceLabelComboBox.setCurrentIndex(index)
-    self._sourceWidgetLayout = QtWidgets.QHBoxLayout()
-    self._sourceWidgetLayout.addWidget(self._sourceLabel)
-    self._sourceWidgetLayout.addWidget(self._sourceLabelComboBox)
 
-    self._sourceWidget = QtWidgets.QWidget()
-    self._sourceWidget.setLayout(self._sourceWidgetLayout)
+    # Explanation
+    self._metadataExplanationLabel = QtWidgets.QLabel('You can try changing the title or artist that Lyric Grabber will look for in these text boxes. When you click the "Grab lyrics" button, Lyric Grabber will use this new information.')
+    self._metadataExplanationLabel.setWordWrap(True)
 
     # Spacer
     self._verticalSpacer = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
@@ -138,25 +120,30 @@ class QLyricsDialog (QtWidgets.QDialog):
     # Try again button
     self._fetchAgainSpacer = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
     self._fetchAgainButton = QtWidgets.QPushButton('Grab lyrics again')
+    self._fetchAgainButton.clicked.connect(lambda: self.grabLyrics())
     self._fetchAgainButton.setAutoDefault(True)
-
-    self._fetchAgainWidgetLayout = QtWidgets.QHBoxLayout()
-    self._fetchAgainWidgetLayout.addItem(self._fetchAgainSpacer)
-    self._fetchAgainWidgetLayout.addWidget(self._fetchAgainButton)
-
-    self._fetchAgainWidget = QtWidgets.QWidget()
-    self._fetchAgainWidget.setLayout(self._fetchAgainWidgetLayout)
+    self._fetchAgainButton.setEnabled(False)
 
     # Add to layout
-    self._metadataLayout = QtWidgets.QVBoxLayout()
-    self._metadataLayout.addWidget(self._urlWidget)
-    self._metadataLayout.addWidget(self._titleWidget)
-    self._metadataLayout.addWidget(self._artistWidget)
-    self._metadataLayout.addWidget(self._sourceWidget)
-    self._metadataLayout.addItem(self._verticalSpacer)
-    self._metadataLayout.addWidget(self._fetchAgainWidget)
-    self._metadataLayout.setSpacing(0)
-    self._metadataLayout.setContentsMargins(10, 10, 10, 10)
+    self._metadataLayout = QtWidgets.QGridLayout()
+    self._metadataLayout.addWidget(self._urlLabel, 0, 0, 1, -1)
+    self._metadataLayout.addWidget(self._urlLineEdit, 1, 0, 1, -1)
+    self._metadataLayout.addWidget(self._urlExplanationLabel, 2, 0, 1, -1)
+    self._metadataLayout.addWidget(self._viewUrlButton, 3, 1, 1, 1)
+    self._metadataLayout.addWidget(self._copyUrlButton, 3, 2, 1, -1)
+    self._metadataLayout.addWidget(self._separatorLineFrame, 4, 0, 1, -1)
+    self._metadataLayout.addWidget(self._titleLabel, 5, 0, 1, -1)
+    self._metadataLayout.addWidget(self._titleLineEdit, 6, 0, 1, -1)
+    self._metadataLayout.addWidget(self._artistLabel, 7, 0, 1, -1)
+    self._metadataLayout.addWidget(self._artistLineEdit, 8, 0, 1, -1)
+    self._metadataLayout.addWidget(self._sourceLabel, 9, 0, 1, -1)
+    self._metadataLayout.addWidget(self._sourceLabelComboBox, 9, 2, 1, -1)
+    self._metadataLayout.addWidget(self._metadataExplanationLabel, 10, 0, 1, -1)
+    self._metadataLayout.addItem(self._verticalSpacer, 11, 0, 1, -1)
+    self._metadataLayout.addItem(self._fetchAgainSpacer, 12, 0, 1, -1)
+    self._metadataLayout.addWidget(self._fetchAgainButton, 12, 2, 1, -1)
+    # self._metadataLayout.setSpacing(0)
+    # self._metadataLayout.setContentsMargins(10, 10, 10, 10)
 
     self._metadataWidget = QtWidgets.QWidget()
     self._metadataWidget.setLayout(self._metadataLayout)
@@ -187,12 +174,20 @@ class QLyricsDialog (QtWidgets.QDialog):
 
   def updateLyrics(self, lyrics):
     self._lyricsQLabel.setText(lyrics)
-    self._lyricsQLabel.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+    self._lyricsQLabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
   def copyLyrics(self):
     clipboard = QtWidgets.QApplication.clipboard()
-    clipboard.clear(mode=clipboard.Clipboard )
+    clipboard.clear(mode=clipboard.Clipboard)
     clipboard.setText(self._lyricsQLabel.text(), mode=QtGui.QClipboard.Clipboard)
+
+  def saveLyrics(self):
+    lyrics = self._lyricsQLabel.toPlainText()
+    self.parent.saveLyrics(lyrics)
+
+  def removeLyrics(self):
+    self._lyricsQLabel.setText('')
+    self.parent.saveLyrics(' ')
 
   def updateUrl(self, url):
     self._urlLineEdit.setText(url)
@@ -202,8 +197,34 @@ class QLyricsDialog (QtWidgets.QDialog):
 
   def copyUrl(self):
     clipboard = QtWidgets.QApplication.clipboard()
-    clipboard.clear(mode=clipboard.Clipboard )
+    clipboard.clear(mode=clipboard.Clipboard)
     clipboard.setText(self._urlLineEdit.text(), mode=QtGui.QClipboard.Clipboard)
 
-  def getFilePath(self):
+  def grabLyrics(self):
+    if self._urlLineEdit.isEnabled(): # This means we should fetch based on URL
+      title = self._titleLineEdit.text()
+      url = self._urlLineEdit.text()
+      print(title, url)
+      self.parent.getLyrics(title=title, url=url)
+    else:
+      artist = self._artistLineEdit.text()
+      title = self._titleLineEdit.text()
+      source = self._sourceLabelComboBox.currentText()
+      self.parent.getLyrics(artist=artist, title=title, source=source)
+
+  def disableUrlEditing(self):
+    self._urlLineEdit.setEnabled(False)
+    self._fetchAgainButton.setEnabled(True)
+
+  def disableMetadataEditing(self):
+    self._artistLineEdit.setEnabled(False)
+    self._titleLineEdit.setEnabled(False)
+    self._sourceLabelComboBox.setEnabled(False)
+    self._fetchAgainButton.setEnabled(True)
+
+  def getFilepath(self):
     return self._filepath
+
+  def closeEvent(self, event):
+    self.parent.resetColours()
+    event.accept()

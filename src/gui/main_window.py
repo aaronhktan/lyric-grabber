@@ -2,7 +2,7 @@ from modules.logger import logger
 from gui import detail_dialog
 from modules import lyric_grabber
 from gui import settings_dialog
-from modules.settings import Settings
+from modules import settings
 
 import base64
 # from colorthief import ColorThief
@@ -25,7 +25,7 @@ class LyricGrabberThread (QtCore.QThread):
     super().__init__()
     self._filepaths = filepaths
 
-    self._settings = Settings()
+    self._settings = settings.Settings()
 
     self._metadataExecutor = futures.ThreadPoolExecutor(max_workers=20)
     if self._settings.get_source() == 'azlyrics' or self._settings.get_source() == 'musixmatch':
@@ -59,7 +59,7 @@ class LyricGrabberThread (QtCore.QThread):
           # self._badSongs.append(result.result()[2])
           # print(self.badSongs)
       except Exception as e:
-        logger.log(logger.LOG_LEVEL_ERROR, ' Exception ocurred while adding file {filepath}: {error}'.format(filepath=result.result().filepath, error=str(e)))
+        logger.log(logger.LOG_LEVEL_ERROR, ' Exception occurred while adding file {filepath}: {error}'.format(filepath=result.result().filepath, error=str(e)))
 
     for song in self._songs:
       self.setProgressIcon.emit(result.result().filepath, states.IN_PROGRESS)
@@ -71,16 +71,51 @@ class LyricGrabberThread (QtCore.QThread):
           if result.result().lyrics:
             self.setProgressIcon.emit(result.result().filepath, states.COMPLETE)
             self.setLyrics.emit(result.result().filepath, result.result().lyrics, result.result().url)
-            self._fileWritingResults.append(self._fileWritingExecutor.submit(lyric_grabber.write_file, result.result().artist, result.result().title, self._settings.get_tag(), result.result().lyrics, result.result().filepath))
+            self._fileWritingResults.append(self._fileWritingExecutor.submit(lyric_grabber.write_file, result.result().artist, result.result().title, self._settings.get_info(), result.result().lyrics, result.result().filepath))
         else:
           self.setProgressIcon.emit(result.result().filepath, states.ERROR)
       except Exception as e:
         self.setProgressIcon.emit(result.result().filepath, states.ERROR)
-        logger.log(logger.LOG_LEVEL_ERROR, ' Exception ocurred while getting lyrics for file {filepath}: {error}'.format(filepath=result.result().filepath, error=str(e)))
+        logger.log(logger.LOG_LEVEL_ERROR, ' Exception occurred while getting lyrics for file {filepath}: {error}'.format(filepath=result.result().filepath, error=str(e)))
 
     for result in futures.as_completed(self._fileWritingResults):
       self.setProgressIcon.emit(result.result().filepath, states.COMPLETE)
       print(result.result().message)
+
+class SingleLyricGrabberThread (QtCore.QThread):
+  setProgressIcon = QtCore.pyqtSignal([int])
+  setLyrics = QtCore.pyqtSignal(['QString'])
+
+  def __init__(self, parent, filepath, artist=None, title=None, url=None, source=None):
+    super().__init__()
+
+    self._filepath = filepath
+    self._artist = artist
+    self._title = title
+    self._url = url
+    self._source = source
+
+    self._settings = settings.Settings()
+    self.setProgressIcon.emit(states.NOT_STARTED)
+
+  def run(self):
+    try:
+      self.setProgressIcon.emit(states.IN_PROGRESS)
+      if self._url is not None: # We have a URL, so scrape the URL
+        result = lyric_grabber.scrape_url(self._artist, self._title, self._url, self._filepath)
+      else: # No URL, so fetch based on artist and title
+        result = lyric_grabber.get_lyrics(self._settings.get_approximate(), not self._settings.get_remove_brackets(), self._artist, self._title, self._source.lower(), self._filepath)
+
+      if result.succeeded:
+        self.setLyrics.emit(result.lyrics)
+        result = lyric_grabber.write_file(self._artist, self._title, self._settings.get_info(), result.lyrics, self._filepath)
+        print(result.message)
+        self.setProgressIcon.emit(states.COMPLETE)
+      else:
+        self.setProgressIcon.emit(states.ERROR)
+      # print(result.lyrics)
+    except Exception as e:
+      logger.log(logger.LOG_LEVEL_ERROR, ' Exception occurred while getting lyrics for file {filepath}: {error}'.format(self_filepath, error=str(e)))
 
 class QWidgetItem (QtWidgets.QWidget):
   # self.largeFont = QtGui.QFont('Gill Sans', 18, QtGui.QFont.Bold)
@@ -89,6 +124,9 @@ class QWidgetItem (QtWidgets.QWidget):
 
   def __init__(self, parent):
     super().__init__(parent)
+
+    # Set parent
+    self.parent = parent
 
     # Add progress label
     self._progressLabel = QtWidgets.QLabel()
@@ -121,12 +159,12 @@ class QWidgetItem (QtWidgets.QWidget):
     self._textTitleLabel.setFont(self.largeFont)
 
     # Add buttons
-    self._lyricsButton = QtWidgets.QPushButton('View Lyrics')
+    self._lyricsButton = QtWidgets.QPushButton(QtGui.QIcon('./assets/lyrics.png'), 'View Lyrics')
     self._lyricsButton.setMaximumWidth(125)
     self._lyricsButton.clicked.connect(lambda: self.openDetailDialog())
     self._openButton = QtWidgets.QPushButton('Open in Finder')
     self._openButton.setMaximumWidth(125)
-    self._openButton.clicked.connect(lambda: self.openFilePath())
+    self._openButton.clicked.connect(lambda: self.openfilepath())
     # self._removeButton = QtWidgets.QPushButton('Remove')
     # self._removeButton.setMaximumWidth(125)
     # self._removeButton.clicked.connect(lambda: self.removeFile())
@@ -153,8 +191,8 @@ class QWidgetItem (QtWidgets.QWidget):
     self._url = ''
 
   def mousePressEvent(self, QMouseEvent):
-      if QMouseEvent.button() == QtCore.Qt.LeftButton:
-        self.mouseReleaseEvent = self.openDetailDialog()
+    if QMouseEvent.button() == QtCore.Qt.LeftButton:
+      self.mouseReleaseEvent = self.openDetailDialog()
 
   def setBackgroundColor(self, backgroundColor):
     self._pal = QtGui.QPalette()
@@ -162,10 +200,21 @@ class QWidgetItem (QtWidgets.QWidget):
     self.setAutoFillBackground(True)
     self.setPalette(self._pal)
 
-  def setProgressIcon(self, imagePath, deviceRatio):
+  def setProgressIcon(self, state, deviceRatio):
+    if state == states.IN_PROGRESS:
+      imagePath = './assets/in_progress.png'
+    elif state == states.ERROR:
+      imagePath = './assets/error.png'
+    elif state == states.COMPLETE:
+      imagePath = './assets/complete.png'
+    else:
+      imagePath = './assets/not_started.png'
     self._progressIcon = QtGui.QPixmap(imagePath)
     self._progressIcon.setDevicePixelRatio(deviceRatio)
     self._progressLabel.setPixmap(self._progressIcon)
+
+  def setProgressIconForSingle(self, state):
+    self.setProgressIcon(state, self.devicePixelRatio())
 
   def setAlbumArt(self, imageData, deviceRatio):
     try:
@@ -195,39 +244,59 @@ class QWidgetItem (QtWidgets.QWidget):
     if QWidgetItem.dialog is not None:
       QWidgetItem.dialog.hide()
     # self.window().setEnabled(False)
-    QWidgetItem.dialog = detail_dialog.QLyricsDialog(self._artist, self._title, self._lyrics, self._url, self._filePath, self)
+    QWidgetItem.dialog = detail_dialog.QLyricsDialog(self, self._artist, self._title, self._lyrics, self._url, self._filepath)
     QWidgetItem.dialog.show()
     # self.window().setEnabled(True)
 
-  def setFilePath(self, filePath):
-    self._filePath = filePath
+  def setfilepath(self, filepath):
+    self._filepath = filepath
 
-  def getFilePath(self):
-    return self._filePath
+  def getFilepath(self):
+    return self._filepath
 
-  def openFilePath(self):
-    QtGui.QDesktopServices.openUrl(QtCore.QUrl('file://' + self._filePath))
+  def openfilepath(self):
+    QtGui.QDesktopServices.openUrl(QtCore.QUrl('file://' + self._filepath))
+
+  def getLyrics(self, artist=None, title=None, url=None, source=None):
+    if artist is None:
+      artist = self._artist
+    self._fetch_thread = SingleLyricGrabberThread(self, self._filepath, artist, title, url, source)
+    self._fetch_thread.start()
+
+    self._fetch_thread.setProgressIcon.connect(self.setProgressIconForSingle)
+    self._fetch_thread.setLyrics.connect(self.setLyrics)
 
   def setLyrics(self, lyrics):
     self._lyrics = lyrics
     try:
       if QWidgetItem.dialog is not None:
-        if QWidgetItem.dialog.getFilePath() == self._filePath:
+        if QWidgetItem.dialog.getFilepath() == self._filepath:
           QWidgetItem.dialog.updateLyrics(lyrics)
     except Exception as e:
       print(e)
+
+  def saveLyrics(self, lyrics):
+    try:
+      self._lyrics = lyrics
+      self._settings = settings.Settings()
+      lyric_grabber.write_file(self._artist, self._title, self._settings.get_info(), lyrics, self._filepath)
+    except Exception as e:
+      print(str(e))
 
   def setUrl(self, url):
     self._url = url
     try:
       if QWidgetItem.dialog is not None:
-        if QWidgetItem.dialog.getFilePath() == self._filePath:
+        if QWidgetItem.dialog.getFilepath() == self._filepath:
           QWidgetItem.dialog.updateUrl(url)
     except Exception as e:
       print(e)
 
+  def resetColours(self):
+    self.parent.resetListColours()
+
   # def removeFile (self):
-  #   self.setParent(None)f
+  #   self.setParent(None)
 
 class MainWindow (QtWidgets.QMainWindow):
   def __init__(self):
@@ -327,11 +396,11 @@ class MainWindow (QtWidgets.QMainWindow):
     # Create WidgetItem for each item
     listWidgetItem = QWidgetItem(self)
     listWidgetItem.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-    listWidgetItem.setProgressIcon('./assets/not_started.png', self.devicePixelRatio())
+    listWidgetItem.setProgressIcon(states.NOT_STARTED, self.devicePixelRatio())
     listWidgetItem.setAlbumArt(art, self.devicePixelRatio())
     listWidgetItem.setArtistText(artist)
     listWidgetItem.setTitleText(title)
-    listWidgetItem.setFilePath(filepath)
+    listWidgetItem.setfilepath(filepath)
     if self._mainScrollAreaWidgetLayout.count() % 2:
       listWidgetItem.setBackgroundColor(QtGui.QColor(245, 245, 245))
     else:
@@ -342,20 +411,22 @@ class MainWindow (QtWidgets.QMainWindow):
   def setProgressIcon(self, filepath, state):
     for i in range(self._mainScrollAreaWidgetLayout.count()):
       widgetItem = self._mainScrollAreaWidgetLayout.itemAt(i).widget()
-      if widgetItem.getFilePath() == filepath:
-        if state == states.IN_PROGRESS:
-          widgetItem.setProgressIcon('./assets/in_progress.png', self.devicePixelRatio())
-        elif state == states.ERROR:
-          widgetItem.setProgressIcon('./assets/error.png', self.devicePixelRatio())
-        elif state == states.COMPLETE:
-          widgetItem.setProgressIcon('./assets/complete.png', self.devicePixelRatio())
+      if widgetItem.getFilepath() == filepath:
+        widgetItem.setProgressIcon(state, self.devicePixelRatio())
 
   def setLyrics(self, filepath, lyrics, url):
     for i in range(self._mainScrollAreaWidgetLayout.count()):
       widgetItem = self._mainScrollAreaWidgetLayout.itemAt(i).widget()
-      if widgetItem.getFilePath() == filepath:
+      if widgetItem.getFilepath() == filepath:
         widgetItem.setLyrics(lyrics)
         widgetItem.setUrl(url)
+
+  def resetListColours(self):
+    for i in range(self._mainScrollAreaWidgetLayout.count()):
+      if i % 2:
+        self._mainScrollAreaWidgetLayout.itemAt(i).widget().setBackgroundColor(QtGui.QColor(245, 245, 245))
+      else:
+        self._mainScrollAreaWidgetLayout.itemAt(i).widget().setBackgroundColor(QtCore.Qt.white)
 
   def removeAllFilesFromList(self):
     for i in reversed(range(self._mainScrollAreaWidgetLayout.count())): 

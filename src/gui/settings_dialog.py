@@ -1,22 +1,19 @@
-from modules.settings import Settings
+from modules import settings
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
-SUPPORTED_SOURCES = ('AZLyrics', 'Genius', 'LyricsFreak', \
-                     'LyricWiki', 'Metrolyrics', 'Musixmatch')
 
 class QSettingsDialog (QtWidgets.QDialog):
   def __init__(self, parent=None):
     super().__init__(parent)
 
     # Get settings from settings.ini file
-    self._settings = Settings()
+    self._settings = settings.Settings()
 
     # Add settings controls
     self._sourceLabel = QtWidgets.QLabel('Lyrics Source:')
     self._sourceComboBox = QtWidgets.QComboBox()
     self._sourceComboBox.setMaximumWidth(150)
-    for source in SUPPORTED_SOURCES:
+    for source in settings.SUPPORTED_SOURCES:
       self._sourceComboBox.addItem(source)
     index = self._sourceComboBox.findText(self._settings.get_source(), QtCore.Qt.MatchFixedString)
     self._sourceComboBox.currentIndexChanged.connect(lambda: self._settings.set_source(self._sourceComboBox.currentText()))
