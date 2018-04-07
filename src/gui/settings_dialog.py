@@ -2,6 +2,10 @@ from modules import settings
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+# Style note: Functions and variable names are not PEP 8 compliant.
+# Blame PyQt for that!
+# Keeping consistency with PyQt camelCase is prioritised.
+
 class QSettingsDialog (QtWidgets.QDialog):
   def __init__(self, parent=None):
     super().__init__(parent)

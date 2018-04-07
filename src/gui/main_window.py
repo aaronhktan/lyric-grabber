@@ -10,6 +10,10 @@ from concurrent import futures
 import os
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+# Style note: Functions and variable names are not PEP 8 compliant.
+# Blame PyQt for that!
+# Keeping consistency with PyQt camelCase is prioritised.
+
 class states:
   NOT_STARTED = 0
   ERROR = 1
@@ -55,10 +59,10 @@ class LyricGrabberThread (QtCore.QThread):
             self.addFileToList.emit(result.result().artist, result.result().title, result.result().art, result.result().filepath)
           self._songs.append(result.result())
         else:
+          self.setProgressIcon.emit(result.result().filepath, states.ERROR)
           logger.log(logger.LOG_LEVEL_INFO, 'No metadata found: ' + result.result().message)
-          # self._badSongs.append(result.result()[2])
-          # print(self.badSongs)
       except Exception as e:
+        self.setProgressIcon.emit(result.result.filepath, states.ERROR)
         logger.log(logger.LOG_LEVEL_ERROR, ' Exception occurred while adding file {filepath}: {error}'.format(filepath=result.result().filepath, error=str(e)))
 
     for song in self._songs:
@@ -367,6 +371,7 @@ class MainWindow (QtWidgets.QMainWindow):
     self._fileDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
 
     self._filepaths = []
+    self._invalid_filepaths = []
 
     if (fileMode == QtWidgets.QFileDialog.Directory):
       directory = self._fileDialog.getExistingDirectory()
@@ -375,6 +380,8 @@ class MainWindow (QtWidgets.QMainWindow):
         for file in files:
           if file.endswith(lyric_grabber.SUPPORTED_FILETYPES):
             self._filepaths.append(os.path.join(root, file))
+          else:
+            self._invalid_filepaths.append(os.path.join(root, file))
     else:
       files = self._fileDialog.getOpenFileNames()
       # print('Files selected are ' + str(files))
@@ -382,9 +389,18 @@ class MainWindow (QtWidgets.QMainWindow):
         for file in files[0]:
           if file.endswith(lyric_grabber.SUPPORTED_FILETYPES):
             self._filepaths.append(file)
+          else:
+            self._invalid_filepaths.append(file)
       except:
         pass
 
+    # Show an error message for each invalid filepath found
+    if self._invalid_filepaths:
+      message = '<b>Some files couldn\'t be added!</b><br><br>▸ ' + '<br>▸ '.join(self._invalid_filepaths)
+      messageDialog = QtWidgets.QErrorMessage(self)
+      messageDialog.showMessage(message)
+
+    # Start another thread for network requests to not block the GUI thread
     self._fetch_thread = LyricGrabberThread(self, self._filepaths)
     self._fetch_thread.start()
 

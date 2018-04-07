@@ -1,6 +1,10 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from modules import settings
 
+# Style note: Functions and variable names are not PEP 8 compliant.
+# Blame PyQt for that!
+# Keeping consistency with PyQt camelCase is prioritised.
+
 class QLyricsDialog (QtWidgets.QDialog):
   # smallFont = QtGui.QFont('San Francisco', 12)
 

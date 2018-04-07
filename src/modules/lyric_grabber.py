@@ -139,8 +139,6 @@ def get_lyrics(approximate, keep_brackets, artist, title, source, song_filepath)
 def scrape_url(artist, title, url, song_filepath):
   try:
     if AZLYRICS_URL_BASE in url:
-      time_to_sleep = random.randrange(10, 30)
-      time.sleep(time_to_sleep)
       result = fetcher.azlyrics_scrape_url(url, title)
     elif GENIUS_URL_BASE in url:
       result = fetcher.genius_scrape_url(url, title)
@@ -151,8 +149,6 @@ def scrape_url(artist, title, url, song_filepath):
     elif METROLYRICS_URL_BASE in url:
       result = fetcher.metrolyrics_scrape_url(url, title)
     elif MUSIXMATCH_URL_BASE in url:
-      time_to_sleep = random.randrange(10, 30)
-      time.sleep(time_to_sleep)
       result = fetcher.musixmatch_scrape_url(url, title)
     else:
       message = logger.create_message(logger.LOG_LEVEL_ERROR, 'Source not valid! (make sure you have a URL from \'AZLyrics\', \'Genius\', \'Lyricsfreak\', \'Lyricwiki\', \'Metrolyrics\', or \'Musixmatch\')')
