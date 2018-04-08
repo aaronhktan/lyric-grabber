@@ -239,7 +239,7 @@ class QWidgetItem (QtWidgets.QWidget):
 
   def mousePressEvent(self, QMouseEvent):
     if QMouseEvent.button() == QtCore.Qt.LeftButton:
-
+      self.parent.setSelectedWidget(self._filepath)
       self.mouseReleaseEvent = self.openDetailDialog()
 
   def setBackgroundColor(self, backgroundColor):
@@ -302,6 +302,7 @@ class QWidgetItem (QtWidgets.QWidget):
                                                      url=self._url,
                                                      filepath=self._filepath)
     QWidgetItem.dialog.show()
+    self.activateWindow()
     # self.window().setEnabled(True)
 
   def setfilepath(self, filepath):
@@ -366,6 +367,8 @@ class QWidgetItem (QtWidgets.QWidget):
   #   self.setParent(None)
 
 class MainWindow (QtWidgets.QMainWindow):
+  selectedWidgetIndex = None
+
   def __init__(self):
     super(MainWindow, self).__init__()
 
@@ -427,10 +430,30 @@ class MainWindow (QtWidgets.QMainWindow):
     self._mainScrollArea.setWidget(self._mainScrollAreaWidget)
     self.setCentralWidget(self._mainScrollArea)
 
-  # def keyPressEvent(self, event):
-  #   key = event.key()
-  #   if key == QtCore.Qt.Key_O:
-  #       print('O')
+  def keyPressEvent(self, event):
+    key = event.key()
+    if key == QtCore.Qt.Key_S:
+      if MainWindow.selectedWidgetIndex is not None:
+        newIndex = MainWindow.selectedWidgetIndex + 1
+        if self._mainScrollAreaWidgetLayout.itemAt(newIndex) is not None:
+          MainWindow.selectedWidgetIndex += 1
+          self.resetListColours()
+          self._mainScrollArea.ensureWidgetVisible(self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget())
+          self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget().openDetailDialog()
+    if key == QtCore.Qt.Key_W:
+      if MainWindow.selectedWidgetIndex is not None:
+        newIndex = MainWindow.selectedWidgetIndex - 1
+        if self._mainScrollAreaWidgetLayout.itemAt(newIndex) is not None:
+          MainWindow.selectedWidgetIndex -= 1
+          self.resetListColours()
+          self._mainScrollArea.ensureWidgetVisible(self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget())
+          self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget().openDetailDialog()
+
+  def setSelectedWidget(self, filepath):
+    for i in range(self._mainScrollAreaWidgetLayout.count()):
+      if self._mainScrollAreaWidgetLayout.itemAt(i).widget().getFilepath() == filepath:
+        MainWindow.selectedWidgetIndex = i
+        break
 
   def openFileDialog(self, fileMode):
     # fileMode parameter is QtWidgets.QFileDialog.Directory or QtWidgets.QFileDialog.ExistingFiles
@@ -525,6 +548,8 @@ class MainWindow (QtWidgets.QMainWindow):
         self._mainScrollAreaWidgetLayout.itemAt(i).widget().setBackgroundColor(QtCore.Qt.white)
 
   def removeAllFilesFromList(self):
+    if QWidgetItem.dialog:
+      QWidgetItem.dialog.close()
     for i in reversed(range(self._mainScrollAreaWidgetLayout.count())):
       self._mainScrollAreaWidgetLayout.itemAt(i).widget().setParent(None)
 
