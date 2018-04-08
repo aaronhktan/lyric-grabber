@@ -7,6 +7,8 @@ from modules import settings
 
 class QLyricsDialog (QtWidgets.QDialog):
   # smallFont = QtGui.QFont('San Francisco', 12)
+  x_coordinate = None
+  y_coordinate = None
 
   def __init__(self, parent, artist, title, lyrics, url, filepath):
     super().__init__(parent)
@@ -175,6 +177,19 @@ class QLyricsDialog (QtWidgets.QDialog):
     self._allQVBoxLayout.addWidget(self._lyricsTabWidget)
     # self._allQVBoxLayout.addWidget(self._songNavigationWidget)
     self.setLayout(self._allQVBoxLayout)
+
+    if QLyricsDialog.x_coordinate is not None and QLyricsDialog.y_coordinate is not None:
+      # print('Read as {}, {}'.format(QLyricsDialog.x_coordinate, QLyricsDialog.y_coordinate))
+      self.move(QLyricsDialog.x_coordinate, QLyricsDialog.y_coordinate - 11 * self.devicePixelRatio())
+    else:
+      self.move(parent.size().width() + self.mapToGlobal(parent.parent.pos()).x() + 25 * self.devicePixelRatio(),
+                self.mapToGlobal(parent.parent.pos()).y() - 25 * self.devicePixelRatio())
+
+  def moveEvent(self, event):
+    # print('Mapped to global as {}, {}'.format(self.mapToGlobal(event.pos()).x() / 2, self.mapToGlobal(event.pos()).y() / 2))
+    QLyricsDialog.x_coordinate = self.mapToGlobal(event.pos()).x() / self.devicePixelRatio()
+    QLyricsDialog.y_coordinate = self.mapToGlobal(event.pos()).y() / self.devicePixelRatio()
+    # print('Set as {}, {}'.format(QLyricsDialog.x_coordinate, QLyricsDialog.y_coordinate))
 
   def updateLyrics(self, lyrics):
     self._lyricsQLabel.setText(lyrics)

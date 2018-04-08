@@ -2,6 +2,11 @@ import configparser
 
 current_version = 1
 
+SUPPORTED_FILETYPES = ('.mp3', '.mp4', '.m4a', '.m4v', \
+                       '.tta', '.ape', '.wma', '.aiff', \
+                       '.flac', '.ogg', '.oga', '.opus', \
+                       '.aac', '.wav', '.wv')
+
 SUPPORTED_SOURCES = ('AZLyrics', 'Genius', 'LyricsFreak', \
                      'LyricWiki', 'Metrolyrics', 'Musixmatch')
 
@@ -10,7 +15,8 @@ class Settings:
   approximate = False
   info = False
   remove_brackets = True
-  tag = True
+  metadata = True
+  text = False
 
   def __init__ (self, parent=None):
     config = configparser.ConfigParser()
@@ -24,8 +30,10 @@ class Settings:
       self.set_info(config_settings.getboolean('info'))
     if 'remove_brackets' in config_settings:
       self.set_remove_brackets(config_settings.getboolean('remove_brackets'))
-    if 'tag' in config_settings:
-      self.set_tag(config_settings.getboolean('tag'))
+    if 'metadata' in config_settings:
+      self.set_metadata(config_settings.getboolean('metadata'))
+    if 'text' in config_settings:
+      self.set_text(config_settings.getboolean('text'))
 
   def set_source(self, source_flag):
     self.source = source_flag
@@ -55,12 +63,19 @@ class Settings:
   def get_remove_brackets(self):
     return self.remove_brackets
 
-  def set_tag(self, tag_flag):
-    self.tag = tag_flag
+  def set_metadata(self, metadata_flag):
+    self.metadata = metadata_flag
     self.save_settings()
 
-  def get_tag(self):
-    return self.tag
+  def get_metadata(self):
+    return self.metadata
+
+  def set_text(self, text_flag):
+    self.text = text_flag
+    self.save_settings()
+
+  def get_text(self):
+    return self.text
 
   def save_settings(self):
     config = configparser.ConfigParser()
@@ -68,7 +83,8 @@ class Settings:
                           'approximate': self.approximate,
                           'info': self.info,
                           'remove_brackets': self.remove_brackets,
-                          'tag': self.tag}
+                          'metadata': self.metadata,
+                          'text': self.text}
     config['ABOUT'] = {'version': 1}
     with open('./modules/settings.ini', 'w') as configfile:
       config.write(configfile)

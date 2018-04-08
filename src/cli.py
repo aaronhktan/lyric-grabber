@@ -46,15 +46,18 @@ def main():
   parser.add_argument('-i', '--info',
                       action='store_true',
                       help='add song title and artist to top of file (default: lyrics only)')
-  parser.add_argument('-r', '--recursive', 
+  parser.add_argument('-m', '--metadata',
+                      action='store_false',
+                      help='prevent from saving lyrics directly to file (default: saves them as part of file metadata)')
+  parser.add_argument('-r', '--recursive',
                       action='store_true',
                       help='scan all subdirectories for files (default: scans specified filepath only)')
   parser.add_argument('-s', '--source', metavar='source',
                       nargs='?', choices=SUPPORTED_SOURCES, default='genius',
                       help='which lyrics source to use (default: \'genius\')')
-  parser.add_argument('-t', '--tag', 
+  parser.add_argument('-t', '--text',
                       action='store_true',
-                      help='save lyrics directly to file (default: saves them as a text file with the same name)')
+                      help='save lyrics to text file (default: doesn\'t)')
   args = parser.parse_args()
 
   # print(args.approximate)
@@ -93,21 +96,33 @@ def main():
   file_writing_results = []
 
   if filepath.endswith(SUPPORTED_FILETYPES):
-    metadata_results.append(metadata_executor.submit(lyric_grabber.get_metadata, False, filepath))
+    metadata_results.append(metadata_executor.submit(lyric_grabber.get_metadata,
+                                                     get_art=False,
+                                                     song_filepath=filepath))
   elif args.recursive:
     for root, dirs, files in os.walk(filepath):
       for file in files:
         if file.endswith(SUPPORTED_FILETYPES):
-          metadata_results.append(metadata_executor.submit(lyric_grabber.get_metadata, False, os.path.join(root, file)))
+          metadata_results.append(metadata_executor.submit(lyric_grabber.get_metadata,
+                                                           get_art=False,
+                                                           song_filepath=os.path.join(root, file)))
   else:
     for file in os.listdir(filepath):
       if file.endswith(SUPPORTED_FILETYPES):
-        metadata_results.append(metadata_executor.submit(lyric_grabber.get_metadata, False, '{filepath}/{file}'.format(filepath=filepath, file=file)))
+        metadata_results.append(metadata_executor.submit(lyric_grabber.get_metadata,
+                                                         get_art=False,
+                                                         song_filepath='{filepath}/{file}'.format(filepath=filepath, file=file)))
 
   for result in futures.as_completed(metadata_results):
     try:
       if result.result().succeeded:
-        lyrics_results.append(lyrics_executor.submit(lyric_grabber.get_lyrics, args.approximate, args.brackets, result.result().artist, result.result().title, args.source, result.result().filepath))
+        lyrics_results.append(lyrics_executor.submit(lyric_grabber.get_lyrics,
+                                                     approximate=args.approximate,
+                                                     keep_brackets=args.brackets,
+                                                     artist=result.result().artist,
+                                                     title=result.result().title,
+                                                     source=args.source,
+                                                     song_filepath=result.result().filepath))
       else:
         print(result.result().message)
     except:
@@ -116,7 +131,14 @@ def main():
   for result in futures.as_completed(lyrics_results):
     try:
       if result.result().succeeded:
-        file_writing_results.append(file_writing_executor.submit(lyric_grabber.write_file, result.result().artist, result.result().title, args.info, result.result().lyrics, result.result().filepath))
+        file_writing_results.append(file_writing_executor.submit(lyric_grabber.write_file,
+                                                                 artist=result.result().artist,
+                                                                 title=result.result().title,
+                                                                 write_info=args.info,
+                                                                 write_metadata=args.metadata,
+                                                                 write_text=args.text,
+                                                                 lyrics=result.result().lyrics,
+                                                                 song_filepath=result.result().filepath))
       else:
         print(result.result().message)
     except:

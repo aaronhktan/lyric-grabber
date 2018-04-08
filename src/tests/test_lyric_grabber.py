@@ -21,13 +21,23 @@ class TestGetLyrics(unittest.TestCase):
   keep_brackets = True
 
   def test_invalid_source(self):
-    result = lyric_grabber.get_lyrics(self.approximate, self.keep_brackets, 'Aaron', 'A Song', 'A source that doesn\'t exist', 'filepath.mp3')
+    result = lyric_grabber.get_lyrics(approximate=self.approximate,
+                                      keep_brackets=self.keep_brackets,
+                                      artist='Aaron',
+                                      title='A Song',
+                                      source='A source that doesn\'t exist',
+                                      song_filepath='filepath.mp3')
     self.assertFalse(result.succeeded)
     self.assertEqual(result.message, '\033[31;1m' + '[ERROR] ' + '\033[0m' + 'Source not valid! (choose from \'azlyrics\', \'genius\', \'lyricsfreak\', \'lyricwiki\', \'metrolyrics\', \'musixmatch\')')
     self.assertEqual(result.filepath, 'filepath.mp3')
 
   def test_get_lyrics(self):
-    result = lyric_grabber.get_lyrics(self.approximate, self.keep_brackets, 'Portugal. The Man', 'Feel It Still', 'genius', 'filepath.mp3')
+    result = lyric_grabber.get_lyrics(approximate=self.approximate,
+                                      keep_brackets=self.keep_brackets,
+                                      artist='Portugal. The Man',
+                                      title='Feel It Still',
+                                      source='genius',
+                                      song_filepath='filepath.mp3')
     self.assertTrue(result.succeeded)
     self.assertEqual(result.artist, 'Portugal. The Man')
     self.assertEqual(result.title, 'Feel It Still')
@@ -41,9 +51,17 @@ class TestWriteFile(unittest.TestCase):
   lyrics = 'Corazón, tú sí sabes / Quererme como a mí me gusta'
   filepath = 'test_file.mp3'
 
-  def test_write_info(self):
+  def test_write_metadata(self):
     write_info = True
-    result = lyric_grabber.write_file(self.artist, self.title, write_info, self.lyrics, self.filepath)
+    write_metadata = False
+    write_text = True
+    result = lyric_grabber.write_file(artist=self.artist,
+                                      title=self.title,
+                                      write_info=write_info,
+                                      write_metadata=write_metadata,
+                                      write_text=write_text,
+                                      lyrics=self.lyrics,
+                                      song_filepath=self.filepath)
     self.assertTrue(result.succeeded)
     self.assertEqual(result.filepath, self.filepath)
     self.assertEqual(result.message, '\033[32;1m' + '[SUCCESS] ' + '\033[0m' + 'Got lyrics for file: {file}'.format(file=self.title))
@@ -57,7 +75,15 @@ class TestWriteFile(unittest.TestCase):
 
   def test_not_write_info(self):
     write_info = False
-    result = lyric_grabber.write_file(self.artist, self.title, write_info, self.lyrics, self.filepath)
+    write_metadata = False
+    write_text = True
+    result = lyric_grabber.write_file(artist=self.artist,
+                                      title=self.title,
+                                      write_info=write_info,
+                                      write_metadata=write_metadata,
+                                      write_text=write_text,
+                                      lyrics=self.lyrics,
+                                      song_filepath=self.filepath)
     self.assertTrue(result.succeeded)
     self.assertEqual(result.filepath, self.filepath)
     self.assertEqual(result.message, '\033[32;1m' + '[SUCCESS] ' + '\033[0m' + 'Got lyrics for file: {file}'.format(file=self.title))
@@ -71,8 +97,16 @@ class TestWriteFile(unittest.TestCase):
 
   def test_no_lyrics(self):
     write_info = True
+    write_metadata = False
+    write_text = True
     lyrics = False
-    result = lyric_grabber.write_file(self.artist, self.title, write_info, lyrics, self.filepath)
+    result = lyric_grabber.write_file(artist=self.artist,
+                                      title=self.title,
+                                      write_info=write_info,
+                                      write_metadata=write_metadata,
+                                      write_text=write_text,
+                                      lyrics=lyrics,
+                                      song_filepath=self.filepath)
     self.assertTrue(result.succeeded)
     self.assertEqual(result.filepath, 'test_file.mp3')
     self.assertEqual(result.message, '\033[93;1m' + '[INFO] ' + '\033[0m' + 'No lyrics found for file: {file}'.format(file=self.title))

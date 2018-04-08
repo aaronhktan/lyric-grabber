@@ -32,9 +32,12 @@ class QSettingsDialog (QtWidgets.QDialog):
     self._infoCheckBox = QtWidgets.QCheckBox('Add title and artist to top of saved file')
     self._infoCheckBox.stateChanged.connect(lambda state: self._settings.set_info(1) if state else self._settings.set_info(0))
     self._infoCheckBox.setChecked(self._settings.get_info())
-    self._tagCheckBox = QtWidgets.QCheckBox('Save lyrics to file in addition to text file')
-    self._tagCheckBox.stateChanged.connect(lambda state: self._settings.set_tag(1) if state else self._settings.set_tag(0))
-    self._tagCheckBox.setChecked(self._settings.get_tag())
+    self._metadataCheckBox = QtWidgets.QCheckBox('Save lyrics to song metadata')
+    self._metadataCheckBox.stateChanged.connect(lambda state: self._settings.set_metadata(1) if state else self._settings.set_metadata(0))
+    self._metadataCheckBox.setChecked(self._settings.get_metadata())
+    self._textCheckBox = QtWidgets.QCheckBox('Save lyrics to a text file')
+    self._textCheckBox.stateChanged.connect(lambda state: self._settings.set_text(1) if state else self._settings.set_text(0))
+    self._textCheckBox.setChecked(self._settings.get_text())
 
     # For testing
     # self._approximateCheckBox.setChecked(True)
@@ -82,9 +85,10 @@ class QSettingsDialog (QtWidgets.QDialog):
     self._settingsGridLayout.addWidget(self._approximateCheckBox, 1, 1)
     self._settingsGridLayout.addWidget(self._bracketCheckBox, 2, 1)
     self._settingsGridLayout.addWidget(self._infoCheckBox, 3, 1)
-    self._settingsGridLayout.addWidget(self._tagCheckBox, 4, 1)
-    self._settingsGridLayout.addItem(self._verticalSpacer, 5, 0)
-    self._settingsGridLayout.addWidget(self._aboutGroupBox, 6, 0, 1, -1)
+    self._settingsGridLayout.addWidget(self._metadataCheckBox, 4, 1)
+    self._settingsGridLayout.addWidget(self._textCheckBox, 5, 1)
+    self._settingsGridLayout.addItem(self._verticalSpacer, 6, 0)
+    self._settingsGridLayout.addWidget(self._aboutGroupBox, 7, 0, 1, -1)
 
     self.setLayout(self._settingsGridLayout)
 

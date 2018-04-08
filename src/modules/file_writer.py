@@ -1,6 +1,6 @@
 import os
 
-def write_lyrics_to_txt(filename, lyrics):
+def write_lyrics_to_txt(lyrics, filename):
   try:
     lyrics_file = open(filename[:filename.rfind('.')] + '.txt', 'w+')                                   # Slice off file extension and replace with txt
     lyrics_file.write(lyrics)

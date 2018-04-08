@@ -5,7 +5,7 @@ import unittest
 
 class TestFileWrite(unittest.TestCase):
   def test_write_file(self):
-    result = file_writer.write_lyrics_to_txt('test_file.mp3', 'Testing 123')
+    result = file_writer.write_lyrics_to_txt('Testing 123', 'test_file.mp3')
     self.assertEqual(result, True)
 
     file = open('test_file.mp3'[:'test_file.mp3'.rfind('.')] + '.txt', 'r')
@@ -16,7 +16,7 @@ class TestFileWrite(unittest.TestCase):
     os.remove('test_file.txt')
 
   def test_write_strange_characters(self):
-    result = file_writer.write_lyrics_to_txt('test_file.mp3', 'qéêàÇïú我的天啊עִבְרִית')
+    result = file_writer.write_lyrics_to_txt('qéêàÇïú我的天啊עִבְרִית', 'test_file.mp3')
     self.assertEqual(result, True)
 
     file = open('test_file.mp3'[:'test_file.mp3'.rfind('.')] + '.txt', 'r')

@@ -47,40 +47,67 @@ class LyricGrabberThread (QtCore.QThread):
 
   def run(self):
     for filepath in self._filepaths:
-      self._metadataResults.append(self._metadataExecutor.submit(lyric_grabber.get_metadata, True, filepath))
+      self._metadataResults.append(self._metadataExecutor.submit(lyric_grabber.get_metadata,
+                                                                 get_art=True,
+                                                                 song_filepath=filepath))
 
     # Create and show items in list as metadata finishes fetching
     for result in futures.as_completed(self._metadataResults):
       try:
         if result.result().succeeded:
           if result.result().art is None:
-            self.addFileToList.emit(result.result().artist, result.result().title, b'', result.result().filepath)
+            self.addFileToList.emit(result.result().artist,
+                                    result.result().title,
+                                    b'',
+                                    result.result().filepath)
           else:
-            self.addFileToList.emit(result.result().artist, result.result().title, result.result().art, result.result().filepath)
+            self.addFileToList.emit(result.result().artist,
+                                    result.result().title,
+                                    result.result().art,
+                                    result.result().filepath)
           self._songs.append(result.result())
         else:
           self.setProgressIcon.emit(result.result().filepath, states.ERROR)
           logger.log(logger.LOG_LEVEL_INFO, 'No metadata found: ' + result.result().message)
       except Exception as e:
-        self.setProgressIcon.emit(result.result.filepath, states.ERROR)
-        logger.log(logger.LOG_LEVEL_ERROR, ' Exception occurred while adding file {filepath}: {error}'.format(filepath=result.result().filepath, error=str(e)))
+        self.setProgressIcon.emit(result.result().filepath, states.ERROR)
+        logger.log(logger.LOG_LEVEL_ERROR, 
+                   ' Exception occurred while adding file {filepath}: {error}'.format(filepath=result.result().filepath,
+                                                                                      error=str(e)))
 
     for song in self._songs:
       self.setProgressIcon.emit(result.result().filepath, states.IN_PROGRESS)
-      self._lyricsResults.append(self._lyricsExecutor.submit(lyric_grabber.get_lyrics, self._settings.get_approximate(), not self._settings.get_remove_brackets(), song.artist, song.title, self._settings.get_source().lower(), song.filepath))
+      self._lyricsResults.append(self._lyricsExecutor.submit(lyric_grabber.get_lyrics,
+                                                             approximate=self._settings.get_approximate(),
+                                                             keep_brackets=not self._settings.get_remove_brackets(),
+                                                             artist=song.artist,
+                                                             title=song.title,
+                                                             source=self._settings.get_source().lower(),
+                                                             song_filepath=song.filepath))
 
     for result in futures.as_completed(self._lyricsResults):
       try:
         if result.result().succeeded:
           if result.result().lyrics:
             self.setProgressIcon.emit(result.result().filepath, states.COMPLETE)
-            self.setLyrics.emit(result.result().filepath, result.result().lyrics, result.result().url)
-            self._fileWritingResults.append(self._fileWritingExecutor.submit(lyric_grabber.write_file, result.result().artist, result.result().title, self._settings.get_info(), result.result().lyrics, result.result().filepath))
+            self.setLyrics.emit(result.result().filepath,
+                                result.result().lyrics,
+                                result.result().url)
+            self._fileWritingResults.append(self._fileWritingExecutor.submit(lyric_grabber.write_file,
+                                                                             artist=result.result().artist,
+                                                                             title=result.result().title,
+                                                                             write_info=self._settings.get_info(),
+                                                                             write_metadata=self._settings.get_metadata(),
+                                                                             write_text=self._settings.get_text(),
+                                                                             lyrics=result.result().lyrics,
+                                                                             song_filepath=result.result().filepath))
         else:
           self.setProgressIcon.emit(result.result().filepath, states.ERROR)
       except Exception as e:
         self.setProgressIcon.emit(result.result().filepath, states.ERROR)
-        logger.log(logger.LOG_LEVEL_ERROR, ' Exception occurred while getting lyrics for file {filepath}: {error}'.format(filepath=result.result().filepath, error=str(e)))
+        logger.log(logger.LOG_LEVEL_ERROR,
+                   ' Exception occurred while getting lyrics for file {filepath}: {error}'.format(filepath=result.result().filepath,
+                                                                                                  error=str(e)))
 
     for result in futures.as_completed(self._fileWritingResults):
       self.setProgressIcon.emit(result.result().filepath, states.COMPLETE)
@@ -106,20 +133,36 @@ class SingleLyricGrabberThread (QtCore.QThread):
     try:
       self.setProgressIcon.emit(states.IN_PROGRESS)
       if self._url is not None: # We have a URL, so scrape the URL
-        result = lyric_grabber.scrape_url(self._artist, self._title, self._url, self._filepath)
+        result = lyric_grabber.scrape_url(artist=self._artist,
+                                          title=self._title,
+                                          url=self._url,
+                                          song_filepath=self._filepath)
       else: # No URL, so fetch based on artist and title
-        result = lyric_grabber.get_lyrics(self._settings.get_approximate(), not self._settings.get_remove_brackets(), self._artist, self._title, self._source.lower(), self._filepath)
+        result = lyric_grabber.get_lyrics(approximate=self._settings.get_approximate(),
+                                          keep_brackets=not self._settings.get_remove_brackets(),
+                                          artist=self._artist,
+                                          title=self._title,
+                                          source=self._source.lower(),
+                                          song_filepath=self._filepath)
 
       if result.succeeded:
         self.setLyrics.emit(result.lyrics)
-        result = lyric_grabber.write_file(self._artist, self._title, self._settings.get_info(), result.lyrics, self._filepath)
+        result = lyric_grabber.write_file(artist=self._artist,
+                                          title=self._title,
+                                          write_info=self._settings.get_info(),
+                                          write_metadata=self._settings.get_metadata(),
+                                          write_text=self._settings.get_text(),
+                                          lyrics=result.lyrics,
+                                          song_filepath=self._filepath)
         print(result.message)
         self.setProgressIcon.emit(states.COMPLETE)
       else:
         self.setProgressIcon.emit(states.ERROR)
       # print(result.lyrics)
     except Exception as e:
-      logger.log(logger.LOG_LEVEL_ERROR, ' Exception occurred while getting lyrics for file {filepath}: {error}'.format(self_filepath, error=str(e)))
+      logger.log(logger.LOG_LEVEL_ERROR,
+                 ' Exception occurred while getting lyrics for file {filepath}: {error}'.format(self_filepath,
+                                                                                                error=str(e)))
 
 class QWidgetItem (QtWidgets.QWidget):
   # self.largeFont = QtGui.QFont('Gill Sans', 18, QtGui.QFont.Bold)
@@ -196,6 +239,7 @@ class QWidgetItem (QtWidgets.QWidget):
 
   def mousePressEvent(self, QMouseEvent):
     if QMouseEvent.button() == QtCore.Qt.LeftButton:
+
       self.mouseReleaseEvent = self.openDetailDialog()
 
   def setBackgroundColor(self, backgroundColor):
@@ -232,7 +276,10 @@ class QWidgetItem (QtWidgets.QWidget):
       self._albumIcon.setDevicePixelRatio(deviceRatio)
       self._iconWidth = deviceRatio * (self._albumArtLabel.width() - 10)
       self._iconHeight = deviceRatio * (self._albumArtLabel.height() - 10)
-      self._albumArtLabel.setPixmap(self._albumIcon.scaled(self._iconWidth, self._iconHeight, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
+      self._albumArtLabel.setPixmap(self._albumIcon.scaled(self._iconWidth,
+                                                           self._iconHeight,
+                                                           QtCore.Qt.KeepAspectRatio,
+                                                           QtCore.Qt.SmoothTransformation))
     except:
       print('Error setting album art.')
 
@@ -248,7 +295,12 @@ class QWidgetItem (QtWidgets.QWidget):
     if QWidgetItem.dialog is not None:
       QWidgetItem.dialog.hide()
     # self.window().setEnabled(False)
-    QWidgetItem.dialog = detail_dialog.QLyricsDialog(self, self._artist, self._title, self._lyrics, self._url, self._filepath)
+    QWidgetItem.dialog = detail_dialog.QLyricsDialog(parent=self,
+                                                     artist=self._artist,
+                                                     title=self._title,
+                                                     lyrics=self._lyrics,
+                                                     url=self._url,
+                                                     filepath=self._filepath)
     QWidgetItem.dialog.show()
     # self.window().setEnabled(True)
 
@@ -264,7 +316,12 @@ class QWidgetItem (QtWidgets.QWidget):
   def getLyrics(self, artist=None, title=None, url=None, source=None):
     if artist is None:
       artist = self._artist
-    self._fetch_thread = SingleLyricGrabberThread(self, self._filepath, artist, title, url, source)
+    self._fetch_thread = SingleLyricGrabberThread(parent=self,
+                                                  filepath=self._filepath,
+                                                  artist=artist,
+                                                  title=title,
+                                                  url=url,
+                                                  source=source)
     self._fetch_thread.start()
 
     self._fetch_thread.setProgressIcon.connect(self.setProgressIconForSingle)
@@ -283,7 +340,13 @@ class QWidgetItem (QtWidgets.QWidget):
     try:
       self._lyrics = lyrics
       self._settings = settings.Settings()
-      lyric_grabber.write_file(self._artist, self._title, self._settings.get_info(), lyrics, self._filepath)
+      lyric_grabber.write_file(artist=self._artist,
+                               title=self._title,
+                               write_info=self._settings.get_info(),
+                               write_metadata=self._settings.get_metadata(),
+                               write_text=self._settings.get_text(),
+                               lyrics=lyrics,
+                               song_filepath=self._filepath)
     except Exception as e:
       print(str(e))
 
@@ -364,13 +427,22 @@ class MainWindow (QtWidgets.QMainWindow):
     self._mainScrollArea.setWidget(self._mainScrollAreaWidget)
     self.setCentralWidget(self._mainScrollArea)
 
+  # def keyPressEvent(self, event):
+  #   key = event.key()
+  #   if key == QtCore.Qt.Key_O:
+  #       print('O')
+
   def openFileDialog(self, fileMode):
     # fileMode parameter is QtWidgets.QFileDialog.Directory or QtWidgets.QFileDialog.ExistingFiles
     self._fileDialog = QtWidgets.QFileDialog()
     self._fileDialog.setFileMode(fileMode)
     self._fileDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
 
-    self._filepaths = []
+    if not hasattr(self, '_filepaths'):
+      self._filepaths = []
+    else:
+      print([filepath for filepath in self._filepaths])
+    self._new_filepaths = []
     self._invalid_filepaths = []
 
     if (fileMode == QtWidgets.QFileDialog.Directory):
@@ -378,8 +450,12 @@ class MainWindow (QtWidgets.QMainWindow):
       # print('Directory selected is ' + directory)
       for root, dirs, files in os.walk(directory):
         for file in files:
-          if file.endswith(lyric_grabber.SUPPORTED_FILETYPES):
-            self._filepaths.append(os.path.join(root, file))
+          if file.endswith(settings.SUPPORTED_FILETYPES):
+            if file in self._filepaths:
+              self._invalid_filepaths.append(os.path.join(root, file))
+            else:
+              self._filepaths.append(os.path.join(root, file))
+              self._new_filepaths.append(os.path.join(root, file))
           else:
             self._invalid_filepaths.append(os.path.join(root, file))
     else:
@@ -387,8 +463,12 @@ class MainWindow (QtWidgets.QMainWindow):
       # print('Files selected are ' + str(files))
       try:
         for file in files[0]:
-          if file.endswith(lyric_grabber.SUPPORTED_FILETYPES):
-            self._filepaths.append(file)
+          if file.endswith(settings.SUPPORTED_FILETYPES):
+            if file in self._filepaths:
+              self._invalid_filepaths.append(file)
+            else:
+              self._filepaths.append(file)
+              self._new_filepaths.append(file)
           else:
             self._invalid_filepaths.append(file)
       except:
@@ -396,12 +476,12 @@ class MainWindow (QtWidgets.QMainWindow):
 
     # Show an error message for each invalid filepath found
     if self._invalid_filepaths:
-      message = '<b>Some files couldn\'t be added!</b><br><br>▸ ' + '<br>▸ '.join(self._invalid_filepaths)
+      message = '<b>Some files couldn\'t be added!</b><br>Make sure that it is a valid filetype, and that it hasn\'t already been added.<br><br>▸ ' + '<br>▸ '.join(self._invalid_filepaths)
       messageDialog = QtWidgets.QErrorMessage(self)
       messageDialog.showMessage(message)
 
     # Start another thread for network requests to not block the GUI thread
-    self._fetch_thread = LyricGrabberThread(self, self._filepaths)
+    self._fetch_thread = LyricGrabberThread(self, self._new_filepaths)
     self._fetch_thread.start()
 
     self._fetch_thread.addFileToList.connect(self.addFileToList)
@@ -445,7 +525,7 @@ class MainWindow (QtWidgets.QMainWindow):
         self._mainScrollAreaWidgetLayout.itemAt(i).widget().setBackgroundColor(QtCore.Qt.white)
 
   def removeAllFilesFromList(self):
-    for i in reversed(range(self._mainScrollAreaWidgetLayout.count())): 
+    for i in reversed(range(self._mainScrollAreaWidgetLayout.count())):
       self._mainScrollAreaWidgetLayout.itemAt(i).widget().setParent(None)
 
   def openSettingsDialog(self):
