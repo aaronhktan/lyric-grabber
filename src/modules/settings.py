@@ -1,3 +1,5 @@
+from modules import utils
+
 import configparser
 
 current_version = 1
@@ -20,7 +22,7 @@ class Settings:
 
   def __init__ (self, parent=None):
     config = configparser.ConfigParser()
-    config.read('./modules/settings.ini')
+    config.read(utils.resource_path('./modules/settings.ini'))
     config_settings = config['SETTINGS']
     if 'source' in config_settings:
       self.set_source(config_settings['source'])
@@ -86,5 +88,5 @@ class Settings:
                           'metadata': self.metadata,
                           'text': self.text}
     config['ABOUT'] = {'version': 1}
-    with open('./modules/settings.ini', 'w') as configfile:
+    with open(utils.resource_path('./modules/settings.ini'), 'w') as configfile:
       config.write(configfile)

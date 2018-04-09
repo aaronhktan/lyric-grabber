@@ -3,6 +3,7 @@ from gui import detail_dialog
 from modules import lyric_grabber
 from gui import settings_dialog
 from modules import settings
+from modules import utils
 
 import base64
 # from colorthief import ColorThief
@@ -206,7 +207,7 @@ class QWidgetItem (QtWidgets.QWidget):
     self._textTitleLabel.setFont(self.largeFont)
 
     # Add buttons
-    self._lyricsButton = QtWidgets.QPushButton(QtGui.QIcon('./assets/lyrics.png'), 'View Lyrics')
+    self._lyricsButton = QtWidgets.QPushButton(QtGui.QIcon(utils.resource_path('./assets/lyrics.png')), 'View Lyrics')
     self._lyricsButton.setMaximumWidth(125)
     self._lyricsButton.clicked.connect(lambda: self.openDetailDialog())
     self._openButton = QtWidgets.QPushButton('Open in Finder')
@@ -250,13 +251,13 @@ class QWidgetItem (QtWidgets.QWidget):
 
   def setProgressIcon(self, state, deviceRatio):
     if state == states.IN_PROGRESS:
-      imagePath = './assets/in_progress.png'
+      imagePath = utils.resource_path('./assets/in_progress.png')
     elif state == states.ERROR:
-      imagePath = './assets/error.png'
+      imagePath = utils.resource_path('./assets/error.png')
     elif state == states.COMPLETE:
-      imagePath = './assets/complete.png'
+      imagePath = utils.resource_path('./assets/complete.png')
     else:
-      imagePath = './assets/not_started.png'
+      imagePath = utils.resource_path('./assets/not_started.png')
     self._state = state
     self._progressIcon = QtGui.QPixmap(imagePath)
     self._progressIcon.setDevicePixelRatio(deviceRatio)
@@ -279,11 +280,11 @@ class QWidgetItem (QtWidgets.QWidget):
   def setAlbumArt(self, imageData, deviceRatio):
     try:
       if imageData == b'' or imageData is None:
-        self._albumImage = QtGui.QImage('./assets/art_empty.png')
+        self._albumImage = QtGui.QImage(utils.resource_path('./assets/art_empty.png'))
       else:
         self._albumImage = QtGui.QImage.fromData(imageData)
       if self._albumImage.isNull():
-        self._albumImage = QtGui.QImage('./assets/art_empty.png')
+        self._albumImage = QtGui.QImage(utils.resource_path('./assets/art_empty.png'))
       self._albumIcon = QtGui.QPixmap.fromImage(self._albumImage)
       self._albumIcon.setDevicePixelRatio(deviceRatio)
       self._iconWidth = deviceRatio * (self._albumArtLabel.width() - 10)
@@ -446,14 +447,14 @@ class MainWindow (QtWidgets.QMainWindow):
 
     # Add items to toolbar
     self._leftAlignSpacer = QtWidgets.QSpacerItem(15, 25, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-    self._addFileButton = QtWidgets.QPushButton(QtGui.QIcon('./assets/add_music.png'), 'Add song')
+    self._addFileButton = QtWidgets.QPushButton(QtGui.QIcon(utils.resource_path('./assets/add_music.png')), 'Add song')
     self._addFileButton.clicked.connect(lambda: self.openFileDialog(QtWidgets.QFileDialog.ExistingFiles))
-    self._addFolderButton = QtWidgets.QPushButton(QtGui.QIcon('./assets/add_folder.png'), 'Add folder')
+    self._addFolderButton = QtWidgets.QPushButton(QtGui.QIcon(utils.resource_path('./assets/add_folder.png')), 'Add folder')
     self._addFolderButton.clicked.connect(lambda: self.openFileDialog(QtWidgets.QFileDialog.Directory))
-    self._removeFileButton = QtWidgets.QPushButton(QtGui.QIcon('./assets/delete.png'), 'Remove all')
+    self._removeFileButton = QtWidgets.QPushButton(QtGui.QIcon(utils.resource_path('./assets/delete.png')), 'Remove all')
     self._removeFileButton.clicked.connect(lambda: self.removeAllFilesFromList())
     self._horizontalSpacer = QtWidgets.QSpacerItem(20, 25, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-    self._settingsButton = QtWidgets.QPushButton(QtGui.QIcon('./assets/settings.png'), 'Settings')
+    self._settingsButton = QtWidgets.QPushButton(QtGui.QIcon(utils.resource_path('./assets/settings.png')), 'Settings')
     self._settingsButton.clicked.connect(lambda: self.openSettingsDialog())
     self._rightAlignSpacer = QtWidgets.QSpacerItem(15, 25, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
 
