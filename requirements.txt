@@ -1,5 +1,10 @@
-Unidecode==1.0.22
-requests==2.18.4
-mutagen==1.40.0
-BeautifulSoup==3.2.1
 beautifulsoup4==4.6.0
+certifi==2018.1.18
+chardet==3.0.4
+idna==2.6
+mutagen==1.40.0
+PyQt5==5.10.1
+requests==2.18.4
+sip==4.19.8
+Unidecode==1.0.22
+urllib3==1.22

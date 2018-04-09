@@ -177,7 +177,7 @@ class QWidgetItem (QtWidgets.QWidget):
 
     # Add progress label
     self._progressLabel = QtWidgets.QLabel()
-    self._progressLabel.setFixedWidth(30)
+    self._progressLabel.setFixedWidth(15)
     self._progressLabel.setAlignment(QtCore.Qt.AlignCenter)
 
     # Add album art label
@@ -257,12 +257,24 @@ class QWidgetItem (QtWidgets.QWidget):
       imagePath = './assets/complete.png'
     else:
       imagePath = './assets/not_started.png'
+    self._state = state
     self._progressIcon = QtGui.QPixmap(imagePath)
     self._progressIcon.setDevicePixelRatio(deviceRatio)
-    self._progressLabel.setPixmap(self._progressIcon)
+    self._iconWidth = deviceRatio * self._progressLabel.width()
+    self._iconHeight = deviceRatio * self._progressLabel.height()
+    self._progressLabel.setPixmap(self._progressIcon.scaled(self._iconWidth,
+                                                            self._iconHeight,
+                                                            QtCore.Qt.KeepAspectRatio,
+                                                            QtCore.Qt.SmoothTransformation))
 
   def setProgressIconForSingle(self, state):
     self.setProgressIcon(state, self.devicePixelRatio())
+
+  def getState(self):
+    if hasattr(self, '_state'):
+      return self._state
+    else:
+      return states.NOT_STARTED
 
   def setAlbumArt(self, imageData, deviceRatio):
     try:
@@ -376,6 +388,62 @@ class MainWindow (QtWidgets.QMainWindow):
     self.setMinimumSize(600, 400)
     self.setUnifiedTitleAndToolBarOnMac(True)
 
+    # Create and add items to menubar
+    self._openFileAction = QtWidgets.QAction('Open File...', self)
+    self._openFileAction.setShortcut('Ctrl+O')
+    self._openFileAction.triggered.connect(lambda: self.openFileDialog(QtWidgets.QFileDialog.ExistingFiles))
+    self._openFolderAction = QtWidgets.QAction('Open Folder...', self)
+    self._openFolderAction.setShortcut('Ctrl+Shift+O')
+    self._openFolderAction.triggered.connect(lambda: self.openFileDialog(QtWidgets.QFileDialog.Directory))
+    self._closeAction = QtWidgets.QAction('Close')
+    self._closeAction.setShortcut('Ctrl+W')
+    self._closeAction.triggered.connect(lambda: self.close())
+
+    self._removeAllAction = QtWidgets.QAction('Remove all Files')
+    self._removeAllAction.setShortcut('Ctrl+Backspace')
+    self._removeAllAction.triggered.connect(lambda: self.removeCompletedFiles())
+    self._removeCompletedAction = QtWidgets.QAction('Remove Files with Lyrics')
+    self._removeCompletedAction.setShortcut('Ctrl+Shift+Backspace')
+    self._removeCompletedAction.triggered.connect(lambda: self.removeCompletedFiles())
+
+    self._minimizeAction = QtWidgets.QAction('Minimize', self)
+    self._minimizeAction.setShortcut('Ctrl+M')
+    self._minimizeAction.triggered.connect(lambda: self.showMinimized())
+    self._maximizeAction = QtWidgets.QAction('Zoom', self)
+    self._maximizeAction.setShortcut('Ctrl+Shift+M')
+    self._maximizeAction.triggered.connect(lambda: self.showMaximized())
+    self._showNormalAction = QtWidgets.QAction('Bring to Front', self)
+    self._showNormalAction.triggered.connect(lambda: self.showNormal())
+    self._fullScreenAction = QtWidgets.QAction('Enter Fullscreen', self)
+    self._fullScreenAction.setShortcut('Ctrl+Shift+F')
+    self._fullScreenAction.triggered.connect(lambda: self.showFullScreen())
+
+    self._helpAction = QtWidgets.QAction('Help', self)
+    self._helpAction.triggered.connect(lambda: self.openSettingsDialog())
+
+    self._menuBar = self.menuBar()
+
+    self._fileMenu = self._menuBar.addMenu('File')
+    self._fileMenu.addAction(self._openFileAction)
+    self._fileMenu.addAction(self._openFolderAction)
+    self._fileMenu.addSeparator()
+    self._fileMenu.addAction(self._closeAction)
+
+    self._editMenu = self._menuBar.addMenu('Edit')
+    self._editMenu.addAction(self._removeAllAction)
+    self._editMenu.addAction(self._removeCompletedAction)
+    self._editMenu.addSeparator()
+
+    self._windowMenu = self._menuBar.addMenu('Window')
+    self._windowMenu.addAction(self._minimizeAction)
+    self._windowMenu.addAction(self._maximizeAction)
+    self._windowMenu.addAction(self._fullScreenAction)
+    self._windowMenu.addSeparator()
+    self._windowMenu.addAction(self._showNormalAction)
+
+    self._helpMenu = self._menuBar.addMenu('Help')
+    self._helpMenu.addAction(self._helpAction)
+
     # Add items to toolbar
     self._leftAlignSpacer = QtWidgets.QSpacerItem(15, 25, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
     self._addFileButton = QtWidgets.QPushButton(QtGui.QIcon('./assets/add_music.png'), 'Add song')
@@ -432,22 +500,46 @@ class MainWindow (QtWidgets.QMainWindow):
 
   def keyPressEvent(self, event):
     key = event.key()
-    if key == QtCore.Qt.Key_S:
-      if MainWindow.selectedWidgetIndex is not None:
-        newIndex = MainWindow.selectedWidgetIndex + 1
-        if self._mainScrollAreaWidgetLayout.itemAt(newIndex) is not None:
-          MainWindow.selectedWidgetIndex += 1
-          self.resetListColours()
-          self._mainScrollArea.ensureWidgetVisible(self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget())
-          self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget().openDetailDialog()
-    if key == QtCore.Qt.Key_W:
-      if MainWindow.selectedWidgetIndex is not None:
-        newIndex = MainWindow.selectedWidgetIndex - 1
-        if self._mainScrollAreaWidgetLayout.itemAt(newIndex) is not None:
-          MainWindow.selectedWidgetIndex -= 1
-          self.resetListColours()
-          self._mainScrollArea.ensureWidgetVisible(self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget())
-          self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget().openDetailDialog()
+    # Handle modifiers first, then others
+    if event.modifiers() & QtCore.Qt.ShiftModifier and event.modifiers() & QtCore.Qt.ControlModifier:
+      if key == QtCore.Qt.Key_F:
+        self.showFullScreen()
+      elif key == QtCore.Qt.Key_M:
+        self.showMaximized()
+      elif key == QtCore.Qt.Key_O:
+        # Super + shift + O should open folder browser
+        self.openFileDialog(QtWidgets.QFileDialog.Directory)
+      elif key == QtCore.Qt.Key_Backspace:
+        self.removeCompletedFiles()
+    elif event.modifiers() & QtCore.Qt.ControlModifier:
+      if key == QtCore.Qt.Key_M:
+        self.showMinimized()
+      elif key == QtCore.Qt.Key_O:
+        # Super + O should open file browser
+        self.openFileDialog(QtWidgets.QFileDialog.ExistingFiles)
+      elif key == QtCore.Qt.Key_W:
+        self.close()
+      elif key == QtCore.Qt.Key_Backspace:
+        self.removeAllFilesFromList()
+      elif key == QtCore.Qt.Key_Comma:
+        self.openSettingsDialog()
+    else:
+      if key == QtCore.Qt.Key_S or key == QtCore.Qt.Key_Down:
+        if MainWindow.selectedWidgetIndex is not None:
+          newIndex = MainWindow.selectedWidgetIndex + 1
+          if self._mainScrollAreaWidgetLayout.itemAt(newIndex) is not None:
+            MainWindow.selectedWidgetIndex += 1
+            self.resetListColours()
+            self._mainScrollArea.ensureWidgetVisible(self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget())
+            self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget().openDetailDialog()
+      if key == QtCore.Qt.Key_W or key == QtCore.Qt.Key_Up:
+        if MainWindow.selectedWidgetIndex is not None:
+          newIndex = MainWindow.selectedWidgetIndex - 1
+          if self._mainScrollAreaWidgetLayout.itemAt(newIndex) is not None:
+            MainWindow.selectedWidgetIndex -= 1
+            self.resetListColours()
+            self._mainScrollArea.ensureWidgetVisible(self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget())
+            self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget().openDetailDialog()
 
   def setSelectedWidget(self, filepath):
     for i in range(self._mainScrollAreaWidgetLayout.count()):
@@ -552,6 +644,17 @@ class MainWindow (QtWidgets.QMainWindow):
       QWidgetItem.dialog.close()
     for i in reversed(range(self._mainScrollAreaWidgetLayout.count())):
       self._mainScrollAreaWidgetLayout.itemAt(i).widget().setParent(None)
+    if hasattr(self, '_filepaths'):
+      self._filepaths.clear()
+
+  def removeCompletedFiles(self):
+    if QWidgetItem.dialog:
+      QWidgetItem.dialog.close()
+    for i in reversed(range(self._mainScrollAreaWidgetLayout.count())):
+      if self._mainScrollAreaWidgetLayout.itemAt(i).widget().getState() == states.COMPLETE:
+        self._filepaths.remove(self._mainScrollAreaWidgetLayout.itemAt(i).widget().getFilepath())
+        self._mainScrollAreaWidgetLayout.itemAt(i).widget().setParent(None)
+    self.resetListColours()
 
   def openSettingsDialog(self):
     self.setEnabled(False)

@@ -25,6 +25,45 @@ class QLyricsDialog (QtWidgets.QDialog):
 
     self._settings = settings.Settings()
 
+    # Add a menubar
+    self._grabAction = QtWidgets.QAction('Re-fetch Lyrics', self)
+    self._grabAction.setShortcut('Ctrl+R')
+    self._grabAction.triggered.connect(lambda: self.grabLyrics())
+    self._openUrlAction = QtWidgets.QAction('Open Lyrics in Browser')
+    self._openUrlAction.setShortcut('Ctrl+K')
+    self._openUrlAction.triggered.connect(lambda: self.openUrl())
+    self._closeAction = QtWidgets.QAction('Close')
+    self._closeAction.setShortcut('Esc')
+    self._closeAction.triggered.connect(lambda: self.close())
+
+    self._saveAction = QtWidgets.QAction('Save Lyrics', self)
+    self._saveAction.setShortcut('Ctrl+S')
+    self._saveAction.triggered.connect(lambda: self.saveLyrics())
+    self._removeAction = QtWidgets.QAction('Remove Lyrics', self)
+    self._removeAction.setShortcut('Ctrl+Backspace')
+    self._removeAction.triggered.connect(lambda: self.removeLyrics())
+
+    self._showNormalAction = QtWidgets.QAction('Bring to Front', self)
+    self._showNormalAction.triggered.connect(lambda: self.showNormal())
+    self._fullScreenAction = QtWidgets.QAction('Enter Fullscreen', self)
+    self._fullScreenAction.setShortcut('Ctrl+Shift+F')
+    self._fullScreenAction.triggered.connect(lambda: self.showFullScreen())
+
+    self._menuBar = QtWidgets.QMenuBar()
+
+    self._fileMenu = self._menuBar.addMenu('File')
+    self._fileMenu.addAction(self._grabAction)
+    self._fileMenu.addAction(self._openUrlAction)
+    self._fileMenu.addSeparator()
+    self._fileMenu.addAction(self._closeAction)
+    self._editMenu = self._menuBar.addMenu('Edit')
+    self._editMenu.addAction(self._saveAction)
+    self._editMenu.addAction(self._removeAction)
+    self._windowMenu = self._menuBar.addMenu('Window')
+    self._windowMenu.addAction(self._fullScreenAction)
+    self._windowMenu.insertSeparator(self._showNormalAction)
+    self._windowMenu.addAction(self._showNormalAction)
+
     # Add filepath
     self._filepath = filepath
 
@@ -186,10 +225,27 @@ class QLyricsDialog (QtWidgets.QDialog):
                 self.mapToGlobal(parent.parent.pos()).y() - 25 * self.devicePixelRatio())
 
   def moveEvent(self, event):
-    # print('Mapped to global as {}, {}'.format(self.mapToGlobal(event.pos()).x() / 2, self.mapToGlobal(event.pos()).y() / 2))
+    # print('Mapped to global as {}, {}'.format(self.mapToGlobal(event.pos()).x() / self.devicePixelRatio(), self.mapToGlobal(event.pos()).y() / self.devicePixelRatio()))
     QLyricsDialog.x_coordinate = self.mapToGlobal(event.pos()).x() / self.devicePixelRatio()
     QLyricsDialog.y_coordinate = self.mapToGlobal(event.pos()).y() / self.devicePixelRatio()
     # print('Set as {}, {}'.format(QLyricsDialog.x_coordinate, QLyricsDialog.y_coordinate))
+
+  def keyPressEvent(self, event):
+    key = event.key()
+    if event.modifiers() & QtCore.Qt.ShiftModifier and event.modifiers() & QtCore.Qt.ControlModifier:
+      if key == QtCore.Qt.Key_F:
+        self.showFullScreen()
+    elif event.modifiers() & QtCore.Qt.ControlModifier:
+      if key == QtCore.Qt.Key_K:
+        self.openUrl()
+      elif key == QtCore.Qt.Key_R:
+        self.grabLyrics()
+      elif key == QtCore.Qt.Key_S:
+        self.saveLyrics()
+      elif key == QtCore.Qt.Key_Backspace:
+        self.removeLyrics()
+    elif key == QtCore.Qt.Key_Escape:
+      self.close()
 
   def updateLyrics(self, lyrics):
     self._lyricsQLabel.setText(lyrics)

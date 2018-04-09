@@ -83,6 +83,7 @@ celerybeat-schedule
 *.sage.py
 
 # Environments
+bin/
 .env
 .venv
 env/
@@ -90,6 +91,9 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+pip-selfcheck.json
+pyvenv.cfg
+share/
 
 # Spyder project settings
 .spyderproject
@@ -109,7 +113,7 @@ venv.bak/
 /src/test_assets
 /src/icons
 /screenshots
-*.txt
+/test_songs/*.txt
 
 # Pesky Mac things
 .DS_Store
