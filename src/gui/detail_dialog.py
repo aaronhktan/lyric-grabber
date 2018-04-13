@@ -1,5 +1,7 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
 from modules import settings
+from modules import utils
+
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 # Style note: Functions and variable names are not PEP 8 compliant.
 # Blame PyQt for that!
@@ -123,7 +125,9 @@ class QLyricsDialog (QtWidgets.QDialog):
     self._viewUrlButton.clicked.connect(lambda: self.openUrl())
     self._viewUrlButton.setFocusPolicy(QtCore.Qt.NoFocus)
     self._viewUrlButton.setMaximumWidth(150)
-    self._copyUrlButton = QtWidgets.QPushButton(QtGui.QIcon('./assets/copy.png'), 'Copy URL')
+    self._copyUrlButton = QtWidgets.QPushButton(QtGui.QIcon(utils.resource_path('./assets/copy.png')), 'Copy URL')
+    self._copyUrlButton.pressed.connect(lambda: self._copyUrlButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/copy_inverted.png'))))
+    self._copyUrlButton.released.connect(lambda: self._copyUrlButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/copy.png'))))
     self._copyUrlButton.clicked.connect(lambda: self.copyUrl())
     self._copyUrlButton.setFocusPolicy(QtCore.Qt.NoFocus)
 
@@ -225,9 +229,8 @@ class QLyricsDialog (QtWidgets.QDialog):
                 self.mapToGlobal(parent.parent.pos()).y() - 25 * self.devicePixelRatio())
 
   def moveEvent(self, event):
-    # print('Mapped to global as {}, {}'.format(self.mapToGlobal(event.pos()).x() / self.devicePixelRatio(), self.mapToGlobal(event.pos()).y() / self.devicePixelRatio()))
-    QLyricsDialog.x_coordinate = self.mapToGlobal(event.pos()).x() / self.devicePixelRatio()
-    QLyricsDialog.y_coordinate = self.mapToGlobal(event.pos()).y() / self.devicePixelRatio()
+    QLyricsDialog.x_coordinate = event.pos().x()
+    QLyricsDialog.y_coordinate = event.pos().y()
     # print('Set as {}, {}'.format(QLyricsDialog.x_coordinate, QLyricsDialog.y_coordinate))
 
   def keyPressEvent(self, event):

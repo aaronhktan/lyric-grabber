@@ -1,0 +1,10 @@
+### On adding assets
+
+- Export the icon from Feather's SVG with a width of 34x34. In general, height is more important than width.
+  - Errata:
+    - The garbage can is 34x37.
+    - The settings icon is 40x40.
+    - The clipboard icon is 30x37.
+- Center on a 50x50 transparent canvas.
+- Make sure to update the quaver-onedir.spec and quaver-onefile.spec with reference to the new file created.
+- Voilà!

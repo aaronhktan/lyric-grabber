@@ -9,7 +9,7 @@ def main():
 
   window = main_window.MainWindow()
   window.show()
-  window.setWindowTitle('Lyric Grabber')
+  window.setWindowTitle('Quaver')
 
   sys.exit(app.exec_())
 

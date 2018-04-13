@@ -1,4 +1,5 @@
 from modules import settings
+from modules import utils
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -50,12 +51,12 @@ class QSettingsDialog (QtWidgets.QDialog):
     self._iconLabel = QtWidgets.QLabel()
     self._iconLabel.setFixedWidth(100)
     self._iconLabel.setFixedHeight(100)
-    self._aboutIcon = QtGui.QPixmap('./assets/icon.png')
+    self._aboutIcon = QtGui.QPixmap(utils.resource_path('./assets/icon.png'))
     self._aboutIcon.setDevicePixelRatio(self.devicePixelRatio())
     self._iconWidth = self.devicePixelRatio() * (self._iconLabel.width() - 10)
     self._iconHeight = self.devicePixelRatio() * (self._iconLabel.height() - 10)
     self._iconLabel.setPixmap(self._aboutIcon.scaled(self._iconWidth, self._iconHeight, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
-    self._nameLabel = QtWidgets.QLabel('Lyric Grabber')
+    self._nameLabel = QtWidgets.QLabel('Quaver')
     self._largeFont = QtGui.QFont('Gill Sans', 24)
     self._nameLabel.setFont(self._largeFont)
     self._detailLabel = QtWidgets.QLabel('Made with love by Aaron Tan.\nFree under the MIT License.')

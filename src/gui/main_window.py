@@ -9,11 +9,15 @@ import base64
 # from colorthief import ColorThief
 from concurrent import futures
 import os
+import platform
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 # Style note: Functions and variable names are not PEP 8 compliant.
 # Blame PyQt for that!
 # Keeping consistency with PyQt camelCase is prioritised.
+
+IS_MAC = platform.uname().system.startswith('Darw')
+IS_WINDOWS = platform.uname().system.startswith('Windows')
 
 class states:
   NOT_STARTED = 0
@@ -208,6 +212,8 @@ class QWidgetItem (QtWidgets.QWidget):
 
     # Add buttons
     self._lyricsButton = QtWidgets.QPushButton(QtGui.QIcon(utils.resource_path('./assets/lyrics.png')), 'View Lyrics')
+    self._lyricsButton.pressed.connect(lambda: self._lyricsButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/lyrics_inverted.png'))))
+    self._lyricsButton.released.connect(lambda: self._lyricsButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/lyrics.png'))))
     self._lyricsButton.setMaximumWidth(125)
     self._lyricsButton.clicked.connect(lambda: self.openDetailDialog())
     self._openButton = QtWidgets.QPushButton('Open in Finder')
@@ -390,6 +396,12 @@ class MainWindow (QtWidgets.QMainWindow):
     self.setUnifiedTitleAndToolBarOnMac(True)
 
     # Create and add items to menubar
+    self._openAboutAction = QtWidgets.QAction('About Quaver')
+    self._openAboutAction.triggered.connect(lambda: self.openSettingsDialog())
+    self._openSettingsAction = QtWidgets.QAction('Preferences')
+    self._openSettingsAction.setShortcut('Ctrl+Comma')
+    self._openSettingsAction.triggered.connect(lambda: self.openSettingsDialog())
+
     self._openFileAction = QtWidgets.QAction('Open File...', self)
     self._openFileAction.setShortcut('Ctrl+O')
     self._openFileAction.triggered.connect(lambda: self.openFileDialog(QtWidgets.QFileDialog.ExistingFiles))
@@ -407,22 +419,32 @@ class MainWindow (QtWidgets.QMainWindow):
     self._removeCompletedAction.setShortcut('Ctrl+Shift+Backspace')
     self._removeCompletedAction.triggered.connect(lambda: self.removeCompletedFiles())
 
-    self._minimizeAction = QtWidgets.QAction('Minimize', self)
-    self._minimizeAction.setShortcut('Ctrl+M')
-    self._minimizeAction.triggered.connect(lambda: self.showMinimized())
-    self._maximizeAction = QtWidgets.QAction('Zoom', self)
-    self._maximizeAction.setShortcut('Ctrl+Shift+M')
-    self._maximizeAction.triggered.connect(lambda: self.showMaximized())
-    self._showNormalAction = QtWidgets.QAction('Bring to Front', self)
-    self._showNormalAction.triggered.connect(lambda: self.showNormal())
-    self._fullScreenAction = QtWidgets.QAction('Enter Fullscreen', self)
-    self._fullScreenAction.setShortcut('Ctrl+Shift+F')
-    self._fullScreenAction.triggered.connect(lambda: self.showFullScreen())
+    if IS_MAC:
+      self._minimizeAction = QtWidgets.QAction('Minimize', self)
+      self._minimizeAction.setShortcut('Ctrl+M')
+      self._minimizeAction.triggered.connect(lambda: self.showMinimized())
+      self._maximizeAction = QtWidgets.QAction('Zoom', self)
+      self._maximizeAction.setShortcut('Ctrl+Shift+M')
+      self._maximizeAction.triggered.connect(lambda: self.showMaximized())
+      self._showNormalAction = QtWidgets.QAction('Bring to Front', self)
+      self._showNormalAction.triggered.connect(lambda: self.showNormal())
+      self._fullScreenAction = QtWidgets.QAction('Enter Fullscreen', self)
+      self._fullScreenAction.setShortcut('Ctrl+Shift+F')
+      self._fullScreenAction.triggered.connect(lambda: self.showFullScreen())
 
     self._helpAction = QtWidgets.QAction('Help', self)
     self._helpAction.triggered.connect(lambda: self.openSettingsDialog())
 
-    self._menuBar = self.menuBar()
+    if IS_MAC:
+      self._menuBar = QtWidgets.QMenuBar()
+    else:
+      self._menuBar = self.menuBar()
+
+    if IS_MAC:
+      self._fileMenu = self._menuBar.addMenu('Quaver')
+      self._fileMenu.addAction(self._openAboutAction)
+      self._fileMenu.addSeparator()
+      self._fileMenu.addAction(self._openSettingsAction)
 
     self._fileMenu = self._menuBar.addMenu('File')
     self._fileMenu.addAction(self._openFileAction)
@@ -435,49 +457,66 @@ class MainWindow (QtWidgets.QMainWindow):
     self._editMenu.addAction(self._removeCompletedAction)
     self._editMenu.addSeparator()
 
-    self._windowMenu = self._menuBar.addMenu('Window')
-    self._windowMenu.addAction(self._minimizeAction)
-    self._windowMenu.addAction(self._maximizeAction)
-    self._windowMenu.addAction(self._fullScreenAction)
-    self._windowMenu.addSeparator()
-    self._windowMenu.addAction(self._showNormalAction)
+    if IS_MAC:
+      self._windowMenu = self._menuBar.addMenu('Window')
+      self._windowMenu.addAction(self._minimizeAction)
+      self._windowMenu.addAction(self._maximizeAction)
+      self._windowMenu.addAction(self._fullScreenAction)
+      self._windowMenu.addSeparator()
+      self._windowMenu.addAction(self._showNormalAction)
+
+    if IS_WINDOWS:
+      self._toolsMenu = self._menuBar.addMenu('Tools')
+      self._toolsMenu.addAction(self._openSettingsAction)
 
     self._helpMenu = self._menuBar.addMenu('Help')
     self._helpMenu.addAction(self._helpAction)
+    if IS_WINDOWS:
+      self._helpMenu.addAction(self._openAboutAction)
 
-    # Add items to toolbar
-    self._leftAlignSpacer = QtWidgets.QSpacerItem(15, 25, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-    self._addFileButton = QtWidgets.QPushButton(QtGui.QIcon(utils.resource_path('./assets/add_music.png')), 'Add song')
-    self._addFileButton.clicked.connect(lambda: self.openFileDialog(QtWidgets.QFileDialog.ExistingFiles))
-    self._addFolderButton = QtWidgets.QPushButton(QtGui.QIcon(utils.resource_path('./assets/add_folder.png')), 'Add folder')
-    self._addFolderButton.clicked.connect(lambda: self.openFileDialog(QtWidgets.QFileDialog.Directory))
-    self._removeFileButton = QtWidgets.QPushButton(QtGui.QIcon(utils.resource_path('./assets/delete.png')), 'Remove all')
-    self._removeFileButton.clicked.connect(lambda: self.removeAllFilesFromList())
-    self._horizontalSpacer = QtWidgets.QSpacerItem(20, 25, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-    self._settingsButton = QtWidgets.QPushButton(QtGui.QIcon(utils.resource_path('./assets/settings.png')), 'Settings')
-    self._settingsButton.clicked.connect(lambda: self.openSettingsDialog())
-    self._rightAlignSpacer = QtWidgets.QSpacerItem(15, 25, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+    # Do not create toolbar if not on Mac
+    if IS_MAC:
+      # Add items to toolbar
+      self._leftAlignSpacer = QtWidgets.QSpacerItem(15, 25, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+      self._addFileButton = QtWidgets.QPushButton(QtGui.QIcon(utils.resource_path('./assets/add_music.png')), 'Add song')
+      self._addFileButton.pressed.connect(lambda: self._addFileButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/add_music_inverted.png'))))
+      self._addFileButton.released.connect(lambda: self._addFileButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/add_music.png'))))
+      self._addFileButton.clicked.connect(lambda: self.openFileDialog(QtWidgets.QFileDialog.ExistingFiles))
+      self._addFolderButton = QtWidgets.QPushButton(QtGui.QIcon(utils.resource_path('./assets/add_folder.png')), 'Add folder')
+      self._addFolderButton.pressed.connect(lambda: self._addFolderButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/add_folder_inverted.png'))))
+      self._addFolderButton.released.connect(lambda: self._addFolderButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/add_folder.png'))))
+      self._addFolderButton.clicked.connect(lambda: self.openFileDialog(QtWidgets.QFileDialog.Directory))
+      self._removeFileButton = QtWidgets.QPushButton(QtGui.QIcon(utils.resource_path('./assets/delete.png')), 'Remove all')
+      self._removeFileButton.pressed.connect(lambda: self._removeFileButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/delete_inverted.png'))))
+      self._removeFileButton.released.connect(lambda: self._removeFileButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/delete.png'))))
+      self._removeFileButton.clicked.connect(lambda: self.removeAllFilesFromList())
+      self._horizontalSpacer = QtWidgets.QSpacerItem(20, 25, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+      self._settingsButton = QtWidgets.QPushButton(QtGui.QIcon(utils.resource_path('./assets/settings.png')), 'Settings')
+      self._settingsButton.pressed.connect(lambda: self._settingsButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/settings_inverted.png'))))
+      self._settingsButton.released.connect(lambda: self._settingsButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/settings.png'))))
+      self._settingsButton.clicked.connect(lambda: self.openSettingsDialog())
+      self._rightAlignSpacer = QtWidgets.QSpacerItem(15, 25, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
 
-    self._toolBarLayout = QtWidgets.QHBoxLayout()
-    self._toolBarLayout.addItem(self._leftAlignSpacer)
-    self._toolBarLayout.addWidget(self._addFileButton)
-    self._toolBarLayout.addWidget(self._addFolderButton)
-    self._toolBarLayout.addWidget(self._removeFileButton)
-    self._toolBarLayout.addItem(self._horizontalSpacer)
-    self._toolBarLayout.addWidget(self._settingsButton)
-    self._toolBarLayout.addItem(self._rightAlignSpacer)
-    self._toolBarLayout.setSpacing(5)
-    self._toolBarLayout.setContentsMargins(0, 0, 0, 0)
+      self._toolBarLayout = QtWidgets.QHBoxLayout()
+      self._toolBarLayout.addItem(self._leftAlignSpacer)
+      self._toolBarLayout.addWidget(self._addFileButton)
+      self._toolBarLayout.addWidget(self._addFolderButton)
+      self._toolBarLayout.addWidget(self._removeFileButton)
+      self._toolBarLayout.addItem(self._horizontalSpacer)
+      self._toolBarLayout.addWidget(self._settingsButton)
+      self._toolBarLayout.addItem(self._rightAlignSpacer)
+      self._toolBarLayout.setSpacing(5)
+      self._toolBarLayout.setContentsMargins(0, 0, 0, 0)
 
-    self._toolBarItems = QtWidgets.QWidget()
-    self._toolBarItems.setLayout(self._toolBarLayout)
+      self._toolBarItems = QtWidgets.QWidget()
+      self._toolBarItems.setLayout(self._toolBarLayout)
 
-    # Add toolbar to window
-    self._toolBar = self.addToolBar('main')
-    self._toolBar.addWidget(self._toolBarItems)
-    self._toolBar.setFloatable(False)
-    self._toolBar.setMovable(False)
-    self.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
+      # Add toolbar to window
+      self._toolBar = self.addToolBar('main')
+      self._toolBar.addWidget(self._toolBarItems)
+      self._toolBar.setFloatable(False)
+      self._toolBar.setMovable(False)
+      self.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
 
     # This layout contains all the list items
     # Style the layout: spacing (between items), content (padding within items)
@@ -503,9 +542,9 @@ class MainWindow (QtWidgets.QMainWindow):
     key = event.key()
     # Handle modifiers first, then others
     if event.modifiers() & QtCore.Qt.ShiftModifier and event.modifiers() & QtCore.Qt.ControlModifier:
-      if key == QtCore.Qt.Key_F:
+      if key == QtCore.Qt.Key_F and IS_MAC:
         self.showFullScreen()
-      elif key == QtCore.Qt.Key_M:
+      elif key == QtCore.Qt.Key_M and IS_MAC:
         self.showMaximized()
       elif key == QtCore.Qt.Key_O:
         # Super + shift + O should open folder browser
@@ -513,7 +552,7 @@ class MainWindow (QtWidgets.QMainWindow):
       elif key == QtCore.Qt.Key_Backspace:
         self.removeCompletedFiles()
     elif event.modifiers() & QtCore.Qt.ControlModifier:
-      if key == QtCore.Qt.Key_M:
+      if key == QtCore.Qt.Key_M and IS_MAC:
         self.showMinimized()
       elif key == QtCore.Qt.Key_O:
         # Super + O should open file browser
@@ -533,7 +572,7 @@ class MainWindow (QtWidgets.QMainWindow):
             self.resetListColours()
             self._mainScrollArea.ensureWidgetVisible(self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget())
             self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget().openDetailDialog()
-      if key == QtCore.Qt.Key_W or key == QtCore.Qt.Key_Up:
+      elif key == QtCore.Qt.Key_W or key == QtCore.Qt.Key_Up:
         if MainWindow.selectedWidgetIndex is not None:
           newIndex = MainWindow.selectedWidgetIndex - 1
           if self._mainScrollAreaWidgetLayout.itemAt(newIndex) is not None:
@@ -597,7 +636,7 @@ class MainWindow (QtWidgets.QMainWindow):
       messageDialog.showMessage(message)
 
     # Start another thread for network requests to not block the GUI thread
-    self._fetch_thread = LyricGrabberThread(self, self._new_filepaths)
+    self._fetch_thread = LyricGrabberThread(self, sorted(self._new_filepaths))
     self._fetch_thread.start()
 
     self._fetch_thread.addFileToList.connect(self.addFileToList)

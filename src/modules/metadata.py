@@ -94,14 +94,14 @@ def write_lyrics_to_file(lyrics, song_filepath):
         else:
           m.add(u'USLT')
       except:
-        print('Failed to add USLT')
+        print('Failed to add USLT for file {}'.format(song_filepath))
 
       try:
         # Save new lyrics
         m[u'USLT'] = (mutagen.id3.USLT(encoding=3, lang=u'XXX', desc=u'desc', text=lyrics))
         m.save(song_filepath)
       except:
-        print('Failed to write USLT')
+        print('Failed to write USLT for file {}'.format(song_filepath))
     elif song_filepath.endswith(('.mp4', '.m4a', '.m4v', '.ape', '.wma', '.flac', '.ogg', '.oga', '.opus')):
       m = mutagen.File(song_filepath)
 
