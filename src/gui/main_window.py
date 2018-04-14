@@ -308,11 +308,15 @@ class QWidgetItem (QtWidgets.QWidget):
     self._textArtistLabel.setText(text)
 
   def openDetailDialog(self):
+    self.resetColours()
+    self.setBackgroundColor(QtGui.QColor(170, 211, 255))
     try:
-      QWidgetItem.dialog.close()
-    except:
-      pass
-    finally:
+      QWidgetItem.dialog.setWindowTitle('{artist} - {title}'.format(artist=self._artist, title=self._title))
+      QWidgetItem.dialog.updateLyrics(self._lyrics)
+      QWidgetItem.dialog.updateUrl(self._url)
+      QWidgetItem.dialog.setFilepath(self._filepath)
+      QWidgetItem.dialog.show()
+    except Exception as e:
       # self.window().setEnabled(False)
       QWidgetItem.dialog = detail_dialog.QLyricsDialog(parent=self,
                                                        artist=self._artist,

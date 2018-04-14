@@ -17,8 +17,6 @@ class QLyricsDialog (QtWidgets.QDialog):
 
     # Set parent object
     self.parent = parent
-    self.parent.resetColours()
-    self.parent.setBackgroundColor(QtGui.QColor(170, 211, 255))
 
     # Style lyrics dialog
     # self.setFixedSize(QtCore.QSize(300, 700))
@@ -119,7 +117,7 @@ class QLyricsDialog (QtWidgets.QDialog):
     self._urlLineEdit.setCursorPosition(0)
     self._urlLineEdit.textEdited.connect(self.disableMetadataEditing)
 
-    self._urlExplanationLabel = QtWidgets.QLabel('If you input a valid link, Lyric Grabber can get lyrics from that page when you click the "Grab lyrics" button.')
+    self._urlExplanationLabel = QtWidgets.QLabel('If you input a valid link, Quaver can get lyrics from that page when you click the "Grab lyrics" button.')
     self._urlExplanationLabel.setWordWrap(True)
 
     self._viewUrlButton = QtWidgets.QPushButton('View online')
@@ -134,20 +132,20 @@ class QLyricsDialog (QtWidgets.QDialog):
     self._copyUrlButton.setFocusPolicy(QtCore.Qt.NoFocus)
 
     # Separator Line
-    self._separatorLineFrame = QtWidgets.QFrame();
+    self._separatorLineFrame = QtWidgets.QFrame()
     self._separatorLineFrame.setFrameShape(QtWidgets.QFrame.HLine)
     self._separatorLineFrame.setFrameShadow(QtWidgets.QFrame.Raised)
 
     # Actual metadata
     self._titleLabel = QtWidgets.QLabel('Title:')
     self._titleLineEdit = QtWidgets.QLineEdit()
-    self._titleLineEdit.setText(title);
+    self._titleLineEdit.setText(title)
     self._titleLineEdit.setAttribute(QtCore.Qt.WA_MacShowFocusRect, False)
     self._titleLineEdit.textEdited.connect(self.disableUrlEditing)
 
     self._artistLabel = QtWidgets.QLabel('Artist:')
     self._artistLineEdit = QtWidgets.QLineEdit()
-    self._artistLineEdit.setText(artist);
+    self._artistLineEdit.setText(artist)
     self._artistLineEdit.setAttribute(QtCore.Qt.WA_MacShowFocusRect, False)
     self._artistLineEdit.textEdited.connect(self.disableUrlEditing)
 
@@ -162,7 +160,7 @@ class QLyricsDialog (QtWidgets.QDialog):
       self._sourceLabelComboBox.setCurrentIndex(index)
 
     # Explanation
-    self._metadataExplanationLabel = QtWidgets.QLabel('You can try changing the title or artist that Lyric Grabber will look for in these text boxes. When you click the "Grab lyrics" button, Lyric Grabber will use this new information.')
+    self._metadataExplanationLabel = QtWidgets.QLabel('You can try changing the title or artist that Quaver will look for in these text boxes. When you click the "Grab lyrics" button, Quaver will use this new information.')
     self._metadataExplanationLabel.setWordWrap(True)
 
     # Spacer
@@ -223,15 +221,20 @@ class QLyricsDialog (QtWidgets.QDialog):
     # self._allQVBoxLayout.addWidget(self._songNavigationWidget)
     self.setLayout(self._allQVBoxLayout)
 
-    if QLyricsDialog.x_coordinate is not None and QLyricsDialog.y_coordinate is not None:
+    if QLyricsDialog.x_coordinate is not None \
+    and QLyricsDialog.y_coordinate is not None \
+    and utils.IS_MAC:
       # print('Read as {}, {}'.format(QLyricsDialog.x_coordinate, QLyricsDialog.y_coordinate))
-      if utils.IS_MAC:
-        self.move(QLyricsDialog.x_coordinate, QLyricsDialog.y_coordinate - 11 * self.devicePixelRatio())
-      elif utils.IS_WINDOWS:
-        self.move(QLyricsDialog.x_coordinate - 8 * self.devicePixelRatio(), QLyricsDialog.y_coordinate - 31 * self.devicePixelRatio())
+      # if utils.IS_MAC:
+      self.move(QLyricsDialog.x_coordinate, QLyricsDialog.y_coordinate - 11 * self.devicePixelRatio())
+      # elif utils.IS_WINDOWS:
+      #   self.move(QLyricsDialog.x_coordinate - 8 * self.devicePixelRatio(), QLyricsDialog.y_coordinate - 31 * self.devicePixelRatio())
     else:
-      self.move(parent.size().width() + self.mapToGlobal(parent.parent.pos()).x() + 25 * self.devicePixelRatio(),
-                self.mapToGlobal(parent.parent.pos()).y() - 25 * self.devicePixelRatio())
+      x = parent.size().width() + self.mapToGlobal(parent.parent.pos()).x() + 25 * self.devicePixelRatio()
+      y = self.mapToGlobal(parent.parent.pos()).y() - (25 * self.devicePixelRatio() if utils.IS_MAC else 0)
+      self.move(x if (x + self.width() < QtWidgets.QDesktopWidget().availableGeometry().width()) \
+                  else QtWidgets.QDesktopWidget().availableGeometry().width() - self.width(),
+                y if y > 0 else 0)
 
   def moveEvent(self, event):
     QLyricsDialog.x_coordinate = event.pos().x()
@@ -254,6 +257,11 @@ class QLyricsDialog (QtWidgets.QDialog):
         self.removeLyrics()
     elif key == QtCore.Qt.Key_Escape:
       self.close()
+
+  def updateMetadata(self, artist, title):
+    self.setWindowTitle('{artist} - {title}'.format(artist=artist, title=title))
+    self._titleLineEdit.setText(title)
+    self._artistLineEdit.setText(artist)
 
   def updateLyrics(self, lyrics):
     self._lyricsQLabel.setText(lyrics)
@@ -307,6 +315,9 @@ class QLyricsDialog (QtWidgets.QDialog):
 
   def getFilepath(self):
     return self._filepath
+
+  def setFilepath(self, filepath):
+    self._filepath = filepath
 
   def closeEvent(self, event):
     self.parent.resetColours()

@@ -11,6 +11,10 @@ class QSettingsDialog (QtWidgets.QDialog):
   def __init__(self, parent=None):
     super().__init__(parent)
 
+    # Style the window
+    if utils.IS_WINDOWS:
+      self.setWindowIcon(QtGui.QIcon(utils.resource_path('./assets/icon.png')))
+
     # Get settings from settings.ini file
     self._settings = settings.Settings()
 
