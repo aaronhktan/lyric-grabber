@@ -24,6 +24,7 @@ class QLyricsDialog (QtWidgets.QDialog):
     # self.setFixedSize(QtCore.QSize(300, 700))
     self.setModal(False)
     self.setWindowTitle('{artist} - {title}'.format(artist=artist, title=title))
+    self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
     self._settings = settings.Settings()
 
@@ -126,8 +127,9 @@ class QLyricsDialog (QtWidgets.QDialog):
     self._viewUrlButton.setFocusPolicy(QtCore.Qt.NoFocus)
     self._viewUrlButton.setMaximumWidth(150)
     self._copyUrlButton = QtWidgets.QPushButton(QtGui.QIcon(utils.resource_path('./assets/copy.png')), 'Copy URL')
-    self._copyUrlButton.pressed.connect(lambda: self._copyUrlButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/copy_inverted.png'))))
-    self._copyUrlButton.released.connect(lambda: self._copyUrlButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/copy.png'))))
+    if utils.IS_MAC:
+      self._copyUrlButton.pressed.connect(lambda: self._copyUrlButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/copy_inverted.png'))))
+      self._copyUrlButton.released.connect(lambda: self._copyUrlButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/copy.png'))))
     self._copyUrlButton.clicked.connect(lambda: self.copyUrl())
     self._copyUrlButton.setFocusPolicy(QtCore.Qt.NoFocus)
 
@@ -223,7 +225,10 @@ class QLyricsDialog (QtWidgets.QDialog):
 
     if QLyricsDialog.x_coordinate is not None and QLyricsDialog.y_coordinate is not None:
       # print('Read as {}, {}'.format(QLyricsDialog.x_coordinate, QLyricsDialog.y_coordinate))
-      self.move(QLyricsDialog.x_coordinate, QLyricsDialog.y_coordinate - 11 * self.devicePixelRatio())
+      if utils.IS_MAC:
+        self.move(QLyricsDialog.x_coordinate, QLyricsDialog.y_coordinate - 11 * self.devicePixelRatio())
+      elif utils.IS_WINDOWS:
+        self.move(QLyricsDialog.x_coordinate - 8 * self.devicePixelRatio(), QLyricsDialog.y_coordinate - 31 * self.devicePixelRatio())
     else:
       self.move(parent.size().width() + self.mapToGlobal(parent.parent.pos()).x() + 25 * self.devicePixelRatio(),
                 self.mapToGlobal(parent.parent.pos()).y() - 25 * self.devicePixelRatio())
@@ -257,7 +262,7 @@ class QLyricsDialog (QtWidgets.QDialog):
   def copyLyrics(self):
     clipboard = QtWidgets.QApplication.clipboard()
     clipboard.clear(mode=clipboard.Clipboard)
-    clipboard.setText(self._lyricsQLabel.text(), mode=QtGui.QClipboard.Clipboard)
+    clipboard.setText(self._lyricsQLabel.toPlainText(), mode=QtGui.QClipboard.Clipboard)
 
   def saveLyrics(self):
     lyrics = self._lyricsQLabel.toPlainText()

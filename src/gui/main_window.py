@@ -9,15 +9,11 @@ import base64
 # from colorthief import ColorThief
 from concurrent import futures
 import os
-import platform
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 # Style note: Functions and variable names are not PEP 8 compliant.
 # Blame PyQt for that!
 # Keeping consistency with PyQt camelCase is prioritised.
-
-IS_MAC = platform.uname().system.startswith('Darw')
-IS_WINDOWS = platform.uname().system.startswith('Windows')
 
 class states:
   NOT_STARTED = 0
@@ -212,8 +208,9 @@ class QWidgetItem (QtWidgets.QWidget):
 
     # Add buttons
     self._lyricsButton = QtWidgets.QPushButton(QtGui.QIcon(utils.resource_path('./assets/lyrics.png')), 'View Lyrics')
-    self._lyricsButton.pressed.connect(lambda: self._lyricsButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/lyrics_inverted.png'))))
-    self._lyricsButton.released.connect(lambda: self._lyricsButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/lyrics.png'))))
+    if utils.IS_MAC:
+      self._lyricsButton.pressed.connect(lambda: self._lyricsButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/lyrics_inverted.png'))))
+      self._lyricsButton.released.connect(lambda: self._lyricsButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/lyrics.png'))))
     self._lyricsButton.setMaximumWidth(125)
     self._lyricsButton.clicked.connect(lambda: self.openDetailDialog())
     self._openButton = QtWidgets.QPushButton('Open in Finder')
@@ -311,18 +308,21 @@ class QWidgetItem (QtWidgets.QWidget):
     self._textArtistLabel.setText(text)
 
   def openDetailDialog(self):
-    if QWidgetItem.dialog is not None:
-      QWidgetItem.dialog.hide()
-    # self.window().setEnabled(False)
-    QWidgetItem.dialog = detail_dialog.QLyricsDialog(parent=self,
-                                                     artist=self._artist,
-                                                     title=self._title,
-                                                     lyrics=self._lyrics,
-                                                     url=self._url,
-                                                     filepath=self._filepath)
-    QWidgetItem.dialog.show()
-    self.activateWindow()
-    # self.window().setEnabled(True)
+    try:
+      QWidgetItem.dialog.close()
+    except:
+      pass
+    finally:
+      # self.window().setEnabled(False)
+      QWidgetItem.dialog = detail_dialog.QLyricsDialog(parent=self,
+                                                       artist=self._artist,
+                                                       title=self._title,
+                                                       lyrics=self._lyrics,
+                                                       url=self._url,
+                                                       filepath=self._filepath)
+      QWidgetItem.dialog.show()
+      self.activateWindow()
+      # self.window().setEnabled(True)
 
   def setfilepath(self, filepath):
     self._filepath = filepath
@@ -394,6 +394,8 @@ class MainWindow (QtWidgets.QMainWindow):
     # Style main window
     self.setMinimumSize(600, 400)
     self.setUnifiedTitleAndToolBarOnMac(True)
+    if utils.IS_WINDOWS:
+      self.setWindowIcon(QtGui.QIcon(utils.resource_path('./assets/icon.png')))
 
     # Create and add items to menubar
     self._openAboutAction = QtWidgets.QAction('About Quaver')
@@ -419,7 +421,7 @@ class MainWindow (QtWidgets.QMainWindow):
     self._removeCompletedAction.setShortcut('Ctrl+Shift+Backspace')
     self._removeCompletedAction.triggered.connect(lambda: self.removeCompletedFiles())
 
-    if IS_MAC:
+    if utils.IS_MAC:
       self._minimizeAction = QtWidgets.QAction('Minimize', self)
       self._minimizeAction.setShortcut('Ctrl+M')
       self._minimizeAction.triggered.connect(lambda: self.showMinimized())
@@ -435,12 +437,12 @@ class MainWindow (QtWidgets.QMainWindow):
     self._helpAction = QtWidgets.QAction('Help', self)
     self._helpAction.triggered.connect(lambda: self.openSettingsDialog())
 
-    if IS_MAC:
+    if utils.IS_MAC:
       self._menuBar = QtWidgets.QMenuBar()
     else:
       self._menuBar = self.menuBar()
 
-    if IS_MAC:
+    if utils.IS_MAC:
       self._fileMenu = self._menuBar.addMenu('Quaver')
       self._fileMenu.addAction(self._openAboutAction)
       self._fileMenu.addSeparator()
@@ -457,7 +459,7 @@ class MainWindow (QtWidgets.QMainWindow):
     self._editMenu.addAction(self._removeCompletedAction)
     self._editMenu.addSeparator()
 
-    if IS_MAC:
+    if utils.IS_MAC:
       self._windowMenu = self._menuBar.addMenu('Window')
       self._windowMenu.addAction(self._minimizeAction)
       self._windowMenu.addAction(self._maximizeAction)
@@ -465,17 +467,17 @@ class MainWindow (QtWidgets.QMainWindow):
       self._windowMenu.addSeparator()
       self._windowMenu.addAction(self._showNormalAction)
 
-    if IS_WINDOWS:
+    if utils.IS_WINDOWS:
       self._toolsMenu = self._menuBar.addMenu('Tools')
       self._toolsMenu.addAction(self._openSettingsAction)
 
     self._helpMenu = self._menuBar.addMenu('Help')
     self._helpMenu.addAction(self._helpAction)
-    if IS_WINDOWS:
+    if utils.IS_WINDOWS:
       self._helpMenu.addAction(self._openAboutAction)
 
     # Do not create toolbar if not on Mac
-    if IS_MAC:
+    if utils.IS_MAC:
       # Add items to toolbar
       self._leftAlignSpacer = QtWidgets.QSpacerItem(15, 25, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
       self._addFileButton = QtWidgets.QPushButton(QtGui.QIcon(utils.resource_path('./assets/add_music.png')), 'Add song')
@@ -533,18 +535,25 @@ class MainWindow (QtWidgets.QMainWindow):
     # Create QScrollArea to contains widget containing list of all list items
     # NOTE: Not using QListWidget because scrolling is choppy on macOS
     self._mainScrollArea = QtWidgets.QScrollArea(self)
+    self._mainScrollArea.setFrameShape(QtWidgets.QFrame.NoFrame)
     self._mainScrollArea.setWidgetResizable(True)
     self._mainScrollArea.setAttribute(QtCore.Qt.WA_MacShowFocusRect, False)
     self._mainScrollArea.setWidget(self._mainScrollAreaWidget)
     self.setCentralWidget(self._mainScrollArea)
 
+  def closeEvent(self, event):
+    try:
+      self._fetch_thread.exit()
+    except:
+      print('No thread running, exiting!')
+
   def keyPressEvent(self, event):
     key = event.key()
     # Handle modifiers first, then others
     if event.modifiers() & QtCore.Qt.ShiftModifier and event.modifiers() & QtCore.Qt.ControlModifier:
-      if key == QtCore.Qt.Key_F and IS_MAC:
+      if key == QtCore.Qt.Key_F and utils.IS_MAC:
         self.showFullScreen()
-      elif key == QtCore.Qt.Key_M and IS_MAC:
+      elif key == QtCore.Qt.Key_M and utils.IS_MAC:
         self.showMaximized()
       elif key == QtCore.Qt.Key_O:
         # Super + shift + O should open folder browser
@@ -552,7 +561,7 @@ class MainWindow (QtWidgets.QMainWindow):
       elif key == QtCore.Qt.Key_Backspace:
         self.removeCompletedFiles()
     elif event.modifiers() & QtCore.Qt.ControlModifier:
-      if key == QtCore.Qt.Key_M and IS_MAC:
+      if key == QtCore.Qt.Key_M and utils.IS_MAC:
         self.showMinimized()
       elif key == QtCore.Qt.Key_O:
         # Super + O should open file browser

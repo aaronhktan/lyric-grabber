@@ -5,6 +5,7 @@ from PyQt5 import QtCore, QtWidgets
 
 def main():
   QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
+  QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
   app = QtWidgets.QApplication(sys.argv)
 
   window = main_window.MainWindow()

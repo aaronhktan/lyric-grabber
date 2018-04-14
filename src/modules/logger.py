@@ -1,9 +1,11 @@
+from modules import utils
+
 class logger:
 
-  ERROR = '\033[31;1m'
-  INFO = '\033[93;1m'
-  RESET = '\033[0m'
-  SUCCESS = '\033[32;1m'
+  ERROR = '\033[31;1m' if utils.IS_MAC else ''
+  INFO = '\033[93;1m' if utils.IS_MAC else ''
+  RESET = '\033[0m' if utils.IS_MAC else ''
+  SUCCESS = '\033[32;1m' if utils.IS_MAC else ''
 
   LOG_LEVEL_SUCCESS = 0
   LOG_LEVEL_ERROR = 1

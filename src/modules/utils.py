@@ -1,4 +1,8 @@
 import os, sys
+import platform
+
+IS_MAC = platform.uname().system.startswith('Darw')
+IS_WINDOWS = platform.uname().system.startswith('Windows')
 
 def resource_path(relative_path):
      if hasattr(sys, '_MEIPASS'):

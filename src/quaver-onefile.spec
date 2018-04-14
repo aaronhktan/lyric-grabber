@@ -38,18 +38,32 @@ a.datas += [('./assets/add_folder.png', './assets/add_folder.png', 'DATA'),
             ('./modules/settings.ini', './modules/settings.ini', 'DATA')]
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
-exe = EXE(pyz,
-          a.scripts,
-          a.binaries,
-          a.zipfiles,
-          a.datas,
-          name='Quaver',
-          debug=False,
-          strip=False,
-          upx=True,
-          runtime_tmpdir=None,
-          console=True,
-          icon='assets/icon.icns')
+if sys.platform == 'darwin':
+  exe = EXE(pyz,
+            a.scripts,
+            a.binaries,
+            a.zipfiles,
+            a.datas,
+            name='Quaver',
+            debug=False,
+            strip=False,
+            upx=True,
+            runtime_tmpdir=None,
+            console=True,
+            icon='assets/icon.icns')
+elif sys.platform == 'win32':
+  exe = EXE(pyz,
+            a.scripts,
+            a.binaries,
+            a.zipfiles,
+            a.datas,
+            name='Quaver',
+            debug=False,
+            strip=False,
+            upx=True,
+            runtime_tmpdir=None,
+            console=False,
+            icon='assets/icon.ico')
 
 # Build a .app if on OS X
 if sys.platform == 'darwin':
