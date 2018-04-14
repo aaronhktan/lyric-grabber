@@ -420,7 +420,7 @@ class MainWindow (QtWidgets.QMainWindow):
 
     self._removeAllAction = QtWidgets.QAction('Remove all Files')
     self._removeAllAction.setShortcut('Ctrl+Backspace')
-    self._removeAllAction.triggered.connect(lambda: self.removeCompletedFiles())
+    self._removeAllAction.triggered.connect(lambda: self.removeAllFilesFromList())
     self._removeCompletedAction = QtWidgets.QAction('Remove Files with Lyrics')
     self._removeCompletedAction.setShortcut('Ctrl+Shift+Backspace')
     self._removeCompletedAction.triggered.connect(lambda: self.removeCompletedFiles())
@@ -693,21 +693,27 @@ class MainWindow (QtWidgets.QMainWindow):
         self._mainScrollAreaWidgetLayout.itemAt(i).widget().setBackgroundColor(QtCore.Qt.white)
 
   def removeAllFilesFromList(self):
-    if QWidgetItem.dialog:
+    try:
       QWidgetItem.dialog.close()
-    for i in reversed(range(self._mainScrollAreaWidgetLayout.count())):
-      self._mainScrollAreaWidgetLayout.itemAt(i).widget().setParent(None)
-    if hasattr(self, '_filepaths'):
-      self._filepaths.clear()
+    except:
+      pass
+    finally:
+      for i in reversed(range(self._mainScrollAreaWidgetLayout.count())):
+        self._mainScrollAreaWidgetLayout.itemAt(i).widget().setParent(None)
+      if hasattr(self, '_filepaths'):
+        self._filepaths.clear()
 
   def removeCompletedFiles(self):
-    if QWidgetItem.dialog:
+    try:
       QWidgetItem.dialog.close()
-    for i in reversed(range(self._mainScrollAreaWidgetLayout.count())):
-      if self._mainScrollAreaWidgetLayout.itemAt(i).widget().getState() == states.COMPLETE:
-        self._filepaths.remove(self._mainScrollAreaWidgetLayout.itemAt(i).widget().getFilepath())
-        self._mainScrollAreaWidgetLayout.itemAt(i).widget().setParent(None)
-    self.resetListColours()
+    except:
+      pass
+    finally:
+      for i in reversed(range(self._mainScrollAreaWidgetLayout.count())):
+        if self._mainScrollAreaWidgetLayout.itemAt(i).widget().getState() == states.COMPLETE:
+          self._filepaths.remove(self._mainScrollAreaWidgetLayout.itemAt(i).widget().getFilepath())
+          self._mainScrollAreaWidgetLayout.itemAt(i).widget().setParent(None)
+      self.resetListColours()
 
   def openSettingsDialog(self):
     self.setEnabled(False)
