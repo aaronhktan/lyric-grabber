@@ -1,15 +1,18 @@
-from modules.logger import logger
-from gui import detail_dialog
-from modules import lyric_grabber
-from gui import settings_dialog
-from modules import settings
-from modules import utils
-
-import base64
-# from colorthief import ColorThief
 from concurrent import futures
 import os
+
+# from colorthief import ColorThief
 from PyQt5 import QtCore, QtGui, QtWidgets
+
+from gui import about_dialog
+from gui import appearance
+from gui import detail_dialog
+from gui import error_dialog
+from gui import settings_dialog
+from modules.logger import logger
+from modules import lyric_grabber
+from modules import settings
+from modules import utils
 
 # Style note: Functions and variable names are not PEP 8 compliant.
 # Blame PyQt for that!
@@ -166,8 +169,6 @@ class SingleLyricGrabberThread (QtCore.QThread):
                                                                                                 error=str(e)))
 
 class QWidgetItem (QtWidgets.QWidget):
-  # self.largeFont = QtGui.QFont('Gill Sans', 18, QtGui.QFont.Bold)
-  largeFont = QtGui.QFont('Gill Sans', 18)
   dialog = None;
 
   def __init__(self, parent):
@@ -189,7 +190,9 @@ class QWidgetItem (QtWidgets.QWidget):
 
     # Add title and artist text labels
     self._textTitleLabel = QtWidgets.QLabel()
+    self._textTitleLabel.setFont(appearance.MEDIUM_FONT)
     self._textArtistLabel = QtWidgets.QLabel()
+    self._textArtistLabel.setFont(appearance.SMALL_FONT)
 
     self._textVBoxLayout = QtWidgets.QVBoxLayout()
     self._textVBoxLayout.addWidget(self._textTitleLabel)
@@ -202,9 +205,6 @@ class QWidgetItem (QtWidgets.QWidget):
     # self._textArtistQLabel.setStyleSheet('''
     #     background: rgb(255, 0, 0);
     # ''')
-
-    # Make font
-    self._textTitleLabel.setFont(self.largeFont)
 
     # Add buttons
     self._lyricsButton = QtWidgets.QPushButton(QtGui.QIcon(utils.resource_path('./assets/lyrics.png')), 'View Lyrics')
@@ -309,7 +309,7 @@ class QWidgetItem (QtWidgets.QWidget):
 
   def openDetailDialog(self):
     self.resetColours()
-    self.setBackgroundColor(QtGui.QColor(170, 211, 255))
+    self.setBackgroundColor(appearance.HIGHLIGHT_COLOUR)
     try:
       QWidgetItem.dialog.setWindowTitle('{artist} - {title}'.format(artist=self._artist, title=self._title))
       QWidgetItem.dialog.updateLyrics(self._lyrics)
@@ -358,7 +358,7 @@ class QWidgetItem (QtWidgets.QWidget):
         if QWidgetItem.dialog.getFilepath() == self._filepath:
           QWidgetItem.dialog.updateLyrics(lyrics)
     except Exception as e:
-      print(e)
+      print(str(e))
 
   def saveLyrics(self, lyrics):
     try:
@@ -381,7 +381,7 @@ class QWidgetItem (QtWidgets.QWidget):
         if QWidgetItem.dialog.getFilepath() == self._filepath:
           QWidgetItem.dialog.updateUrl(url)
     except Exception as e:
-      print(e)
+      print(str(e))
 
   def resetColours(self):
     self.parent.resetListColours()
@@ -395,15 +395,12 @@ class MainWindow (QtWidgets.QMainWindow):
   def __init__(self):
     super(MainWindow, self).__init__()
 
-    # Style main window
-    self.setMinimumSize(600, 400)
-    self.setUnifiedTitleAndToolBarOnMac(True)
-    if utils.IS_WINDOWS:
-      self.setWindowIcon(QtGui.QIcon(utils.resource_path('./assets/icon.png')))
+    # Create a settings object
+    self._settings = settings.Settings()
 
     # Create and add items to menubar
     self._openAboutAction = QtWidgets.QAction('About Quaver')
-    self._openAboutAction.triggered.connect(lambda: self.openSettingsDialog())
+    self._openAboutAction.triggered.connect(lambda: self.openAboutDialog())
     self._openSettingsAction = QtWidgets.QAction('Preferences')
     self._openSettingsAction.setShortcut('Ctrl+Comma')
     self._openSettingsAction.triggered.connect(lambda: self.openSettingsDialog())
@@ -439,7 +436,7 @@ class MainWindow (QtWidgets.QMainWindow):
       self._fullScreenAction.triggered.connect(lambda: self.showFullScreen())
 
     self._helpAction = QtWidgets.QAction('Help', self)
-    self._helpAction.triggered.connect(lambda: self.openSettingsDialog())
+    self._helpAction.triggered.connect(lambda: self.openAboutDialog())
 
     if utils.IS_MAC:
       self._menuBar = QtWidgets.QMenuBar()
@@ -545,6 +542,12 @@ class MainWindow (QtWidgets.QMainWindow):
     self._mainScrollArea.setWidget(self._mainScrollAreaWidget)
     self.setCentralWidget(self._mainScrollArea)
 
+    # Style main window
+    self.setMinimumSize(600, 400)
+    self.setUnifiedTitleAndToolBarOnMac(True)
+    if utils.IS_WINDOWS:
+      self.setWindowIcon(QtGui.QIcon(utils.resource_path('./assets/icon.png')))
+
   def closeEvent(self, event):
     try:
       self._fetch_thread.exit()
@@ -608,8 +611,6 @@ class MainWindow (QtWidgets.QMainWindow):
 
     if not hasattr(self, '_filepaths'):
       self._filepaths = []
-    else:
-      print([filepath for filepath in self._filepaths])
     self._new_filepaths = []
     self._invalid_filepaths = []
 
@@ -618,8 +619,8 @@ class MainWindow (QtWidgets.QMainWindow):
       # print('Directory selected is ' + directory)
       for root, dirs, files in os.walk(directory):
         for file in files:
-          if file.endswith(settings.SUPPORTED_FILETYPES):
-            if file in self._filepaths:
+          if file.endswith(utils.SUPPORTED_FILETYPES):
+            if os.path.join(root, file) in self._filepaths:
               self._invalid_filepaths.append(os.path.join(root, file))
             else:
               self._filepaths.append(os.path.join(root, file))
@@ -631,7 +632,7 @@ class MainWindow (QtWidgets.QMainWindow):
       # print('Files selected are ' + str(files))
       try:
         for file in files[0]:
-          if file.endswith(settings.SUPPORTED_FILETYPES):
+          if file.endswith(utils.SUPPORTED_FILETYPES):
             if file in self._filepaths:
               self._invalid_filepaths.append(file)
             else:
@@ -642,12 +643,6 @@ class MainWindow (QtWidgets.QMainWindow):
       except:
         pass
 
-    # Show an error message for each invalid filepath found
-    if self._invalid_filepaths:
-      message = '<b>Some files couldn\'t be added!</b><br>Make sure that it is a valid filetype, and that it hasn\'t already been added.<br><br>▸ ' + '<br>▸ '.join(self._invalid_filepaths)
-      messageDialog = QtWidgets.QErrorMessage(self)
-      messageDialog.showMessage(message)
-
     # Start another thread for network requests to not block the GUI thread
     self._fetch_thread = LyricGrabberThread(self, sorted(self._new_filepaths))
     self._fetch_thread.start()
@@ -655,6 +650,13 @@ class MainWindow (QtWidgets.QMainWindow):
     self._fetch_thread.addFileToList.connect(self.addFileToList)
     self._fetch_thread.setProgressIcon.connect(self.setProgressIcon)
     self._fetch_thread.setLyrics.connect(self.setLyrics)
+
+    # Show an error message for each invalid filepath found
+    if self._invalid_filepaths and self._settings.get_show_errors():
+      self.setEnabled(False)
+      self._error_dialog = error_dialog.QErrorDialog(self, self._invalid_filepaths)
+      self._error_dialog.exec()
+      self.setEnabled(True)
 
   def addFileToList(self, artist, title, art, filepath):
     # Create WidgetItem for each item
@@ -666,7 +668,7 @@ class MainWindow (QtWidgets.QMainWindow):
     listWidgetItem.setTitleText(title)
     listWidgetItem.setfilepath(filepath)
     if self._mainScrollAreaWidgetLayout.count() % 2:
-      listWidgetItem.setBackgroundColor(QtGui.QColor(245, 245, 245))
+      listWidgetItem.setBackgroundColor(appearance.ALTERNATE_COLOUR_ONE)
     else:
       listWidgetItem.setBackgroundColor(QtCore.Qt.white)
     # Add ListQWidgetItem into mainScrollAreaWidgetLayout
@@ -688,13 +690,14 @@ class MainWindow (QtWidgets.QMainWindow):
   def resetListColours(self):
     for i in range(self._mainScrollAreaWidgetLayout.count()):
       if i % 2:
-        self._mainScrollAreaWidgetLayout.itemAt(i).widget().setBackgroundColor(QtGui.QColor(245, 245, 245))
+        self._mainScrollAreaWidgetLayout.itemAt(i).widget().setBackgroundColor(appearance.ALTERNATE_COLOUR_ONE)
       else:
         self._mainScrollAreaWidgetLayout.itemAt(i).widget().setBackgroundColor(QtCore.Qt.white)
 
   def removeAllFilesFromList(self):
     try:
       QWidgetItem.dialog.close()
+      self._fetch_thread.exit()
     except:
       pass
     finally:
@@ -715,8 +718,14 @@ class MainWindow (QtWidgets.QMainWindow):
           self._mainScrollAreaWidgetLayout.itemAt(i).widget().setParent(None)
       self.resetListColours()
 
+  def openAboutDialog(self):
+    self.setEnabled(False)
+    self._settings_dialog = about_dialog.QAboutDialog()
+    self._settings_dialog.exec()
+    self.setEnabled(True)
+
   def openSettingsDialog(self):
     self.setEnabled(False)
-    self._dialog = settings_dialog.QSettingsDialog()
-    self._dialog.exec()
+    self._settings_dialog = settings_dialog.QSettingsDialog()
+    self._settings_dialog.exec()
     self.setEnabled(True)

@@ -153,7 +153,7 @@ class QLyricsDialog (QtWidgets.QDialog):
     self._sourceLabel = QtWidgets.QLabel('Source:')
     self._sourceLabelComboBox = QtWidgets.QComboBox()
     self._sourceLabelComboBox.setMaximumWidth(150)
-    for source in settings.SUPPORTED_SOURCES:
+    for source in utils.SUPPORTED_SOURCES:
       self._sourceLabelComboBox.addItem(source)
     index = self._sourceLabelComboBox.findText(self._settings.get_source(), QtCore.Qt.MatchFixedString)
     if index >= 0:
