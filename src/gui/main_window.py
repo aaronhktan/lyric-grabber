@@ -211,10 +211,10 @@ class QWidgetItem (QtWidgets.QWidget):
     if utils.IS_MAC:
       self._lyricsButton.pressed.connect(lambda: self._lyricsButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/lyrics_inverted.png'))))
       self._lyricsButton.released.connect(lambda: self._lyricsButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/lyrics.png'))))
-    self._lyricsButton.setMaximumWidth(125)
+    self._lyricsButton.setFixedWidth(125)
     self._lyricsButton.clicked.connect(lambda: self.openDetailDialog())
     self._openButton = QtWidgets.QPushButton('Open in Finder')
-    self._openButton.setMaximumWidth(125)
+    self._openButton.setFixedWidth(125)
     self._openButton.clicked.connect(lambda: self.openfilepath())
     # self._removeButton = QtWidgets.QPushButton('Remove')
     # self._removeButton.setMaximumWidth(125)
@@ -228,10 +228,17 @@ class QWidgetItem (QtWidgets.QWidget):
 
     # Layout containing all elements
     self._allHBoxLayout = QtWidgets.QHBoxLayout()
+    if utils.IS_WINDOWS:
+      self._leftSpacer = QtWidgets.QSpacerItem(5, 25, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+      self._allHBoxLayout.addItem(self._leftSpacer)
     self._allHBoxLayout.addWidget(self._progressLabel, 0)
     self._allHBoxLayout.addWidget(self._albumArtLabel, 1)
     self._allHBoxLayout.addLayout(self._textVBoxLayout, 2)
     self._allHBoxLayout.addLayout(self._buttonVBoxLayout, 3)
+    # Add a spacer on the right side for Windows
+    if utils.IS_WINDOWS:
+      self._rightSpacer = QtWidgets.QSpacerItem(10, 25, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+      self._allHBoxLayout.addItem(self._rightSpacer)
 
     self.setLayout(self._allHBoxLayout)
 
