@@ -1,5 +1,6 @@
 from modules.logger import logger
 from modules import settings
+from modules import utils
 
 from collections import namedtuple
 import mutagen
@@ -25,7 +26,7 @@ def get_metadata(get_art, song_filepath):
       message = logger.create_message(logger.LOG_LEVEL_ERROR, 'WV files not supported;' \
       ' consider converting {file} to another format'.format(file=song_filepath))
       return ERROR_TUPLE(False, message, song_filepath)
-    elif song_filepath.endswith(settings.SUPPORTED_FILETYPES):
+    elif song_filepath.endswith(utils.SUPPORTED_FILETYPES):
       m = mutagen.File(song_filepath)
       for tag in ('TPE1', u'\xa9ART', 'Author', 'Artist', 'ARTIST', 'artist'):
         try:

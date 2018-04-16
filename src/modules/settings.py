@@ -4,14 +4,6 @@ import configparser
 
 current_version = 1
 
-SUPPORTED_FILETYPES = ('.mp3', '.mp4', '.m4a', '.m4v', \
-                       '.tta', '.ape', '.wma', '.aiff', \
-                       '.flac', '.ogg', '.oga', '.opus', \
-                       '.aac', '.wav', '.wv')
-
-SUPPORTED_SOURCES = ('AZLyrics', 'Genius', 'LyricsFreak', \
-                     'LyricWiki', 'Metrolyrics', 'Musixmatch')
-
 class Settings:
   source = 'genius'
   approximate = False
@@ -19,6 +11,7 @@ class Settings:
   remove_brackets = True
   metadata = True
   text = False
+  show_errors = True
 
   def __init__ (self, parent=None):
     config = configparser.ConfigParser()
@@ -36,48 +29,57 @@ class Settings:
       self.set_metadata(config_settings.getboolean('metadata'))
     if 'text' in config_settings:
       self.set_text(config_settings.getboolean('text'))
+    if 'show_errors' in config_settings:
+      self.set_show_errors(config_settings.getboolean('show_errors'))
 
   def set_source(self, source_flag):
-    self.source = source_flag
+    Settings.source = str(source_flag)
     self.save_settings()
 
   def get_source(self):
-    return self.source
+    return Settings.source
 
   def set_approximate(self, approximate_flag):
-    self.approximate = approximate_flag
+    Settings.approximate = bool(approximate_flag)
     self.save_settings()
 
   def get_approximate(self):
-    return self.approximate
+    return Settings.approximate
 
   def set_info(self, info_flag):
-    self.info = info_flag
+    Settings.info = bool(info_flag)
     self.save_settings()
 
   def get_info(self):
-    return self.info
+    return Settings.info
 
   def set_remove_brackets(self, remove_brackets_flag):
-    self.remove_brackets = remove_brackets_flag
+    Settings.remove_brackets = bool(remove_brackets_flag)
     self.save_settings()
 
   def get_remove_brackets(self):
-    return self.remove_brackets
+    return Settings.remove_brackets
 
   def set_metadata(self, metadata_flag):
-    self.metadata = metadata_flag
+    Settings.metadata = bool(metadata_flag)
     self.save_settings()
 
   def get_metadata(self):
-    return self.metadata
+    return Settings.metadata
 
   def set_text(self, text_flag):
-    self.text = text_flag
+    Settings.text = bool(text_flag)
     self.save_settings()
 
   def get_text(self):
-    return self.text
+    return Settings.text
+
+  def set_show_errors(self, show_errors_flag):
+    Settings.show_errors = bool(show_errors_flag)
+    self.save_settings()
+
+  def get_show_errors(self):
+    return Settings.show_errors
 
   def save_settings(self):
     config = configparser.ConfigParser()
@@ -86,7 +88,8 @@ class Settings:
                           'info': self.info,
                           'remove_brackets': self.remove_brackets,
                           'metadata': self.metadata,
-                          'text': self.text}
+                          'text': self.text,
+                          'show_errors': self.show_errors}
     config['ABOUT'] = {'version': 1}
     with open(utils.resource_path('./modules/settings.ini'), 'w') as configfile:
       config.write(configfile)
