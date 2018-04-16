@@ -36,6 +36,7 @@ class QErrorDialog (QtWidgets.QDialog):
     self._filepathsModel = QtGui.QStandardItemModel(self._filepathsListView)
     [self._filepathsModel.appendRow(QtGui.QStandardItem(filepath)) for filepath in filepaths]
     self._filepathsListView.setModel(self._filepathsModel)
+    self._filepathsListView.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
     # Spacer as separator
     self._verticalSpacer_2 = QtWidgets.QSpacerItem(50, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
@@ -66,3 +67,5 @@ class QErrorDialog (QtWidgets.QDialog):
     if utils.IS_WINDOWS:
       self.setWindowIcon(QtGui.QIcon(utils.resource_path('./assets/icon.png')))
     self.setWindowTitle('Just so you know...')
+    self.setFixedSize(self.minimumSizeHint())
+    self.setAttribute(QtCore.Qt.WA_DeleteOnClose)

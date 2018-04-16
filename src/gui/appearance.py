@@ -11,7 +11,7 @@ if utils.IS_MAC:
   SMALL_FONT = QtGui.QFont('.SF NS Text', 13)
   TINY_FONT = QtGui.QFont('.SF NS Text', 10)
 elif utils.IS_WINDOWS:
-  LARGE_FONT = QtGui.QFont('MS Shell Dlg 2', 24)
-  MEDIUM_FONT = QtGui.QFont('MS Shell Dlg 2', 18)
-  SMALL_FONT = QtGui.QFont('MS Shell Dlg 2', 13)
-  TINY_FONT = QtGui.QFont('MS Shell Dlg 2', 10)
+  LARGE_FONT = QtGui.QFont('MS Shell Dlg 2', 16)
+  MEDIUM_FONT = QtGui.QFont('MS Shell Dlg 2', 14)
+  SMALL_FONT = QtGui.QFont('MS Shell Dlg 2', 9)
+  TINY_FONT = QtGui.QFont('MS Shell Dlg 2', 7)

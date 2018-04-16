@@ -48,7 +48,8 @@ class QAboutDialog (QtWidgets.QDialog):
     # self._iconLabel.setPalette(self._pal)
 
     self._aboutGridLayout = QtWidgets.QGridLayout()
-    # self._aboutGridLayout.setVerticalSpacing(5)
+    if utils.IS_WINDOWS:
+        self._aboutGridLayout.setVerticalSpacing(15)
     self._aboutGridLayout.addWidget(self._iconLabel, 0, 0, 1, -1, QtCore.Qt.AlignCenter)
     self._aboutGridLayout.addWidget(self._nameLabel, 1, 0, 1, -1, QtCore.Qt.AlignCenter)
     self._aboutGridLayout.addWidget(self._sloganLabel, 2, 0, 1, -1, QtCore.Qt.AlignCenter)
@@ -66,7 +67,10 @@ class QAboutDialog (QtWidgets.QDialog):
       self.setWindowIcon(QtGui.QIcon(utils.resource_path('./assets/icon.png')))
     self.setWindowTitle('About Quaver')
     self.setWindowModality(QtCore.Qt.ApplicationModal)
-    self.setFixedSize(self.minimumSizeHint())
+    if utils.IS_MAC:
+        self.setFixedSize(self.minimumSizeHint())
+    else:
+        self.setFixedSize(200, self.minimumSizeHint().height())
     self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
   def openProjectLink(self):
