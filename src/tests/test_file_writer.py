@@ -1,7 +1,7 @@
-from modules import file_writer
-
 import os
 import unittest
+
+from modules import file_writer
 
 class TestFileWrite(unittest.TestCase):
   def test_write_file(self):

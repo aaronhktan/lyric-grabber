@@ -1,7 +1,7 @@
+from PyQt5 import QtCore, QtGui, QtWidgets
+
 from modules import settings
 from modules import utils
-
-from PyQt5 import QtCore, QtGui, QtWidgets
 
 # Style note: Functions and variable names are not PEP 8 compliant.
 # Blame PyQt for that!
@@ -50,6 +50,9 @@ class QSettingsDialog (QtWidgets.QDialog):
     self._separatorLineFrame.setFrameShadow(QtWidgets.QFrame.Raised)
 
     # Other controls
+    self._playSoundsCheckBox = QtWidgets.QCheckBox('Enable sound effects')
+    self._playSoundsCheckBox.stateChanged.connect(lambda state: self._settings.set_play_sounds(1) if state else self._settings.set_play_sounds(0))
+    self._playSoundsCheckBox.setChecked(self._settings.get_play_sounds())
     self._showErrorCheckBox = QtWidgets.QCheckBox('Show error messages')
     self._showErrorCheckBox.stateChanged.connect(lambda state: self._settings.set_show_errors(1) if state else self._settings.set_show_errors(0))
     self._showErrorCheckBox.setChecked(self._settings.get_show_errors())
@@ -59,7 +62,7 @@ class QSettingsDialog (QtWidgets.QDialog):
     # self._tagCheckBox.setChecked(True)
 
     # Separator leave a bunch of space in case settings expands
-    # self._verticalSpacer = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+    self._verticalSpacer = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
     # Add settings and about to dialog
     self._settingsGridLayout = QtWidgets.QGridLayout()
@@ -71,8 +74,9 @@ class QSettingsDialog (QtWidgets.QDialog):
     self._settingsGridLayout.addWidget(self._metadataCheckBox, 4, 1)
     self._settingsGridLayout.addWidget(self._textCheckBox, 5, 1)
     self._settingsGridLayout.addWidget(self._separatorLineFrame, 6, 0, 1, -1)
-    self._settingsGridLayout.addWidget(self._showErrorCheckBox, 7, 1)
-    # self._settingsGridLayout.addItem(self._verticalSpacer, 6, 0)
+    self._settingsGridLayout.addWidget(self._playSoundsCheckBox, 7, 1)
+    self._settingsGridLayout.addWidget(self._showErrorCheckBox, 8, 1)
+    self._settingsGridLayout.addItem(self._verticalSpacer, 9, 0, -1, -1)
 
     self.setLayout(self._settingsGridLayout)
     self.setAttribute(QtCore.Qt.WA_DeleteOnClose)

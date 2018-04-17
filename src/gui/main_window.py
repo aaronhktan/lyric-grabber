@@ -2,7 +2,7 @@ from concurrent import futures
 import os
 
 # from colorthief import ColorThief
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtMultimedia, QtWidgets
 
 from gui import about_dialog
 from gui import appearance
@@ -28,6 +28,7 @@ class LyricGrabberThread (QtCore.QThread):
   addFileToList = QtCore.pyqtSignal(['QString', 'QString', bytes, 'QString'])
   setProgressIcon = QtCore.pyqtSignal(['QString', int])
   setLyrics = QtCore.pyqtSignal(['QString', 'QString', 'QString'])
+  notifyComplete = QtCore.pyqtSignal(bool)
 
   def __init__(self, parent, filepaths):
     super().__init__()
@@ -107,6 +108,7 @@ class LyricGrabberThread (QtCore.QThread):
                                                                              song_filepath=result.result().filepath))
         else:
           self.setProgressIcon.emit(result.result().filepath, states.ERROR)
+          logger.log(logger.LOG_LEVEL_INFO, 'No lyrics found: ' + result.result().message)
       except Exception as e:
         self.setProgressIcon.emit(result.result().filepath, states.ERROR)
         logger.log(logger.LOG_LEVEL_ERROR,
@@ -114,12 +116,17 @@ class LyricGrabberThread (QtCore.QThread):
                                                                                                   error=str(e)))
 
     for result in futures.as_completed(self._fileWritingResults):
+      # Super weird, but this causes crashes in the compiled .app for macOS.
+      # Uncomment for testing only.
+      # print(result.result().message)
       self.setProgressIcon.emit(result.result().filepath, states.COMPLETE)
-      print(result.result().message)
+
+    self.notifyComplete.emit(True)
 
 class SingleLyricGrabberThread (QtCore.QThread):
   setProgressIcon = QtCore.pyqtSignal([int])
   setLyrics = QtCore.pyqtSignal(['QString'])
+  notifyComplete = QtCore.pyqtSignal(bool)
 
   def __init__(self, parent, filepath, artist=None, title=None, url=None, source=None):
     super().__init__()
@@ -167,6 +174,8 @@ class SingleLyricGrabberThread (QtCore.QThread):
       logger.log(logger.LOG_LEVEL_ERROR,
                  ' Exception occurred while getting lyrics for file {filepath}: {error}'.format(self_filepath,
                                                                                                 error=str(e)))
+
+    self.notifyComplete.emit(True)
 
 class QWidgetItem (QtWidgets.QWidget):
   dialog = None;
@@ -357,6 +366,7 @@ class QWidgetItem (QtWidgets.QWidget):
 
     self._fetch_thread.setProgressIcon.connect(self.setProgressIconForSingle)
     self._fetch_thread.setLyrics.connect(self.setLyrics)
+    self._fetch_thread.notifyComplete.connect(self.parent.playSuccessSound)
 
   def setLyrics(self, lyrics):
     self._lyrics = lyrics
@@ -657,10 +667,12 @@ class MainWindow (QtWidgets.QMainWindow):
     self._fetch_thread.addFileToList.connect(self.addFileToList)
     self._fetch_thread.setProgressIcon.connect(self.setProgressIcon)
     self._fetch_thread.setLyrics.connect(self.setLyrics)
+    self._fetch_thread.notifyComplete.connect(self.playSuccessSound)
 
     # Show an error message for each invalid filepath found
     if self._invalid_filepaths and self._settings.get_show_errors():
       self.setEnabled(False)
+      self.playErrorSound()
       self._error_dialog = error_dialog.QErrorDialog(self, self._invalid_filepaths)
       self._error_dialog.exec()
       self.setEnabled(True)
@@ -736,3 +748,11 @@ class MainWindow (QtWidgets.QMainWindow):
     self._settings_dialog = settings_dialog.QSettingsDialog()
     self._settings_dialog.exec()
     self.setEnabled(True)
+
+  def playSuccessSound(self):
+    if self._settings.get_play_sounds():
+      QtMultimedia.QSound.play(utils.resource_path('./assets/success.wav'))
+
+  def playErrorSound(self):
+    if self._settings.get_play_sounds():
+      QtMultimedia.QSound.play(utils.resource_path('./assets/error.wav'))

@@ -1,6 +1,6 @@
-from modules.logger import logger
-
 import unittest
+
+from modules.logger import logger
 
 class TestLogger(unittest.TestCase):
   def test_create_success_message(self):

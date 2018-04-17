@@ -1,9 +1,10 @@
+from collections import namedtuple
+
+import mutagen
+
 from modules.logger import logger
 from modules import settings
 from modules import utils
-
-from collections import namedtuple
-import mutagen
 
 METADATA_TUPLE = namedtuple('metadata', ['succeeded', 'artist', 'title', 'art', 'filepath'])
 ERROR_TUPLE = namedtuple('error', ['succeeded', 'message', 'filepath'])

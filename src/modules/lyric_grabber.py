@@ -1,12 +1,12 @@
-from modules import fetcher
-from modules import file_writer
-from modules.logger import logger
-from modules import metadata
-
 from collections import namedtuple
 import random
 import re
 import time
+
+from modules import fetcher
+from modules import file_writer
+from modules.logger import logger
+from modules import metadata
 
 AZLYRICS_URL_BASE = 'azlyrics.com'
 GENIUS_URL_BASE = 'genius.com'

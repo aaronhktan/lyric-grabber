@@ -1,6 +1,6 @@
-from modules import fetcher
-
 import unittest
+
+from modules import fetcher
 
 class TestAZLyrics(unittest.TestCase):
   def test_azlyrics_get_lyrics(self):

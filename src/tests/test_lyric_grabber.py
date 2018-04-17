@@ -1,8 +1,8 @@
-from modules import lyric_grabber
-
 import unittest
 from collections import namedtuple
 import os
+
+from modules import lyric_grabber
 
 class TestMetadata(unittest.TestCase):
 

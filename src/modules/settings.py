@@ -1,6 +1,8 @@
+import configparser
+
 from modules import utils
 
-import configparser
+# This class should be the single source of truth for settings
 
 current_version = 1
 
@@ -11,6 +13,7 @@ class Settings:
   remove_brackets = True
   metadata = True
   text = False
+  play_sounds = True
   show_errors = True
 
   def __init__ (self, parent=None):
@@ -29,6 +32,8 @@ class Settings:
       self.set_metadata(config_settings.getboolean('metadata'))
     if 'text' in config_settings:
       self.set_text(config_settings.getboolean('text'))
+    if 'play_sounds' in config_settings:
+      self.set_play_sounds(config_settings.getboolean('play_sounds'))
     if 'show_errors' in config_settings:
       self.set_show_errors(config_settings.getboolean('show_errors'))
 
@@ -74,6 +79,13 @@ class Settings:
   def get_text(self):
     return Settings.text
 
+  def set_play_sounds(self, play_sounds_flag):
+    Settings.play_sounds = bool(play_sounds_flag)
+    self.save_settings()
+
+  def get_play_sounds(self):
+    return Settings.play_sounds
+
   def set_show_errors(self, show_errors_flag):
     Settings.show_errors = bool(show_errors_flag)
     self.save_settings()
@@ -83,13 +95,14 @@ class Settings:
 
   def save_settings(self):
     config = configparser.ConfigParser()
-    config['SETTINGS'] = {'source': self.source,
-                          'approximate': self.approximate,
-                          'info': self.info,
-                          'remove_brackets': self.remove_brackets,
-                          'metadata': self.metadata,
-                          'text': self.text,
-                          'show_errors': self.show_errors}
+    config['SETTINGS'] = {'source': Settings.source,
+                          'approximate': Settings.approximate,
+                          'info': Settings.info,
+                          'remove_brackets': Settings.remove_brackets,
+                          'metadata': Settings.metadata,
+                          'text': Settings.text,
+                          'play_sounds': Settings.play_sounds,
+                          'show_errors': Settings.show_errors}
     config['ABOUT'] = {'version': 1}
     with open(utils.resource_path('./modules/settings.ini'), 'w') as configfile:
       config.write(configfile)

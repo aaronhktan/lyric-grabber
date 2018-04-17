@@ -1,7 +1,7 @@
+from PyQt5 import QtCore, QtGui, QtWidgets
+
 from gui import appearance
 from modules import utils
-
-from PyQt5 import QtCore, QtGui, QtWidgets
 
 class QAboutDialog (QtWidgets.QDialog):
   def __init__(self, parent=None):
@@ -19,6 +19,7 @@ class QAboutDialog (QtWidgets.QDialog):
     self._nameLabel = QtWidgets.QLabel('Quaver')
     self._nameLabel.setFont(appearance.LARGE_FONT)
     self._sloganLabel = QtWidgets.QLabel('Quickly find your lyrics')
+    self._sloganLabel.setFont(appearance.SMALL_FONT)
 
     # Spacer as separator
     self._verticalSpacer = QtWidgets.QSpacerItem(50, 50, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
@@ -31,12 +32,15 @@ class QAboutDialog (QtWidgets.QDialog):
 
     # Credits
     self._creditsLabel = QtWidgets.QLabel(('<center>Made with love by Aaron Tan'
-      '<br>Free under the <a href=https://github.com/cheeseisdisgusting/lyric-grabber/blob/master/LICENSE>MIT License</a>'
+      '<br>Free under the <a href=https://github.com/cheeseisdisgusting/lyric-grabber/blob/master/LICENSE style="color: black; text-decoration: none">MIT License</a>'
       '<br>Check it out on <a href=https://github.com/cheeseisdisgusting/lyric-grabber>Github</a>!</center>'))
     self._creditsLabel.setOpenExternalLinks(True)
-    self._iconsCreditsLabel = QtWidgets.QLabel(('<center>Icons from <a href=https://feathericons.com>Feather Icons</a>'
-      '<br>Quaver Icon based on <a href=https://commons.wikimedia.org/wiki/File:Eighth_rest.svg>Marmelad</a>'
-      '<br>Built with <a href=https://www.python.org>Python</a> and <a href=https://riverbankcomputing.com/software/pyqt/intro>PyQt</a></center>'))
+    self._iconsCreditsLabel = QtWidgets.QLabel(('<center>UI icons from <a href=https://feathericons.com style="color: black; text-decoration: none">Feather Icons</a>'
+      '<br>Quaver icon based on <a href=https://commons.wikimedia.org/wiki/File:Eighth_rest.svg style="color: black; text-decoration: none">Marmelad</a>'
+      '<br>Warning icon from <a href=https://openclipart.org/detail/29833/warning-icon style="color: black; text-decoration: none">matthewgarysmith</a>'
+      '<br>Sounds contributed by <a href=https://sonniss.com style="color: black; text-decoration: none">Sonniss</a>'
+      '<br><br>Built with <a href=https://www.python.org style="color: black; text-decoration: none">Python</a>'
+      ' and <a href=https://riverbankcomputing.com/software/pyqt/intro style="color: black; text-decoration: none">PyQt</a></center>'))
     self._iconsCreditsLabel.setOpenExternalLinks(True)
     self._iconsCreditsLabel.setFont(appearance.TINY_FONT)
     self._versionLabel = QtWidgets.QLabel('Version 0.1.0')

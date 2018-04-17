@@ -1,12 +1,12 @@
-from modules.keys import genius_key
-from modules.logger import logger
-
 from collections import namedtuple
 import json
-from urllib.parse import urlencode, quote_plus
-import urllib.request
 import random
 import re
+from urllib.parse import urlencode, quote_plus
+import urllib.request
+
+from modules.keys import genius_key
+from modules.logger import logger
 
 try:
   from BeautifulSoup import BeautifulSoup, Comment

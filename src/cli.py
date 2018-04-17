@@ -1,11 +1,11 @@
-from modules.keys import genius_key
-from modules.logger import logger
-from modules import lyric_grabber
-
 import argparse
 from concurrent import futures
 import os
 import time
+
+from modules.keys import genius_key
+from modules.logger import logger
+from modules import lyric_grabber
 
 SUPPORTED_FILETYPES = ('.mp3', '.mp4', '.m4a', '.m4v', '.aac', \
                        '.ape', '.wav', '.wma', '.aiff', '.wv', \

@@ -1,7 +1,7 @@
+from PyQt5 import QtCore, QtGui, QtWidgets
+
 from modules import settings
 from modules import utils
-
-from PyQt5 import QtCore, QtGui, QtWidgets
 
 # Style note: Functions and variable names are not PEP 8 compliant.
 # Blame PyQt for that!
@@ -88,7 +88,9 @@ class QLyricsDialog (QtWidgets.QDialog):
     self._lyricsCopyButton.clicked.connect(lambda: self.copyLyrics())
     self._lyricsSaveButton = QtWidgets.QPushButton('Save lyrics')
     self._lyricsSaveButton.setMaximumWidth(125)
-    self._lyricsHorizontalSpacer = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+    self._lyricsHorizontalSpacer = QtWidgets.QSpacerItem(0, 0,
+                                                         QtWidgets.QSizePolicy.Expanding,
+                                                         QtWidgets.QSizePolicy.Minimum)
     self._lyricsSaveButton.clicked.connect(lambda: self.saveLyrics())
     self._lyricsClearButton = QtWidgets.QPushButton('Remove lyrics')
     self._lyricsClearButton.setMaximumWidth(125)
@@ -117,17 +119,21 @@ class QLyricsDialog (QtWidgets.QDialog):
     self._urlLineEdit.setCursorPosition(0)
     self._urlLineEdit.textEdited.connect(self.disableMetadataEditing)
 
-    self._urlExplanationLabel = QtWidgets.QLabel('If you input a valid link, Quaver can get lyrics from that page when you click the "Grab lyrics" button.')
+    self._urlExplanationLabel = QtWidgets.QLabel('If you input a valid link,'
+        'Quaver can get lyrics from that page when you click the "Grab lyrics" button.')
     self._urlExplanationLabel.setWordWrap(True)
 
     self._viewUrlButton = QtWidgets.QPushButton('View online')
     self._viewUrlButton.clicked.connect(lambda: self.openUrl())
     self._viewUrlButton.setFocusPolicy(QtCore.Qt.NoFocus)
     self._viewUrlButton.setMaximumWidth(150)
-    self._copyUrlButton = QtWidgets.QPushButton(QtGui.QIcon(utils.resource_path('./assets/copy.png')), 'Copy URL')
+    self._copyUrlButton = QtWidgets.QPushButton(
+        QtGui.QIcon(utils.resource_path('./assets/copy.png')), 'Copy URL')
     if utils.IS_MAC:
-      self._copyUrlButton.pressed.connect(lambda: self._copyUrlButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/copy_inverted.png'))))
-      self._copyUrlButton.released.connect(lambda: self._copyUrlButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/copy.png'))))
+      self._copyUrlButton.pressed.connect(lambda: self._copyUrlButton.setIcon(
+        QtGui.QIcon(utils.resource_path('./assets/copy_inverted.png'))))
+      self._copyUrlButton.released.connect(lambda: self._copyUrlButton.setIcon(
+        QtGui.QIcon(utils.resource_path('./assets/copy.png'))))
     self._copyUrlButton.clicked.connect(lambda: self.copyUrl())
     self._copyUrlButton.setFocusPolicy(QtCore.Qt.NoFocus)
 
@@ -160,14 +166,20 @@ class QLyricsDialog (QtWidgets.QDialog):
       self._sourceLabelComboBox.setCurrentIndex(index)
 
     # Explanation
-    self._metadataExplanationLabel = QtWidgets.QLabel('You can try changing the title or artist that Quaver will look for in these text boxes. When you click the "Grab lyrics" button, Quaver will use this new information.')
+    self._metadataExplanationLabel = QtWidgets.QLabel('You can try changing the title or artist'
+        'that Quaver will look for in these text boxes.'
+        'When you click the "Grab lyrics" button, Quaver will use this new information.')
     self._metadataExplanationLabel.setWordWrap(True)
 
     # Spacer
-    self._verticalSpacer = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+    self._verticalSpacer = QtWidgets.QSpacerItem(0, 0,
+                                                 QtWidgets.QSizePolicy.Minimum,
+                                                 QtWidgets.QSizePolicy.Expanding)
 
     # Try again button
-    self._fetchAgainSpacer = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+    self._fetchAgainSpacer = QtWidgets.QSpacerItem(0, 0,
+                                                   QtWidgets.QSizePolicy.Expanding,
+                                                   QtWidgets.QSizePolicy.Minimum)
     self._fetchAgainButton = QtWidgets.QPushButton('Grab lyrics again')
     self._fetchAgainButton.clicked.connect(lambda: self.grabLyrics())
     self._fetchAgainButton.setAutoDefault(True)
