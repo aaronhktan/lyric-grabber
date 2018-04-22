@@ -788,6 +788,10 @@ class MainWindow (QtWidgets.QMainWindow):
     self.setEnabled(True)
 
   def playSuccessSound(self):
+    # Playing sounded with PyQt causes this to happen when closing:
+    # QCoreApplication::postEvent: Unexpected null receiver
+    # I have no idea why and it doesn't seem to negatively affect UX
+    # since it's closing anyway...
     if self._settings.get_play_sounds():
       QtMultimedia.QSound.play(utils.resource_path('./assets/success.wav'))
 
