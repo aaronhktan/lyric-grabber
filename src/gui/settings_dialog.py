@@ -20,6 +20,7 @@ class QSettingsDialog (QtWidgets.QDialog):
 
     # Add settings controls
     self._sourceLabel = QtWidgets.QLabel('Lyrics Source:')
+    self._sourceLabel.setAlignment(QtCore.Qt.AlignRight)
     self._sourceComboBox = QtWidgets.QComboBox()
     self._sourceComboBox.setMaximumWidth(150)
     for source in utils.SUPPORTED_SOURCES:
@@ -28,6 +29,8 @@ class QSettingsDialog (QtWidgets.QDialog):
     self._sourceComboBox.currentIndexChanged.connect(lambda: self._settings.set_source(self._sourceComboBox.currentText()))
     if index >= 0:
       self._sourceComboBox.setCurrentIndex(index)
+    self._optionsLabel = QtWidgets.QLabel('Lyrics Options:')
+    self._optionsLabel.setAlignment(QtCore.Qt.AlignRight)
     self._approximateCheckBox = QtWidgets.QCheckBox('Search only by song title')
     self._approximateCheckBox.setChecked(self._settings.get_approximate())
     self._approximateCheckBox.stateChanged.connect(lambda state: self._settings.set_approximate(1) if state else self._settings.set_approximate(0))
@@ -50,6 +53,7 @@ class QSettingsDialog (QtWidgets.QDialog):
     self._separatorLineFrame.setFrameShadow(QtWidgets.QFrame.Raised)
 
     # Other controls
+    self._playSoundsLabel = QtWidgets.QLabel('Sounds and dialogs:')
     self._playSoundsCheckBox = QtWidgets.QCheckBox('Enable sound effects')
     self._playSoundsCheckBox.stateChanged.connect(lambda state: self._settings.set_play_sounds(1) if state else self._settings.set_play_sounds(0))
     self._playSoundsCheckBox.setChecked(self._settings.get_play_sounds())
@@ -68,12 +72,14 @@ class QSettingsDialog (QtWidgets.QDialog):
     self._settingsGridLayout = QtWidgets.QGridLayout()
     self._settingsGridLayout.addWidget(self._sourceLabel, 0, 0)
     self._settingsGridLayout.addWidget(self._sourceComboBox, 0, 1)
+    self._settingsGridLayout.addWidget(self._optionsLabel, 1, 0)
     self._settingsGridLayout.addWidget(self._approximateCheckBox, 1, 1)
     self._settingsGridLayout.addWidget(self._bracketCheckBox, 2, 1)
     self._settingsGridLayout.addWidget(self._infoCheckBox, 3, 1)
     self._settingsGridLayout.addWidget(self._metadataCheckBox, 4, 1)
     self._settingsGridLayout.addWidget(self._textCheckBox, 5, 1)
     self._settingsGridLayout.addWidget(self._separatorLineFrame, 6, 0, 1, -1)
+    self._settingsGridLayout.addWidget(self._playSoundsLabel, 7, 0)
     self._settingsGridLayout.addWidget(self._playSoundsCheckBox, 7, 1)
     self._settingsGridLayout.addWidget(self._showErrorCheckBox, 8, 1)
     self._settingsGridLayout.addItem(self._verticalSpacer, 9, 0, -1, -1)

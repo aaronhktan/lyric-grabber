@@ -331,6 +331,7 @@ class QWidgetItem (QtWidgets.QWidget):
       QWidgetItem.dialog.updateLyrics(self._lyrics)
       QWidgetItem.dialog.updateUrl(self._url)
       QWidgetItem.dialog.setFilepath(self._filepath)
+      QWidgetItem.dialog.setArtistAndTitle(self._artist, self._title)
       QWidgetItem.dialog.show()
     except Exception as e:
       # self.window().setEnabled(False)
@@ -538,12 +539,39 @@ class MainWindow (QtWidgets.QMainWindow):
       self._toolBar.setMovable(False)
       self.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
 
+    # Create a hint for the user
+    self._instructionIconLabel = QtWidgets.QLabel()
+    self._instructionIconLabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+    self._instructionIconLabel.setAlignment(QtCore.Qt.AlignCenter)
+    self._quaverIcon = QtGui.QPixmap(utils.resource_path('./assets/icon_monochrome.png'))
+    self._quaverIcon.setDevicePixelRatio(self.devicePixelRatio())
+    self._iconWidth = self.devicePixelRatio() * 150
+    self._iconHeight = self.devicePixelRatio() * 150
+    self._instructionIconLabel.setPixmap(self._quaverIcon.scaled(self._iconWidth, self._iconHeight, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
+
+    self._verticalSpacer = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+
+    if utils.IS_MAC:
+      self._instructionLabel = QtWidgets.QLabel('Grab lyrics by adding a song.'
+        '<br>Click "Add song" or "Add folder" to get started.')
+    else:
+      self._instructionLabel = QtWidgets.QLabel('Grab lyrics by adding a song.'
+        '<br>Open the "File" menu, the "Open File" to get started.')
+    self._instructionLabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+    self._instructionLabel.setAlignment(QtCore.Qt.AlignCenter)
+    self._instructionLabel.setStyleSheet('color: grey')
+    self._instructionLabel.setFont(appearance.SMALL_FONT)
+
     # This layout contains all the list items
     # Style the layout: spacing (between items), content (padding within items)
     self._mainScrollAreaWidgetLayout = QtWidgets.QVBoxLayout()
-    self._mainScrollAreaWidgetLayout.setAlignment(QtCore.Qt.AlignTop)
+    self._mainScrollAreaWidgetLayout.setAlignment(QtCore.Qt.AlignCenter)
     self._mainScrollAreaWidgetLayout.setSpacing(0)
     self._mainScrollAreaWidgetLayout.setContentsMargins(0, 0, 0, 0)
+
+    self._mainScrollAreaWidgetLayout.addWidget(self._instructionIconLabel)
+    self._mainScrollAreaWidgetLayout.addItem(self._verticalSpacer)
+    self._mainScrollAreaWidgetLayout.addWidget(self._instructionLabel)
 
     # mainScrollAreaWidget contains layout that contains all listwidgets
     self._mainScrollAreaWidget = QtWidgets.QWidget()
@@ -678,6 +706,13 @@ class MainWindow (QtWidgets.QMainWindow):
       self.setEnabled(True)
 
   def addFileToList(self, artist, title, art, filepath):
+    try:
+      self._instructionLabel.setParent(None)
+      self._instructionIconLabel.setParent(None)
+      self._mainScrollAreaWidgetLayout.removeItem(self._verticalSpacer)
+      self._mainScrollAreaWidgetLayout.setAlignment(QtCore.Qt.AlignTop)
+    except Exception as e:
+      pass
     # Create WidgetItem for each item
     listWidgetItem = QWidgetItem(self)
     listWidgetItem.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)

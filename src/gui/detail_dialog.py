@@ -248,10 +248,9 @@ class QLyricsDialog (QtWidgets.QDialog):
                   else QtWidgets.QDesktopWidget().availableGeometry().width() - self.width(),
                 y if y > 0 else 0)
 
-  def moveEvent(self, event):
-    QLyricsDialog.x_coordinate = event.pos().x()
-    QLyricsDialog.y_coordinate = event.pos().y()
-    # print('Set as {}, {}'.format(QLyricsDialog.x_coordinate, QLyricsDialog.y_coordinate))
+  def closeEvent(self, event):
+    self.parent.resetColours()
+    event.accept()
 
   def keyPressEvent(self, event):
     key = event.key()
@@ -269,6 +268,11 @@ class QLyricsDialog (QtWidgets.QDialog):
         self.removeLyrics()
     elif key == QtCore.Qt.Key_Escape:
       self.close()
+
+  def moveEvent(self, event):
+    QLyricsDialog.x_coordinate = event.pos().x()
+    QLyricsDialog.y_coordinate = event.pos().y()
+    # print('Set as {}, {}'.format(QLyricsDialog.x_coordinate, QLyricsDialog.y_coordinate))
 
   def updateMetadata(self, artist, title):
     self.setWindowTitle('{artist} - {title}'.format(artist=artist, title=title))
@@ -303,6 +307,10 @@ class QLyricsDialog (QtWidgets.QDialog):
     clipboard.clear(mode=clipboard.Clipboard)
     clipboard.setText(self._urlLineEdit.text(), mode=QtGui.QClipboard.Clipboard)
 
+  def setArtistAndTitle(self, artist, title):
+    self._artistLineEdit.setText(artist)
+    self._titleLineEdit.setText(title)
+
   def grabLyrics(self):
     if self._urlLineEdit.isEnabled(): # This means we should fetch based on URL
       title = self._titleLineEdit.text()
@@ -330,7 +338,3 @@ class QLyricsDialog (QtWidgets.QDialog):
 
   def setFilepath(self, filepath):
     self._filepath = filepath
-
-  def closeEvent(self, event):
-    self.parent.resetColours()
-    event.accept()
