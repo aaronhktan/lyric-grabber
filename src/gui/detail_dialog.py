@@ -117,10 +117,9 @@ class QLyricsDialog (QtWidgets.QDialog):
     self._urlLineEdit.setText(url)
     self._urlLineEdit.setAttribute(QtCore.Qt.WA_MacShowFocusRect, False)
     self._urlLineEdit.setCursorPosition(0)
-    self._urlLineEdit.textEdited.connect(self.disableMetadataEditing)
 
     self._urlExplanationLabel = QtWidgets.QLabel('If you input a valid link,'
-        'Quaver can get lyrics from that page when you click the "Grab lyrics" button.')
+        ' Quaver can get lyrics from that page when you click the "Grab lyrics" button.')
     self._urlExplanationLabel.setWordWrap(True)
 
     self._viewUrlButton = QtWidgets.QPushButton('View online')
@@ -136,6 +135,10 @@ class QLyricsDialog (QtWidgets.QDialog):
         QtGui.QIcon(utils.resource_path('./assets/copy.png'))))
     self._copyUrlButton.clicked.connect(lambda: self.copyUrl())
     self._copyUrlButton.setFocusPolicy(QtCore.Qt.NoFocus)
+    self._fetchAgainLinkButton = QtWidgets.QPushButton('Grab Lyrics')
+    self._fetchAgainLinkButton.setMaximumWidth(150)
+    self._fetchAgainLinkButton.clicked.connect(lambda: self.grabLyrics())
+    self._fetchAgainLinkButton.setAutoDefault(True)
 
     # Separator Line
     self._separatorLineFrame = QtWidgets.QFrame()
@@ -147,13 +150,11 @@ class QLyricsDialog (QtWidgets.QDialog):
     self._titleLineEdit = QtWidgets.QLineEdit()
     self._titleLineEdit.setText(title)
     self._titleLineEdit.setAttribute(QtCore.Qt.WA_MacShowFocusRect, False)
-    self._titleLineEdit.textEdited.connect(self.disableUrlEditing)
 
     self._artistLabel = QtWidgets.QLabel('Artist:')
     self._artistLineEdit = QtWidgets.QLineEdit()
     self._artistLineEdit.setText(artist)
     self._artistLineEdit.setAttribute(QtCore.Qt.WA_MacShowFocusRect, False)
-    self._artistLineEdit.textEdited.connect(self.disableUrlEditing)
 
     # Source
     self._sourceLabel = QtWidgets.QLabel('Source:')
@@ -166,9 +167,9 @@ class QLyricsDialog (QtWidgets.QDialog):
       self._sourceLabelComboBox.setCurrentIndex(index)
 
     # Explanation
-    self._metadataExplanationLabel = QtWidgets.QLabel('You can try changing the title or artist'
-        'that Quaver will look for in these text boxes.'
-        'When you click the "Grab lyrics" button, Quaver will use this new information.')
+    self._metadataExplanationLabel = QtWidgets.QLabel('You can change the title or artist'
+        ' that Quaver will look for in these text boxes.'
+        ' When you click the "Grab lyrics" button, Quaver will use this new information.')
     self._metadataExplanationLabel.setWordWrap(True)
 
     # Spacer
@@ -180,29 +181,29 @@ class QLyricsDialog (QtWidgets.QDialog):
     self._fetchAgainSpacer = QtWidgets.QSpacerItem(0, 0,
                                                    QtWidgets.QSizePolicy.Expanding,
                                                    QtWidgets.QSizePolicy.Minimum)
-    self._fetchAgainButton = QtWidgets.QPushButton('Grab lyrics again')
-    self._fetchAgainButton.clicked.connect(lambda: self.grabLyrics())
-    self._fetchAgainButton.setAutoDefault(True)
-    self._fetchAgainButton.setEnabled(False)
+    self._fetchAgainMetadataButton = QtWidgets.QPushButton('Grab lyrics')
+    self._fetchAgainMetadataButton.clicked.connect(lambda: self.grabLyrics(use_url=False))
+    self._fetchAgainMetadataButton.setAutoDefault(True)
 
     # Add to layout
     self._metadataLayout = QtWidgets.QGridLayout()
     self._metadataLayout.addWidget(self._urlLabel, 0, 0, 1, -1)
     self._metadataLayout.addWidget(self._urlLineEdit, 1, 0, 1, -1)
-    self._metadataLayout.addWidget(self._urlExplanationLabel, 2, 0, 1, -1)
-    self._metadataLayout.addWidget(self._viewUrlButton, 3, 1, 1, 1)
-    self._metadataLayout.addWidget(self._copyUrlButton, 3, 2, 1, -1)
-    self._metadataLayout.addWidget(self._separatorLineFrame, 4, 0, 1, -1)
-    self._metadataLayout.addWidget(self._titleLabel, 5, 0, 1, -1)
-    self._metadataLayout.addWidget(self._titleLineEdit, 6, 0, 1, -1)
-    self._metadataLayout.addWidget(self._artistLabel, 7, 0, 1, -1)
-    self._metadataLayout.addWidget(self._artistLineEdit, 8, 0, 1, -1)
-    self._metadataLayout.addWidget(self._sourceLabel, 9, 0, 1, -1)
-    self._metadataLayout.addWidget(self._sourceLabelComboBox, 9, 2, 1, -1)
-    self._metadataLayout.addWidget(self._metadataExplanationLabel, 10, 0, 1, -1)
-    self._metadataLayout.addItem(self._verticalSpacer, 11, 0, 1, -1)
-    self._metadataLayout.addItem(self._fetchAgainSpacer, 12, 0, 1, -1)
-    self._metadataLayout.addWidget(self._fetchAgainButton, 12, 2, 1, -1)
+    self._metadataLayout.addWidget(self._viewUrlButton, 2, 1, 1, 1)
+    self._metadataLayout.addWidget(self._copyUrlButton, 2, 2, 1, 1)
+    self._metadataLayout.addWidget(self._urlExplanationLabel, 3, 0, 1, -1)
+    self._metadataLayout.addWidget(self._fetchAgainLinkButton, 4, 2, 1, 1)
+    self._metadataLayout.addWidget(self._separatorLineFrame, 5, 0, 1, -1)
+    self._metadataLayout.addWidget(self._titleLabel, 6, 0, 1, -1)
+    self._metadataLayout.addWidget(self._titleLineEdit, 7, 0, 1, -1)
+    self._metadataLayout.addWidget(self._artistLabel, 8, 0, 1, -1)
+    self._metadataLayout.addWidget(self._artistLineEdit, 9, 0, 1, -1)
+    self._metadataLayout.addWidget(self._sourceLabel, 10, 0, 1, -1)
+    self._metadataLayout.addWidget(self._sourceLabelComboBox, 10, 2, 1, -1)
+    self._metadataLayout.addWidget(self._metadataExplanationLabel, 11, 0, 1, -1)
+    self._metadataLayout.addItem(self._verticalSpacer, 12, 0, 1, -1)
+    self._metadataLayout.addItem(self._fetchAgainSpacer, 13, 0, 1, -1)
+    self._metadataLayout.addWidget(self._fetchAgainMetadataButton, 13, 2, 1, -1)
     # self._metadataLayout.setSpacing(0)
     # self._metadataLayout.setContentsMargins(10, 10, 10, 10)
 
@@ -311,8 +312,8 @@ class QLyricsDialog (QtWidgets.QDialog):
     self._artistLineEdit.setText(artist)
     self._titleLineEdit.setText(title)
 
-  def grabLyrics(self):
-    if self._urlLineEdit.isEnabled(): # This means we should fetch based on URL
+  def grabLyrics(self, use_url=True):
+    if use_url: # This means we should fetch based on URL
       title = self._titleLineEdit.text()
       url = self._urlLineEdit.text()
       print(title, url)
@@ -321,17 +322,8 @@ class QLyricsDialog (QtWidgets.QDialog):
       artist = self._artistLineEdit.text()
       title = self._titleLineEdit.text()
       source = self._sourceLabelComboBox.currentText()
+      print(source)
       self.parent.getLyrics(artist=artist, title=title, source=source)
-
-  def disableUrlEditing(self):
-    self._urlLineEdit.setEnabled(False)
-    self._fetchAgainButton.setEnabled(True)
-
-  def disableMetadataEditing(self):
-    self._artistLineEdit.setEnabled(False)
-    self._titleLineEdit.setEnabled(False)
-    self._sourceLabelComboBox.setEnabled(False)
-    self._fetchAgainButton.setEnabled(True)
 
   def getFilepath(self):
     return self._filepath

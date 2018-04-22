@@ -1,5 +1,6 @@
 from concurrent import futures
 import os
+import threading
 
 # from colorthief import ColorThief
 from PyQt5 import QtCore, QtGui, QtMultimedia, QtWidgets
@@ -127,6 +128,7 @@ class SingleLyricGrabberThread (QtCore.QThread):
   setProgressIcon = QtCore.pyqtSignal([int])
   setLyrics = QtCore.pyqtSignal(['QString'])
   notifyComplete = QtCore.pyqtSignal(bool)
+  lock = threading.Lock()
 
   def __init__(self, parent, filepath, artist=None, title=None, url=None, source=None):
     super().__init__()
@@ -141,41 +143,42 @@ class SingleLyricGrabberThread (QtCore.QThread):
     self.setProgressIcon.emit(states.NOT_STARTED)
 
   def run(self):
-    try:
-      self.setProgressIcon.emit(states.IN_PROGRESS)
-      if self._url is not None: # We have a URL, so scrape the URL
-        result = lyric_grabber.scrape_url(artist=self._artist,
-                                          title=self._title,
-                                          url=self._url,
-                                          song_filepath=self._filepath)
-      else: # No URL, so fetch based on artist and title
-        result = lyric_grabber.get_lyrics(approximate=self._settings.get_approximate(),
-                                          keep_brackets=not self._settings.get_remove_brackets(),
-                                          artist=self._artist,
-                                          title=self._title,
-                                          source=self._source.lower(),
-                                          song_filepath=self._filepath)
+    with SingleLyricGrabberThread.lock:
+      try:
+        self.setProgressIcon.emit(states.IN_PROGRESS)
+        if self._url is not None: # We have a URL, so scrape the URL
+          result = lyric_grabber.scrape_url(artist=self._artist,
+                                            title=self._title,
+                                            url=self._url,
+                                            song_filepath=self._filepath)
+        else: # No URL, so fetch based on artist and title
+          result = lyric_grabber.get_lyrics(approximate=self._settings.get_approximate(),
+                                            keep_brackets=not self._settings.get_remove_brackets(),
+                                            artist=self._artist,
+                                            title=self._title,
+                                            source=self._source.lower(),
+                                            song_filepath=self._filepath)
 
-      if result.succeeded:
-        self.setLyrics.emit(result.lyrics)
-        result = lyric_grabber.write_file(artist=self._artist,
-                                          title=self._title,
-                                          write_info=self._settings.get_info(),
-                                          write_metadata=self._settings.get_metadata(),
-                                          write_text=self._settings.get_text(),
-                                          lyrics=result.lyrics,
-                                          song_filepath=self._filepath)
-        print(result.message)
-        self.setProgressIcon.emit(states.COMPLETE)
-      else:
-        self.setProgressIcon.emit(states.ERROR)
-      # print(result.lyrics)
-    except Exception as e:
-      logger.log(logger.LOG_LEVEL_ERROR,
-                 ' Exception occurred while getting lyrics for file {filepath}: {error}'.format(self_filepath,
-                                                                                                error=str(e)))
+        if result.succeeded:
+          self.setLyrics.emit(result.lyrics)
+          result = lyric_grabber.write_file(artist=self._artist,
+                                            title=self._title,
+                                            write_info=self._settings.get_info(),
+                                            write_metadata=self._settings.get_metadata(),
+                                            write_text=self._settings.get_text(),
+                                            lyrics=result.lyrics,
+                                            song_filepath=self._filepath)
+          print(result.message)
+          self.setProgressIcon.emit(states.COMPLETE)
+        else:
+          self.setProgressIcon.emit(states.ERROR)
+        # print(result.lyrics)
+      except Exception as e:
+        logger.log(logger.LOG_LEVEL_ERROR,
+                   ' Exception occurred while getting lyrics for file {filepath}: {error}'.format(self_filepath,
+                                                                                                  error=str(e)))
 
-    self.notifyComplete.emit(True)
+      self.notifyComplete.emit(True)
 
 class QWidgetItem (QtWidgets.QWidget):
   dialog = None;
