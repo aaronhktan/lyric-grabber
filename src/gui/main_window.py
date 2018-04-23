@@ -1,5 +1,6 @@
 from concurrent import futures
 import os
+import sys
 import threading
 
 # from colorthief import ColorThief
@@ -30,6 +31,7 @@ class LyricGrabberThread (QtCore.QThread):
   setProgressIcon = QtCore.pyqtSignal(['QString', int])
   setLyrics = QtCore.pyqtSignal(['QString', 'QString', 'QString'])
   notifyComplete = QtCore.pyqtSignal(bool)
+  interrupt = False
 
   def __init__(self, parent, filepaths):
     super().__init__()
@@ -73,15 +75,20 @@ class LyricGrabberThread (QtCore.QThread):
                                     result.result().filepath)
           self._songs.append(result.result())
         else:
-          self.setProgressIcon.emit(result.result().filepath, states.ERROR)
+          if not LyricGrabberThread.interrupt:
+            self.setProgressIcon.emit(result.result().filepath, states.ERROR)
           logger.log(logger.LOG_LEVEL_INFO, 'No metadata found: ' + result.result().message)
       except Exception as e:
-        self.setProgressIcon.emit(result.result().filepath, states.ERROR)
+        if not LyricGrabberThread.interrupt:
+          self.setProgressIcon.emit(result.result().filepath, states.ERROR)
         logger.log(logger.LOG_LEVEL_ERROR, 
                    ' Exception occurred while adding file {filepath}: {error}'.format(filepath=result.result().filepath,
                                                                                       error=str(e)))
 
     for song in self._songs:
+      if LyricGrabberThread.interrupt:
+        self.exit()
+        return
       self.setProgressIcon.emit(result.result().filepath, states.IN_PROGRESS)
       self._lyricsResults.append(self._lyricsExecutor.submit(lyric_grabber.get_lyrics,
                                                              approximate=self._settings.get_approximate(),
@@ -92,14 +99,18 @@ class LyricGrabberThread (QtCore.QThread):
                                                              song_filepath=song.filepath))
 
     for result in futures.as_completed(self._lyricsResults):
+      if LyricGrabberThread.interrupt:
+        self.exit()
+        return
       try:
         if result.result().succeeded:
           if result.result().lyrics:
-            self.setProgressIcon.emit(result.result().filepath, states.COMPLETE)
-            self.setLyrics.emit(result.result().filepath,
+            if not LyricGrabberThread.interrupt:
+              self.setProgressIcon.emit(result.result().filepath, states.COMPLETE)
+              self.setLyrics.emit(result.result().filepath,
                                 result.result().lyrics,
                                 result.result().url)
-            self._fileWritingResults.append(self._fileWritingExecutor.submit(lyric_grabber.write_file,
+              self._fileWritingResults.append(self._fileWritingExecutor.submit(lyric_grabber.write_file,
                                                                              artist=result.result().artist,
                                                                              title=result.result().title,
                                                                              write_info=self._settings.get_info(),
@@ -108,10 +119,12 @@ class LyricGrabberThread (QtCore.QThread):
                                                                              lyrics=result.result().lyrics,
                                                                              song_filepath=result.result().filepath))
         else:
-          self.setProgressIcon.emit(result.result().filepath, states.ERROR)
+          if not LyricGrabberThread.interrupt:
+            self.setProgressIcon.emit(result.result().filepath, states.ERROR)
           logger.log(logger.LOG_LEVEL_INFO, 'No lyrics found: ' + result.result().message)
       except Exception as e:
-        self.setProgressIcon.emit(result.result().filepath, states.ERROR)
+        if not LyricGrabberThread.interrupt:
+          self.setProgressIcon.emit(result.result().filepath, states.ERROR)
         logger.log(logger.LOG_LEVEL_ERROR,
                    ' Exception occurred while getting lyrics for file {filepath}: {error}'.format(filepath=result.result().filepath,
                                                                                                   error=str(e)))
@@ -120,9 +133,11 @@ class LyricGrabberThread (QtCore.QThread):
       # Super weird, but this causes crashes in the compiled .app for macOS.
       # Uncomment for testing only.
       # print(result.result().message)
-      self.setProgressIcon.emit(result.result().filepath, states.COMPLETE)
+      if not LyricGrabberThread.interrupt:
+        self.setProgressIcon.emit(result.result().filepath, states.COMPLETE)
 
-    self.notifyComplete.emit(True)
+    if not LyricGrabberThread.interrupt:
+      self.notifyComplete.emit(True)
 
 class SingleLyricGrabberThread (QtCore.QThread):
   setProgressIcon = QtCore.pyqtSignal([int])
@@ -412,6 +427,7 @@ class QWidgetItem (QtWidgets.QWidget):
 
 class MainWindow (QtWidgets.QMainWindow):
   selectedWidgetIndex = None
+  widgetAddingLock = threading.Lock()
 
   def __init__(self):
     super(MainWindow, self).__init__()
@@ -598,7 +614,7 @@ class MainWindow (QtWidgets.QMainWindow):
 
   def closeEvent(self, event):
     try:
-      self._fetch_thread.exit()
+      LyricGrabberThread.interrupt = True
     except:
       print('No thread running, exiting!')
 
@@ -691,8 +707,44 @@ class MainWindow (QtWidgets.QMainWindow):
       except:
         pass
 
+    self.startFetchThread(self._new_filepaths)
+
+    # Show an error message for each invalid filepath found
+    if self._invalid_filepaths and self._settings.get_show_errors():
+      self.showError()
+
+  def generateFilepathList(self, files):
+    if not hasattr(self, '_filepaths'):
+      self._filepaths = []
+    self._new_filepaths = []
+    self._invalid_filepaths = []
+
+    for file in files:
+      if file.endswith(utils.SUPPORTED_FILETYPES):
+        if file in self._filepaths:
+          self._invalid_filepaths.append(file)
+        else:
+          self._filepaths.append(file)
+          self._new_filepaths.append(file)
+      else:
+        self._invalid_filepaths.append(file)
+
+    self.startFetchThread(self._new_filepaths)
+
+    # Show an error message for each invalid filepath found
+    if self._invalid_filepaths and self._settings.get_show_errors():
+      self.showError()
+
+  def showError(self):
+    self.setEnabled(False)
+    self.playErrorSound()
+    self._error_dialog = error_dialog.QErrorDialog(self, self._invalid_filepaths)
+    self._error_dialog.exec()
+    self.setEnabled(True)
+
+  def startFetchThread(self, filepaths):
     # Start another thread for network requests to not block the GUI thread
-    self._fetch_thread = LyricGrabberThread(self, sorted(self._new_filepaths))
+    self._fetch_thread = LyricGrabberThread(self, sorted(filepaths))
     self._fetch_thread.start()
 
     self._fetch_thread.addFileToList.connect(self.addFileToList)
@@ -700,36 +752,31 @@ class MainWindow (QtWidgets.QMainWindow):
     self._fetch_thread.setLyrics.connect(self.setLyrics)
     self._fetch_thread.notifyComplete.connect(self.playSuccessSound)
 
-    # Show an error message for each invalid filepath found
-    if self._invalid_filepaths and self._settings.get_show_errors():
-      self.setEnabled(False)
-      self.playErrorSound()
-      self._error_dialog = error_dialog.QErrorDialog(self, self._invalid_filepaths)
-      self._error_dialog.exec()
-      self.setEnabled(True)
-
   def addFileToList(self, artist, title, art, filepath):
-    try:
-      self._instructionLabel.setParent(None)
-      self._instructionIconLabel.setParent(None)
-      self._mainScrollAreaWidgetLayout.removeItem(self._verticalSpacer)
-      self._mainScrollAreaWidgetLayout.setAlignment(QtCore.Qt.AlignTop)
-    except Exception as e:
-      pass
-    # Create WidgetItem for each item
-    listWidgetItem = QWidgetItem(self)
-    listWidgetItem.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-    listWidgetItem.setProgressIcon(states.NOT_STARTED, self.devicePixelRatio())
-    listWidgetItem.setAlbumArt(art, self.devicePixelRatio())
-    listWidgetItem.setArtistText(artist)
-    listWidgetItem.setTitleText(title)
-    listWidgetItem.setfilepath(filepath)
-    if self._mainScrollAreaWidgetLayout.count() % 2:
-      listWidgetItem.setBackgroundColor(appearance.ALTERNATE_COLOUR_ONE)
-    else:
-      listWidgetItem.setBackgroundColor(QtCore.Qt.white)
-    # Add ListQWidgetItem into mainScrollAreaWidgetLayout
-    self._mainScrollAreaWidgetLayout.addWidget(listWidgetItem)
+    with MainWindow.widgetAddingLock:
+      try:
+        if self._removedInstructions:
+          pass
+      except Exception as e:
+        self._instructionLabel.setParent(None)
+        self._instructionIconLabel.setParent(None)
+        self._mainScrollAreaWidgetLayout.removeItem(self._verticalSpacer)
+        self._mainScrollAreaWidgetLayout.setAlignment(QtCore.Qt.AlignTop)
+        self._removedInstructions = True
+      # Create WidgetItem for each item
+      listWidgetItem = QWidgetItem(self)
+      listWidgetItem.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+      listWidgetItem.setProgressIcon(states.NOT_STARTED, self.devicePixelRatio())
+      listWidgetItem.setAlbumArt(art, self.devicePixelRatio())
+      listWidgetItem.setArtistText(artist)
+      listWidgetItem.setTitleText(title)
+      listWidgetItem.setfilepath(filepath)
+      if self._mainScrollAreaWidgetLayout.count() % 2:
+        listWidgetItem.setBackgroundColor(appearance.ALTERNATE_COLOUR_ONE)
+      else:
+        listWidgetItem.setBackgroundColor(QtCore.Qt.white)
+      # Add ListQWidgetItem into mainScrollAreaWidgetLayout
+      self._mainScrollAreaWidgetLayout.addWidget(listWidgetItem)
 
   def setProgressIcon(self, filepath, state):
     for i in range(self._mainScrollAreaWidgetLayout.count()):
@@ -759,7 +806,12 @@ class MainWindow (QtWidgets.QMainWindow):
       pass
     finally:
       for i in reversed(range(self._mainScrollAreaWidgetLayout.count())):
-        self._mainScrollAreaWidgetLayout.itemAt(i).widget().setParent(None)
+        if self._mainScrollAreaWidgetLayout.itemAt(i).widget() is self._instructionIconLabel \
+        or self._mainScrollAreaWidgetLayout.itemAt(i).widget() is self._instructionLabel \
+        or wself._mainScrollAreaWidgetLayout.itemAt(i) is self._verticalSpacer:
+          pass
+        else:
+          self._mainScrollAreaWidgetLayout.itemAt(i).widget().setParent(None)
       if hasattr(self, '_filepaths'):
         self._filepaths.clear()
 
