@@ -572,10 +572,10 @@ class MainWindow (QtWidgets.QMainWindow):
 
     if utils.IS_MAC:
       self._instructionLabel = QtWidgets.QLabel('Grab lyrics by adding a song.'
-        '<br>Click "Add song" or "Add folder" to get started.')
+        '<br>Drag a song in, or click "Add song" to get started.')
     else:
       self._instructionLabel = QtWidgets.QLabel('Grab lyrics by adding a song.'
-        '<br>Open the "File" menu, the "Open File" to get started.')
+        '<br>Drag a song in, or open the "File" menu to get started.')
     self._instructionLabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
     self._instructionLabel.setAlignment(QtCore.Qt.AlignCenter)
     self._instructionLabel.setStyleSheet('color: grey')
@@ -611,12 +611,29 @@ class MainWindow (QtWidgets.QMainWindow):
     self.setUnifiedTitleAndToolBarOnMac(True)
     if utils.IS_WINDOWS:
       self.setWindowIcon(QtGui.QIcon(utils.resource_path('./assets/icon.png')))
+    self.setAcceptDrops(True)
 
   def closeEvent(self, event):
     try:
       LyricGrabberThread.interrupt = True
     except:
       print('No thread running, exiting!')
+
+  def dragEnterEvent(self, event):
+    # print('Something entered')
+    event.accept()
+
+  def dragMoveEvent(self, event):
+    # print('Drag moved')
+    event.accept()
+
+  def dropEvent(self, event):
+    if event.mimeData().hasUrls:
+      event.accept()
+      # print(event.mimeData().urls())
+      filepaths = []
+      [filepaths.append(url.toString().replace('file://', '')) for url in event.mimeData().urls()]
+      self.generateFilepathList(filepaths)
 
   def keyPressEvent(self, event):
     key = event.key()
@@ -673,72 +690,46 @@ class MainWindow (QtWidgets.QMainWindow):
     self._fileDialog.setFileMode(fileMode)
     self._fileDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
 
-    if not hasattr(self, '_filepaths'):
-      self._filepaths = []
-    self._new_filepaths = []
-    self._invalid_filepaths = []
+    filepaths = []
 
     if (fileMode == QtWidgets.QFileDialog.Directory):
       directory = self._fileDialog.getExistingDirectory()
       # print('Directory selected is ' + directory)
       for root, dirs, files in os.walk(directory):
-        for file in files:
-          if file.endswith(utils.SUPPORTED_FILETYPES):
-            if os.path.join(root, file) in self._filepaths:
-              self._invalid_filepaths.append(os.path.join(root, file))
-            else:
-              self._filepaths.append(os.path.join(root, file))
-              self._new_filepaths.append(os.path.join(root, file))
-          else:
-            self._invalid_filepaths.append(os.path.join(root, file))
+        [filepaths.append(os.path.join(root, file)) for file in files]
     else:
       files = self._fileDialog.getOpenFileNames()
       # print('Files selected are ' + str(files))
-      try:
-        for file in files[0]:
-          if file.endswith(utils.SUPPORTED_FILETYPES):
-            if file in self._filepaths:
-              self._invalid_filepaths.append(file)
-            else:
-              self._filepaths.append(file)
-              self._new_filepaths.append(file)
-          else:
-            self._invalid_filepaths.append(file)
-      except:
-        pass
+      [filepaths.append(file) for file in files[0]]
 
-    self.startFetchThread(self._new_filepaths)
-
-    # Show an error message for each invalid filepath found
-    if self._invalid_filepaths and self._settings.get_show_errors():
-      self.showError()
+    self.generateFilepathList(filepaths)
 
   def generateFilepathList(self, files):
-    if not hasattr(self, '_filepaths'):
-      self._filepaths = []
-    self._new_filepaths = []
-    self._invalid_filepaths = []
+    if not hasattr(self, '_all_filepaths'):
+      self._all_filepaths = []
+    filepaths = []
+    invalid_filepaths = []
 
     for file in files:
       if file.endswith(utils.SUPPORTED_FILETYPES):
-        if file in self._filepaths:
-          self._invalid_filepaths.append(file)
+        if file in self._all_filepaths:
+          invalid_filepaths.append(file)
         else:
-          self._filepaths.append(file)
-          self._new_filepaths.append(file)
+          self._all_filepaths.append(file)
+          filepaths.append(file)
       else:
-        self._invalid_filepaths.append(file)
+        invalid_filepaths.append(file)
 
-    self.startFetchThread(self._new_filepaths)
+    self.startFetchThread(filepaths)
 
     # Show an error message for each invalid filepath found
-    if self._invalid_filepaths and self._settings.get_show_errors():
-      self.showError()
+    if invalid_filepaths and self._settings.get_show_errors():
+      self.showError(invalid_filepaths)
 
-  def showError(self):
+  def showError(self, filepaths):
     self.setEnabled(False)
     self.playErrorSound()
-    self._error_dialog = error_dialog.QErrorDialog(self, self._invalid_filepaths)
+    self._error_dialog = error_dialog.QErrorDialog(self, filepaths)
     self._error_dialog.exec()
     self.setEnabled(True)
 
@@ -793,10 +784,15 @@ class MainWindow (QtWidgets.QMainWindow):
 
   def resetListColours(self):
     for i in range(self._mainScrollAreaWidgetLayout.count()):
-      if i % 2:
-        self._mainScrollAreaWidgetLayout.itemAt(i).widget().setBackgroundColor(appearance.ALTERNATE_COLOUR_ONE)
+      if self._mainScrollAreaWidgetLayout.itemAt(i).widget() is self._instructionIconLabel \
+      or self._mainScrollAreaWidgetLayout.itemAt(i).widget() is self._instructionLabel \
+      or self._mainScrollAreaWidgetLayout.itemAt(i) is self._verticalSpacer:
+        pass
       else:
-        self._mainScrollAreaWidgetLayout.itemAt(i).widget().setBackgroundColor(QtCore.Qt.white)
+        if i % 2:
+          self._mainScrollAreaWidgetLayout.itemAt(i).widget().setBackgroundColor(appearance.ALTERNATE_COLOUR_ONE)
+        else:
+          self._mainScrollAreaWidgetLayout.itemAt(i).widget().setBackgroundColor(QtCore.Qt.white)
 
   def removeAllFilesFromList(self):
     try:
@@ -808,12 +804,12 @@ class MainWindow (QtWidgets.QMainWindow):
       for i in reversed(range(self._mainScrollAreaWidgetLayout.count())):
         if self._mainScrollAreaWidgetLayout.itemAt(i).widget() is self._instructionIconLabel \
         or self._mainScrollAreaWidgetLayout.itemAt(i).widget() is self._instructionLabel \
-        or wself._mainScrollAreaWidgetLayout.itemAt(i) is self._verticalSpacer:
+        or self._mainScrollAreaWidgetLayout.itemAt(i) is self._verticalSpacer:
           pass
         else:
           self._mainScrollAreaWidgetLayout.itemAt(i).widget().setParent(None)
-      if hasattr(self, '_filepaths'):
-        self._filepaths.clear()
+      if hasattr(self, '_all_filepaths'):
+        self._all_filepaths.clear()
 
   def removeCompletedFiles(self):
     try:
@@ -822,9 +818,14 @@ class MainWindow (QtWidgets.QMainWindow):
       pass
     finally:
       for i in reversed(range(self._mainScrollAreaWidgetLayout.count())):
-        if self._mainScrollAreaWidgetLayout.itemAt(i).widget().getState() == states.COMPLETE:
-          self._filepaths.remove(self._mainScrollAreaWidgetLayout.itemAt(i).widget().getFilepath())
-          self._mainScrollAreaWidgetLayout.itemAt(i).widget().setParent(None)
+        if self._mainScrollAreaWidgetLayout.itemAt(i).widget() is self._instructionIconLabel \
+        or self._mainScrollAreaWidgetLayout.itemAt(i).widget() is self._instructionLabel \
+        or self._mainScrollAreaWidgetLayout.itemAt(i) is self._verticalSpacer:
+          pass
+        else:
+          if self._mainScrollAreaWidgetLayout.itemAt(i).widget().getState() == states.COMPLETE:
+            self._all_filepaths.remove(self._mainScrollAreaWidgetLayout.itemAt(i).widget().getFilepath())
+            self._mainScrollAreaWidgetLayout.itemAt(i).widget().setParent(None)
       self.resetListColours()
 
   def openAboutDialog(self):

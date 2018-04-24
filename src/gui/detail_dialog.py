@@ -233,6 +233,7 @@ class QLyricsDialog (QtWidgets.QDialog):
     self._allQVBoxLayout.addWidget(self._lyricsTabWidget)
     # self._allQVBoxLayout.addWidget(self._songNavigationWidget)
     self.setLayout(self._allQVBoxLayout)
+    self.setSizeGripEnabled(True);
 
     if QLyricsDialog.x_coordinate is not None \
     and QLyricsDialog.y_coordinate is not None \

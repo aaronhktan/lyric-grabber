@@ -85,11 +85,11 @@ class QSettingsDialog (QtWidgets.QDialog):
     self._settingsGridLayout.addItem(self._verticalSpacer, 9, 0, -1, -1)
 
     self.setLayout(self._settingsGridLayout)
-    self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
     # Style settings dialog
     if utils.IS_WINDOWS:
       self.setWindowIcon(QtGui.QIcon(utils.resource_path('./assets/icon.png')))
     self.setWindowTitle('Settings')
     self.setWindowModality(QtCore.Qt.ApplicationModal)
+    self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
     self.setFixedSize(self.minimumSizeHint())
