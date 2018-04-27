@@ -28,9 +28,10 @@ class states:
 
 class LyricGrabberThread (QtCore.QThread):
   addFileToList = QtCore.pyqtSignal(['QString', 'QString', bytes, 'QString'])
-  setProgressIcon = QtCore.pyqtSignal(['QString', int])
-  setLyrics = QtCore.pyqtSignal(['QString', 'QString', 'QString'])
   notifyComplete = QtCore.pyqtSignal(bool)
+  notifyNoMetadata = QtCore.pyqtSignal(list)
+  setLyrics = QtCore.pyqtSignal(['QString', 'QString', 'QString'])
+  setProgressIcon = QtCore.pyqtSignal(['QString', int])
   interrupt = False
 
   def __init__(self, parent, filepaths):
@@ -76,7 +77,7 @@ class LyricGrabberThread (QtCore.QThread):
           self._songs.append(result.result())
         else:
           if not LyricGrabberThread.interrupt:
-            self.setProgressIcon.emit(result.result().filepath, states.ERROR)
+            self.notifyNoMetadata.emit([result.result().filepath])
           logger.log(logger.LOG_LEVEL_INFO, 'No metadata found: ' + result.result().message)
       except Exception as e:
         if not LyricGrabberThread.interrupt:
@@ -581,6 +582,8 @@ class MainWindow (QtWidgets.QMainWindow):
     self._instructionLabel.setStyleSheet('color: grey')
     self._instructionLabel.setFont(appearance.SMALL_FONT)
 
+    self._removedInstructions = False
+
     # This layout contains all the list items
     # Style the layout: spacing (between items), content (padding within items)
     self._mainScrollAreaWidgetLayout = QtWidgets.QVBoxLayout()
@@ -632,7 +635,13 @@ class MainWindow (QtWidgets.QMainWindow):
       event.accept()
       # print(event.mimeData().urls())
       filepaths = []
-      [filepaths.append(url.toString().replace('file://', '')) for url in event.mimeData().urls()]
+      for url in event.mimeData().urls():
+        url = url.toString().replace('file://', '')
+        if os.path.isdir(url):
+          for root, dirs, files in os.walk(url):
+            [filepaths.append(os.path.join(root, file)) for file in files]
+        elif os.path.isfile(url):
+          filepaths.append(url)
       self.generateFilepathList(filepaths)
 
   def keyPressEvent(self, event):
@@ -739,21 +748,22 @@ class MainWindow (QtWidgets.QMainWindow):
     self._fetch_thread.start()
 
     self._fetch_thread.addFileToList.connect(self.addFileToList)
-    self._fetch_thread.setProgressIcon.connect(self.setProgressIcon)
-    self._fetch_thread.setLyrics.connect(self.setLyrics)
     self._fetch_thread.notifyComplete.connect(self.playSuccessSound)
+    self._fetch_thread.notifyNoMetadata.connect(self.showError)
+    self._fetch_thread.setLyrics.connect(self.setLyrics)
+    self._fetch_thread.setProgressIcon.connect(self.setProgressIcon)
 
   def addFileToList(self, artist, title, art, filepath):
     with MainWindow.widgetAddingLock:
-      try:
-        if self._removedInstructions:
-          pass
-      except Exception as e:
+      if self._removedInstructions:
+        pass
+      else:
         self._instructionLabel.setParent(None)
         self._instructionIconLabel.setParent(None)
         self._mainScrollAreaWidgetLayout.removeItem(self._verticalSpacer)
         self._mainScrollAreaWidgetLayout.setAlignment(QtCore.Qt.AlignTop)
         self._removedInstructions = True
+
       # Create WidgetItem for each item
       listWidgetItem = QWidgetItem(self)
       listWidgetItem.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
