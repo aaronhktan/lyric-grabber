@@ -1,5 +1,6 @@
 from concurrent import futures
 import os
+import subprocess
 import sys
 import threading
 
@@ -241,7 +242,10 @@ class QWidgetItem (QtWidgets.QWidget):
       self._lyricsButton.released.connect(lambda: self._lyricsButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/lyrics.png'))))
     self._lyricsButton.setFixedWidth(125)
     self._lyricsButton.clicked.connect(lambda: self.openDetailDialog())
-    self._openButton = QtWidgets.QPushButton('Open in Finder')
+    if utils.IS_MAC:
+      self._openButton = QtWidgets.QPushButton('Open in Finder')
+    else:
+      self.self._openButton = QtWidgets.QPushButton('Open in File Browser')
     self._openButton.setFixedWidth(125)
     self._openButton.clicked.connect(lambda: self.openfilepath())
     # self._removeButton = QtWidgets.QPushButton('Remove')
@@ -371,7 +375,13 @@ class QWidgetItem (QtWidgets.QWidget):
     return self._filepath
 
   def openfilepath(self):
-    QtGui.QDesktopServices.openUrl(QtCore.QUrl('file://' + self._filepath))
+    # QtGui.QDesktopServices.openUrl(QtCore.QUrl('file://' + self._filepath))
+    if utils.IS_MAC:
+      subprocess.run(['open', '-R', self._filepath])
+    elif utils.IS_WINDOWS:
+      subprocess.run(['explorer', '/select,', self._filepath])
+    # else:
+    #   subprocess.run(['xdg-open', self._filepath])
 
   def getLyrics(self, artist=None, title=None, url=None, source=None):
     if artist is None:

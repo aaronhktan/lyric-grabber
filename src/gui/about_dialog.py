@@ -43,7 +43,7 @@ class QAboutDialog (QtWidgets.QDialog):
       ' and <a href=https://riverbankcomputing.com/software/pyqt/intro style="color: black; text-decoration: none">PyQt</a></center>'))
     self._iconsCreditsLabel.setOpenExternalLinks(True)
     self._iconsCreditsLabel.setFont(appearance.TINY_FONT)
-    self._versionLabel = QtWidgets.QLabel('Version 0.1.0')
+    self._versionLabel = QtWidgets.QLabel('Build 0.5.428-alpha')
     self._versionLabel.setFont(appearance.TINY_FONT)
 
     # self._pal = QtGui.QPalette()
