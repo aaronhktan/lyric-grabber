@@ -11,11 +11,11 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    version="1.0"
-   width="35"
-   height="35"
+   width="40"
+   height="40"
    id="svg2208"
-   inkscape:version="0.91 r13725"
-   sodipodi:docname="Quaver-Logo-2018-04-11.svg">
+   inkscape:version="0.92.2 5c3e80d, 2017-08-06"
+   sodipodi:docname="Quaver-Logo-2018-04-28.svg">
   <metadata
      id="metadata9">
     <rdf:RDF>
@@ -37,16 +37,16 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1920"
-     inkscape:window-height="1017"
+     inkscape:window-width="1395"
+     inkscape:window-height="856"
      id="namedview7"
      showgrid="false"
      units="px"
      inkscape:zoom="6.6779855"
-     inkscape:cx="-2.8847606"
+     inkscape:cx="-5.8796758"
      inkscape:cy="13.885328"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
+     inkscape:window-x="45"
+     inkscape:window-y="0"
      inkscape:window-maximized="1"
      inkscape:current-layer="layer1" />
   <defs
@@ -82,8 +82,9 @@
        x1="17.5"
        y1="35.319744"
        x2="17.5"
-       y2="-4.4073486e-006"
-       gradientUnits="userSpaceOnUse" />
+       y2="-4.4073486e-06"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(2.5,2.5)" />
     <linearGradient
        inkscape:collect="always"
        xlink:href="#linearGradient4299"
@@ -92,27 +93,28 @@
        y1="0.16692375"
        x2="17.612309"
        y2="34.945381"
-       gradientUnits="userSpaceOnUse" />
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(2.5,2.5)" />
   </defs>
   <circle
      style="fill:url(#linearGradient4297);fill-opacity:1;stroke:#ffffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
      id="path4285"
-     cx="17.5"
-     cy="17.5"
+     cx="20"
+     cy="20"
      r="17.445381" />
   <circle
      style="fill:url(#linearGradient4245);fill-opacity:1;stroke:#4cea00;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
      id="path4147"
-     cx="17.5"
-     cy="17.5"
+     cx="20"
+     cy="20"
      r="16" />
   <g
-     transform="translate(-469.53822,-134.95416)"
+     transform="translate(-469.53822,-129.95416)"
      id="layer1"
      style="stroke:#000000;stroke-opacity:1">
     <g
-       transform="matrix(1.8,0,0,1.8,-471.40868,9.4615275)"
-       style="fill:#ffffff;fill-rule:evenodd;stroke:none;stroke-width:0;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10;stroke-opacity:1;fill-opacity:1"
+       transform="matrix(1.8,0,0,1.8,-468.90868,6.9615275)"
+       style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10;stroke-opacity:1"
        id="g128">
       <path
          d="m 530.74163,73.654451 c -0.65501,0.123444 -1.15634,0.57565 -1.38306,1.200423 -0.0491,0.20154 -0.0491,0.250665 -0.0491,0.526523 0,0.379148 0.024,0.580688 0.20154,0.880479 0.25066,0.50259 0.77719,0.90567 1.37803,1.053046 0.62981,0.177607 1.68286,0.0252 2.88832,-0.374109 l 0.29979,-0.103289 -1.48132,4.093782 -1.45613,4.088743 c 0,0 0.0492,0.0252 0.12849,0.07936 0.14737,0.09825 0.39804,0.172569 0.57565,0.172569 0.29979,0 0.67893,-0.172569 0.72806,-0.324983 0,-0.04912 0.70287,-2.436116 1.55438,-5.270272 l 1.50525,-5.195954 -0.0491,-0.07306 c -0.12219,-0.152415 -0.37285,-0.201541 -0.52653,-0.07936 -0.0491,0.04912 -0.12721,0.152415 -0.17634,0.226732 -0.22673,0.379148 -0.80239,1.053047 -1.10217,1.303713 -0.27586,0.226732 -0.42827,0.250665 -0.67894,0.152414 -0.22673,-0.123444 -0.30105,-0.250666 -0.45347,-0.929603 -0.14738,-0.6739 -0.32372,-0.979988 -0.70287,-1.230654 -0.35018,-0.225473 -0.80238,-0.299791 -1.20042,-0.196502 z"
