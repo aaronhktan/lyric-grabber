@@ -273,6 +273,7 @@ class QWidgetItem (QtWidgets.QWidget):
       self._allHBoxLayout.addItem(self._rightSpacer)
 
     self.setLayout(self._allHBoxLayout)
+    self.setFocusPolicy(QtCore.Qt.NoFocus)
 
     # Initialize various parameters to nothing
     self._artist = ''
@@ -616,6 +617,7 @@ class MainWindow (QtWidgets.QMainWindow):
     self._mainScrollArea.setFrameShape(QtWidgets.QFrame.NoFrame)
     self._mainScrollArea.setWidgetResizable(True)
     self._mainScrollArea.setAttribute(QtCore.Qt.WA_MacShowFocusRect, False)
+    self._mainScrollArea.setFocusPolicy(QtCore.Qt.NoFocus)
     self._mainScrollArea.setWidget(self._mainScrollAreaWidget)
     self.setCentralWidget(self._mainScrollArea)
 
