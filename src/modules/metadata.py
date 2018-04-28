@@ -88,6 +88,7 @@ def write_lyrics_to_file(lyrics, song_filepath):
         m = mutagen.id3.ID3(song_filepath)
       elif song_filepath.endswith('.aiff'):
         song = mutagen.aiff.AIFF(song_filepath)
+        m = song.tags
 
       try:
         # Remove any previously saved lyrics
@@ -95,8 +96,8 @@ def write_lyrics_to_file(lyrics, song_filepath):
           m.delall(u'USLT')
         else:
           m.add(u'USLT')
-      except:
-        print('Failed to add USLT for file {}'.format(song_filepath))
+      except Exception as e:
+        print('Failed to add USLT for file {}; error: {}'.format(song_filepath, str(e)))
 
       try:
         # Save new lyrics
