@@ -750,8 +750,13 @@ class MainWindow (QtWidgets.QMainWindow):
   def showError(self, filepaths):
     self.setEnabled(False)
     self.playErrorSound()
-    self._error_dialog = error_dialog.QErrorDialog(self, filepaths)
-    self._error_dialog.exec()
+    try:
+      if not hasattr(self, '_error_dialog'):
+        self._error_dialog = error_dialog.QErrorDialog(self, filepaths)
+        self._error_dialog.exec()
+        del self._error_dialog
+    except:
+      pass
     self.setEnabled(True)
 
   def startFetchThread(self, filepaths):

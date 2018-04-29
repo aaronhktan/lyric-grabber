@@ -24,7 +24,7 @@ class QErrorDialog (QtWidgets.QDialog):
         if len(filepaths) > 1 else 'A file couldn\'t be added.')
     self._errorMessageLabel.setFont(appearance.SMALL_FONT_BOLD)
     self._errorDescriptionLabel = QtWidgets.QLabel((
-      '<br>Try checking that the file format is valid,'
+      'Try checking that the file format is valid,'
       ' and that it hasn\'t already been added.'
       '<br><br>Check "Don\'t show this again" if you do not want to see these error messages.'
       ' You can re-enable these messages under Settings.'))
@@ -32,11 +32,6 @@ class QErrorDialog (QtWidgets.QDialog):
     self._errorDescriptionLabel.setMinimumHeight(self._errorDescriptionLabel.minimumSizeHint().height())
     self._errorDescriptionLabel.setWordWrap(True)
     self._errorDescriptionLabel.setFont(appearance.SMALLER_FONT)
-
-    # Spacer as separator
-    self._verticalSpacer_1 = QtWidgets.QSpacerItem(50, 20,
-                                                   QtWidgets.QSizePolicy.Minimum,
-                                                   QtWidgets.QSizePolicy.Minimum)
 
     # List of files that couldn't be added
     self._filepathsListView = QtWidgets.QListView()
@@ -48,11 +43,6 @@ class QErrorDialog (QtWidgets.QDialog):
     self._filepathsListView.setModel(self._filepathsModel)
     self._filepathsListView.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
     self._filepathsListView.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-
-    # Spacer as separator
-    self._verticalSpacer_2 = QtWidgets.QSpacerItem(50, 20,
-                                                   QtWidgets.QSizePolicy.Minimum,
-                                                   QtWidgets.QSizePolicy.Minimum)
 
     # Option to suppress further errors
     self._showErrorCheckBox = QtWidgets.QCheckBox('Don\'t show this again')
@@ -73,9 +63,9 @@ class QErrorDialog (QtWidgets.QDialog):
     self._errorGridLayout = QtWidgets.QGridLayout()
     # self._errorGridLayout.setSpacing(0)
     self._errorGridLayout.addWidget(self._iconLabel, 1, 0, 2, 1)
+    self._errorGridLayout.setAlignment(self._iconLabel, QtCore.Qt.AlignTop)
     self._errorGridLayout.addWidget(self._errorMessageLabel, 1, 1, 1, -1)
     self._errorGridLayout.addWidget(self._errorDescriptionLabel, 2, 1, 1, -1)
-    self._errorGridLayout.addItem(self._verticalSpacer_1, 3, 1, 1, -1)
     self._errorGridLayout.addWidget(self._showErrorCheckBox, 6, 1, 1, 1)
     self._errorGridLayout.addWidget(self._showMoreButton, 6, 2, 1, 1)
     self._errorGridLayout.addWidget(self._okButton, 6, 3, 1, 1)
@@ -91,7 +81,6 @@ class QErrorDialog (QtWidgets.QDialog):
   def showDetails(self):
     self._errorGridLayout.addWidget(self._filepathsListView, 4, 1, 1, -1)
     self._filepathsListView.show()
-    self._errorGridLayout.addItem(self._verticalSpacer_2, 5, 1, 1, -1)
     self._showMoreButton.setText('Hide Details')
     self._showMoreButton.clicked.connect(lambda: self.hideDetails())
     self.setFixedSize(600, 400)
@@ -99,7 +88,6 @@ class QErrorDialog (QtWidgets.QDialog):
   def hideDetails(self):
     self._errorGridLayout.removeWidget(self._filepathsListView)
     self._filepathsListView.hide()
-    self._errorGridLayout.removeItem(self._verticalSpacer_2)
     self._showMoreButton.setText('Show Details')
     self._showMoreButton.clicked.connect(lambda: self.showDetails())
     self.setFixedSize(self.sizeHint())
