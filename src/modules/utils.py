@@ -1,6 +1,9 @@
 import os, sys
 import platform
 
+VERSION_NUMBER = '0.5.428-alpha'
+UPDATE_URL = 'https://github.com/cheeseisdisgusting/lyric-grabber/releases'
+
 IS_MAC = platform.uname().system.startswith('Darw')
 IS_WINDOWS = platform.uname().system.startswith('Windows')
 

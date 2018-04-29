@@ -38,6 +38,7 @@ class QAboutDialog (QtWidgets.QDialog):
     self._iconsCreditsLabel = QtWidgets.QLabel(('<center>UI icons from <a href=https://feathericons.com style="color: black; text-decoration: none">Feather Icons</a>'
       '<br>Quaver icon based on <a href=https://commons.wikimedia.org/wiki/File:Eighth_rest.svg style="color: black; text-decoration: none">Marmelad</a>'
       '<br>Warning icon from <a href=https://openclipart.org/detail/29833/warning-icon style="color: black; text-decoration: none">matthewgarysmith</a>'
+      '<br>Download icon from <a href=https://openclipart.org/detail/218662/download-icon style="color: black; text-decoration: none">qubodup</a>'
       '<br>Sounds contributed by <a href=https://sonniss.com style="color: black; text-decoration: none">Sonniss</a>'
       '<br><br>Built with <a href=https://www.python.org style="color: black; text-decoration: none">Python</a>'
       ' and <a href=https://riverbankcomputing.com/software/pyqt/intro style="color: black; text-decoration: none">PyQt</a></center>'))

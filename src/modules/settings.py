@@ -15,6 +15,7 @@ class Settings:
   text = False
   play_sounds = True
   show_errors = True
+  show_updates = True
 
   def __init__ (self, parent=None):
     config = configparser.ConfigParser()
@@ -36,6 +37,8 @@ class Settings:
       self.set_play_sounds(config_settings.getboolean('play_sounds'))
     if 'show_errors' in config_settings:
       self.set_show_errors(config_settings.getboolean('show_errors'))
+    if 'show_updates' in config_settings:
+      self.set_show_updates(config_settings.getboolean('show_updates'))
 
   def set_source(self, source_flag):
     Settings.source = str(source_flag)
@@ -93,6 +96,13 @@ class Settings:
   def get_show_errors(self):
     return Settings.show_errors
 
+  def set_show_updates(self, show_updates_flag):
+    Settings.show_updates = bool(show_updates_flag)
+    self.save_settings()
+
+  def get_show_updates(self):
+    return Settings.show_updates
+
   def save_settings(self):
     config = configparser.ConfigParser()
     config['SETTINGS'] = {'source': Settings.source,
@@ -102,7 +112,8 @@ class Settings:
                           'metadata': Settings.metadata,
                           'text': Settings.text,
                           'play_sounds': Settings.play_sounds,
-                          'show_errors': Settings.show_errors}
+                          'show_errors': Settings.show_errors,
+                          'show_updates': Settings.show_updates}
     config['ABOUT'] = {'version': 1}
     with open(utils.resource_path('./modules/settings.ini'), 'w') as configfile:
       config.write(configfile)

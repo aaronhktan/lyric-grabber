@@ -62,6 +62,9 @@ class QSettingsDialog (QtWidgets.QDialog):
     self._showErrorCheckBox = QtWidgets.QCheckBox('Show error messages')
     self._showErrorCheckBox.stateChanged.connect(lambda state: self._settings.set_show_errors(1) if state else self._settings.set_show_errors(0))
     self._showErrorCheckBox.setChecked(self._settings.get_show_errors())
+    self._showUpdatesCheckBox = QtWidgets.QCheckBox('Show update messages')
+    self._showUpdatesCheckBox.stateChanged.connect(lambda state: self._settings.set_show_updates(1) if state else self._settings.set_show_updates(0))
+    self._showUpdatesCheckBox.setChecked(self._settings.get_show_updates())
 
     # For testing
     # self._approximateCheckBox.setChecked(True)
@@ -84,7 +87,8 @@ class QSettingsDialog (QtWidgets.QDialog):
     self._settingsGridLayout.addWidget(self._playSoundsLabel, 7, 0)
     self._settingsGridLayout.addWidget(self._playSoundsCheckBox, 7, 1)
     self._settingsGridLayout.addWidget(self._showErrorCheckBox, 8, 1)
-    self._settingsGridLayout.addItem(self._verticalSpacer, 9, 0, -1, -1)
+    self._settingsGridLayout.addWidget(self._showUpdatesCheckBox, 9, 1)
+    self._settingsGridLayout.addItem(self._verticalSpacer, 10, 0, -1, -1)
 
     self.setLayout(self._settingsGridLayout)
 

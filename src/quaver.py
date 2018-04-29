@@ -1,7 +1,9 @@
-from gui import main_window
-
 import sys
+
 from PyQt5 import QtCore, QtWidgets
+
+from gui import main_window
+from gui import update_dialog
 
 class MainApp (QtWidgets.QApplication):
   def __init__(self, argv):
@@ -10,6 +12,12 @@ class MainApp (QtWidgets.QApplication):
     self._window = main_window.MainWindow()
     self._window.show()
     self._window.setWindowTitle('Quaver')
+
+    # Check for updates
+    update_available = True
+    if update_available and self._window._settings.get_show_updates():
+      self._update_dialog = update_dialog.QUpdateDialog(self._window, 'lol')
+      self._update_dialog.exec()
 
   def event(self, event):
     if event.type() == QtCore.QEvent.FileOpen:
