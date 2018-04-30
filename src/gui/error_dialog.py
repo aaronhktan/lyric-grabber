@@ -27,21 +27,29 @@ class QErrorDialog (modal_dialog.QModalDialog):
     self._filepathsListView.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
     self._filepathsListView.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
 
-    self.setFixedSize(self.sizeHint())
+    # self.setFixedSize(self.sizeHint())
 
   def showDetails(self):
     self._dialogGridLayout.addWidget(self._filepathsListView, 4, 1, 1, -1)
     self._filepathsListView.show()
     self._showMoreButton.setText('Hide Details')
     self._showMoreButton.clicked.connect(lambda: self.hideDetails())
-    self.setFixedSize(600, 400)
+
+    animation = QtCore.QPropertyAnimation(self, b'size', self)
+    animation.setDuration(150)
+    animation.setEndValue(QtCore.QSize(600, 400))
+    animation.start();
 
   def hideDetails(self):
     self._dialogGridLayout.removeWidget(self._filepathsListView)
     self._filepathsListView.hide()
     self._showMoreButton.setText('Show Details')
     self._showMoreButton.clicked.connect(lambda: self.showDetails())
-    self.setFixedSize(self.sizeHint())
+
+    animation = QtCore.QPropertyAnimation(self, b'size', self)
+    animation.setDuration(150)
+    animation.setEndValue(self.sizeHint())
+    animation.start();
 
   def showAgainAction(self, state):
     if state:

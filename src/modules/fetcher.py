@@ -5,9 +5,6 @@ import re
 from urllib.parse import urlencode, quote_plus
 import urllib.request
 
-from modules.keys import genius_key
-from modules.logger import logger
-
 try:
   from BeautifulSoup import BeautifulSoup, Comment
 except:
@@ -25,6 +22,9 @@ try:
   import unidecode
 except ImportError:
   raise ImportError('Can\'t find unidecode; please install it via "pip install unidecode"')
+
+from modules.keys import genius_key
+from modules.logger import logger
 
 AZLYRICS_URL_BASE = 'https://search.azlyrics.com/search.php?'
 GENIUS_URL_BASE = 'https://api.genius.com/search?'

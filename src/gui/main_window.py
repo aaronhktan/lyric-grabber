@@ -4,8 +4,10 @@ import subprocess
 import sys
 import threading
 
-# from colorthief import ColorThief
-from PyQt5 import QtCore, QtGui, QtMultimedia, QtWidgets
+try:
+  from PyQt5 import QtCore, QtGui, QtMultimedia, QtWidgets
+except ImportError:
+  raise ImportError('Can\'t find requests; please install it via "pip install requests"')
 
 from gui import about_dialog
 from gui import appearance
@@ -323,16 +325,16 @@ class QWidgetItem (QtWidgets.QWidget):
   def setAlbumArt(self, imageData, deviceRatio):
     try:
       if imageData == b'' or imageData is None:
-        self._albumImage = QtGui.QImage(utils.resource_path('./assets/art_empty.png'))
+        albumImage = QtGui.QImage(utils.resource_path('./assets/art_empty.png'))
       else:
-        self._albumImage = QtGui.QImage.fromData(imageData)
-      if self._albumImage.isNull():
-        self._albumImage = QtGui.QImage(utils.resource_path('./assets/art_empty.png'))
-      self._albumIcon = QtGui.QPixmap.fromImage(self._albumImage)
-      self._albumIcon.setDevicePixelRatio(deviceRatio)
+        albumImage = QtGui.QImage.fromData(imageData)
+      if albumImage.isNull():
+        albumImage = QtGui.QImage(utils.resource_path('./assets/art_empty.png'))
+      albumIcon = QtGui.QPixmap.fromImage(albumImage)
+      albumIcon.setDevicePixelRatio(deviceRatio)
       self._iconWidth = deviceRatio * (self._albumArtLabel.width() - 10)
       self._iconHeight = deviceRatio * (self._albumArtLabel.height() - 10)
-      self._albumArtLabel.setPixmap(self._albumIcon.scaled(self._iconWidth,
+      self._albumArtLabel.setPixmap(albumIcon.scaled(self._iconWidth,
                                                            self._iconHeight,
                                                            QtCore.Qt.KeepAspectRatio,
                                                            QtCore.Qt.SmoothTransformation))
@@ -761,14 +763,14 @@ class MainWindow (QtWidgets.QMainWindow):
 
   def startFetchThread(self, filepaths):
     # Start another thread for network requests to not block the GUI thread
-    self._fetch_thread = LyricGrabberThread(self, sorted(filepaths))
-    self._fetch_thread.start()
+    fetch_thread = LyricGrabberThread(self, sorted(filepaths))
+    fetch_thread.start()
 
-    self._fetch_thread.addFileToList.connect(self.addFileToList)
-    self._fetch_thread.notifyComplete.connect(self.playSuccessSound)
-    self._fetch_thread.notifyNoMetadata.connect(self.showError)
-    self._fetch_thread.setLyrics.connect(self.setLyrics)
-    self._fetch_thread.setProgressIcon.connect(self.setProgressIcon)
+    fetch_thread.addFileToList.connect(self.addFileToList)
+    fetch_thread.notifyComplete.connect(self.playSuccessSound)
+    fetch_thread.notifyNoMetadata.connect(self.showError)
+    fetch_thread.setLyrics.connect(self.setLyrics)
+    fetch_thread.setProgressIcon.connect(self.setProgressIcon)
 
   def addFileToList(self, artist, title, art, filepath):
     with MainWindow.widgetAddingLock:
@@ -793,7 +795,7 @@ class MainWindow (QtWidgets.QMainWindow):
         listWidgetItem.setBackgroundColor(appearance.ALTERNATE_COLOUR_ONE)
       else:
         listWidgetItem.setBackgroundColor(QtCore.Qt.white)
-      # Add ListQWidgetItem into mainScrollAreaWidgetLayout
+      # Add ListWidgetItem into mainScrollAreaWidgetLayout
       self._mainScrollAreaWidgetLayout.addWidget(listWidgetItem)
 
   def setProgressIcon(self, filepath, state):
@@ -834,7 +836,10 @@ class MainWindow (QtWidgets.QMainWindow):
         or self._mainScrollAreaWidgetLayout.itemAt(i) is self._verticalSpacer:
           pass
         else:
-          self._mainScrollAreaWidgetLayout.itemAt(i).widget().setParent(None)
+          widget = self._mainScrollAreaWidgetLayout.itemAt(i).widget()
+          widget.deleteLater()
+          widget.setParent(None)
+          widget = None
       if hasattr(self, '_all_filepaths'):
         self._all_filepaths.clear()
 
@@ -852,7 +857,10 @@ class MainWindow (QtWidgets.QMainWindow):
         else:
           if self._mainScrollAreaWidgetLayout.itemAt(i).widget().getState() == states.COMPLETE:
             self._all_filepaths.remove(self._mainScrollAreaWidgetLayout.itemAt(i).widget().getFilepath())
-            self._mainScrollAreaWidgetLayout.itemAt(i).widget().setParent(None)
+            widget = self._mainScrollAreaWidgetLayout.itemAt(i).widget()
+            widget.deleteLater()
+            widget.setParent(None)
+            widget = None
       self.resetListColours()
 
   def openAboutDialog(self):

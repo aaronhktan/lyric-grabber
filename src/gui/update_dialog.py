@@ -5,11 +5,12 @@ from gui import modal_dialog
 from modules import utils
 
 class QUpdateDialog (modal_dialog.QModalDialog):
-  def __init__(self, parent, description):
+  def __init__(self, parent, version, url, description):
     super().__init__(parent)
 
     self.setIcon('./assets/update.png')
-    self.setTitle('A new version of Quaver is available!')
+    print(version)
+    self.setTitle('Version {} of Quaver is available!'.format(version))
     self.setMessage((
       'Click "OK" to download the new version of Quaver.'
       '<br><br>Check "Don\'t show this again" if you do not want to see these update messages.'
@@ -22,21 +23,30 @@ class QUpdateDialog (modal_dialog.QModalDialog):
     self._descriptionQTextEdit.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
     self._descriptionQTextEdit.setContentsMargins(10, 10, 0, 10)
 
-    self.setFixedSize(self.sizeHint())
+    # Download update
+    self._update_url = url
 
   def showDetails(self):
     self._dialogGridLayout.addWidget(self._descriptionQTextEdit, 4, 1, 1, -1)
     self._descriptionQTextEdit.show()
     self._showMoreButton.setText('Hide Details')
     self._showMoreButton.clicked.connect(lambda: self.hideDetails())
-    self.setFixedSize(600, 400)
+
+    animation = QtCore.QPropertyAnimation(self, b'size', self)
+    animation.setDuration(150)
+    animation.setEndValue(QtCore.QSize(600, 400))
+    animation.start();
 
   def hideDetails(self):
     self._dialogGridLayout.removeWidget(self._descriptionQTextEdit)
     self._descriptionQTextEdit.hide()
     self._showMoreButton.setText('Show Details')
     self._showMoreButton.clicked.connect(lambda: self.showDetails())
-    self.setFixedSize(self.sizeHint())
+
+    animation = QtCore.QPropertyAnimation(self, b'size', self)
+    animation.setDuration(150)
+    animation.setEndValue(self.sizeHint())
+    animation.start();
 
   def showAgainAction(self, state):
     if state:
@@ -45,5 +55,5 @@ class QUpdateDialog (modal_dialog.QModalDialog):
       modal_dialog.QModalDialog.settings.set_show_updates(1)
 
   def okAction(self):
-    QtGui.QDesktopServices.openUrl(QtCore.QUrl(utils.UPDATE_URL))
+    QtGui.QDesktopServices.openUrl(QtCore.QUrl(self._update_url))
     self.close()

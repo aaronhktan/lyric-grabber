@@ -1,8 +1,10 @@
 import os, sys
 import platform
 
-VERSION_NUMBER = '0.5.428-alpha'
-UPDATE_URL = 'https://github.com/cheeseisdisgusting/lyric-grabber/releases'
+VERSION_NUMBER = '0.5.429'
+CHANNEL = 'alpha'
+UPDATE_URL = 'https://api.github.com/repos/cheeseisdisgusting/lyric-grabber/releases'
+UPDATE_REGEX = r'(.*)\s.?(\d*.{1,})\-(.*)'
 
 IS_MAC = platform.uname().system.startswith('Darw')
 IS_WINDOWS = platform.uname().system.startswith('Windows')
