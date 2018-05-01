@@ -94,17 +94,16 @@ def write_lyrics_to_file(lyrics, song_filepath):
         # Remove any previously saved lyrics
         if len(m.getall(u'USLT')) != 0:
           m.delall(u'USLT')
-        else:
           m.add(u'USLT')
       except Exception as e:
-        print('Failed to add USLT for file {}; error: {}'.format(song_filepath, str(e)))
+        logger.log(logger.LOG_LEVEL_ERROR, 'Failed to add USLT for file {}; error: {}'.format(song_filepath, str(e)))
 
       try:
         # Save new lyrics
         m[u'USLT'] = (mutagen.id3.USLT(encoding=3, lang=u'XXX', desc=u'desc', text=lyrics))
         m.save(song_filepath)
       except:
-        print('Failed to write USLT for file {}'.format(song_filepath))
+        logger.log(logger.LOG_LEVEL_ERROR, 'Failed to write USLT for file {}'.format(song_filepath))
     elif song_filepath.endswith(('.mp4', '.m4a', '.m4v', '.ape', '.wma', '.flac', '.ogg', '.oga', '.opus')):
       m = mutagen.File(song_filepath)
 
@@ -126,7 +125,7 @@ def write_lyrics_to_file(lyrics, song_filepath):
     message = logger.create_message(logger.LOG_LEVEL_SUCCESS, 'Wrote lyrics for file: {file}'.format(file=song_filepath))
     return ERROR_TUPLE(True, message, song_filepath)
   except Exception as e:
-    print(str(e))
+    logger.log(logger.LOG_LEVEL_ERROR, str(e))
     message = logger.create_message(logger.LOG_LEVEL_ERROR, 'Couldn\'t write lyrics for file: {file}; error {error}'.format(file=song_filepath,
                                                                                                                             error=str(e)))
     return ERROR_TUPLE(False, message, song_filepath)

@@ -317,13 +317,13 @@ class QLyricsDialog (QtWidgets.QDialog):
     if use_url: # This means we should fetch based on URL
       title = self._titleLineEdit.text()
       url = self._urlLineEdit.text()
-      print(title, url)
+      # print(title, url)
       self.parent.getLyrics(title=title, url=url)
     else:
       artist = self._artistLineEdit.text()
       title = self._titleLineEdit.text()
       source = self._sourceLabelComboBox.currentText()
-      print(source)
+      # print(source)
       self.parent.getLyrics(artist=artist, title=title, source=source)
 
   def getFilepath(self):

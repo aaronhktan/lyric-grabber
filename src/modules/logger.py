@@ -14,13 +14,21 @@ class logger:
 
   def log(log_level, message):
     if log_level == logger.LOG_LEVEL_SUCCESS:
-      print(logger.SUCCESSS + '[SUCCESS] ' + logger.RESET + message)
+      pass
+      # print('Success!')
+      # print(logger.SUCCESSS + '[SUCCESS] ' + logger.RESET + message)
     elif log_level == logger.LOG_LEVEL_ERROR:
-      print(logger.ERROR + '[ERROR] ' + logger.RESET + message)
+      pass
+      # print('Error!')
+      # print(logger.ERROR + '[ERROR] ' + logger.RESET + message)
     elif log_level == logger.LOG_LEVEL_INFO:
-      print(logger.INFO + '[INFO] ' + logger.RESET + message)
+      pass
+      # print('Info!')
+      # print(logger.INFO + '[INFO] ' + logger.RESET + message)
     elif log_level == logger.LOG_LEVEL_WARNING:
-      print(logger.INFO + '[WARNING] ' + logger.RESET + message)
+      pass
+      # print('Warning!')
+      # print(logger.INFO + '[WARNING] ' + logger.RESET + message)
 
   def create_message(log_level, message):
     if log_level == logger.LOG_LEVEL_SUCCESS:

@@ -9,7 +9,6 @@ class QUpdateDialog (modal_dialog.QModalDialog):
     super().__init__(parent)
 
     self.setIcon('./assets/update.png')
-    print(version)
     self.setTitle('Version {} of Quaver is available!'.format(version))
     self.setMessage((
       'Click "OK" to download the new version of Quaver.'

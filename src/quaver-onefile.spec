@@ -39,6 +39,7 @@ a.datas += [('./assets/add_folder.png', './assets/add_folder.png', 'DATA'),
             ('./assets/settings_inverted.png', './assets/settings_inverted.png', 'DATA'),
             ('./modules/settings.ini', './modules/settings.ini', 'DATA'),
             ('./assets/success.wav', './assets/success.wav', 'DATA'),
+            ('./assets/update.png', './assets/update.png', 'DATA'),
             ('./assets/warning.png', './assets/warning.png', 'DATA')]
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)

@@ -187,7 +187,7 @@ class SingleLyricGrabberThread (QtCore.QThread):
                                             write_text=self._settings.get_text(),
                                             lyrics=result.lyrics,
                                             song_filepath=self._filepath)
-          print(result.message)
+          logger.log(logger.LOG_LEVEL_SUCCESS, result.message)
           self.setProgressIcon.emit(states.COMPLETE)
         else:
           self.setProgressIcon.emit(states.ERROR)
@@ -339,7 +339,7 @@ class QWidgetItem (QtWidgets.QWidget):
                                                            QtCore.Qt.KeepAspectRatio,
                                                            QtCore.Qt.SmoothTransformation))
     except:
-      print('Error setting album art.')
+      logger.log(logger.LOG_LEVEL_ERROR, 'Error setting album art.')
 
   def setTitleText(self, text):
     self._title = text
@@ -408,7 +408,7 @@ class QWidgetItem (QtWidgets.QWidget):
         if QWidgetItem.dialog.getFilepath() == self._filepath:
           QWidgetItem.dialog.updateLyrics(lyrics)
     except Exception as e:
-      print(str(e))
+      logger.log(logger.LOG_LEVEL_ERROR, str(e))
 
   def saveLyrics(self, lyrics):
     try:
@@ -422,7 +422,7 @@ class QWidgetItem (QtWidgets.QWidget):
                                lyrics=lyrics,
                                song_filepath=self._filepath)
     except Exception as e:
-      print(str(e))
+      logger.log(logger.LOG_LEVEL_ERROR, str(e))
 
   def setUrl(self, url):
     self._url = url
@@ -431,7 +431,7 @@ class QWidgetItem (QtWidgets.QWidget):
         if QWidgetItem.dialog.getFilepath() == self._filepath:
           QWidgetItem.dialog.updateUrl(url)
     except Exception as e:
-      print(str(e))
+      logger.log(logger.LOG_LEVEL_ERROR, str(e))
 
   def resetColours(self):
     self.parent.resetListColours()
@@ -634,7 +634,7 @@ class MainWindow (QtWidgets.QMainWindow):
     try:
       LyricGrabberThread.interrupt = True
     except:
-      print('No thread running, exiting!')
+      logger.log(logger.LOG_LEVEL_ERROR, 'No thread running, exiting!')
 
   def dragEnterEvent(self, event):
     # print('Something entered')

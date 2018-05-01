@@ -107,7 +107,7 @@ def write_file(artist, title, write_info, write_metadata, write_text, lyrics, so
       message = logger.create_message(logger.LOG_LEVEL_INFO, 'No lyrics found for file: {file}'.format(file=title))
       return FILE_TUPLE(True, song_filepath, message)
   except Exception as e:
-    print(str(e))
+    logger.log(logger.LOG_LEVEL_ERROR, str(e))
 
   message = logger.create_message(logger.LOG_LEVEL_SUCCESS, 'Got lyrics for file: {file}'.format(file=title))
   return FILE_TUPLE(True, song_filepath, message)
