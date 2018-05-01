@@ -18,13 +18,13 @@ class MainApp (QtWidgets.QApplication):
     self._window.setWindowTitle('Quaver')
 
     # Check for updates
-    update_available = update.check_for_updates()
-    if update_available and self._window._settings.get_show_updates():
-      self._update_dialog = update_dialog.QUpdateDialog(self._window, 
-        version=update_available.version,
-        url=update_available.url,
-        description=update_available.description)
-      self._update_dialog.exec()
+    # update_available = update.check_for_updates()
+    # if update_available and self._window._settings.get_show_updates():
+    #   self._update_dialog = update_dialog.QUpdateDialog(self._window, 
+    #     version=update_available.version,
+    #     url=update_available.url,
+    #     description=update_available.description)
+    #   self._update_dialog.exec()
 
   def event(self, event):
     if event.type() == QtCore.QEvent.FileOpen:

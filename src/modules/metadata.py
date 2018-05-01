@@ -92,11 +92,15 @@ def write_lyrics_to_file(lyrics, song_filepath):
 
       try:
         # Remove any previously saved lyrics
-        if len(m.getall(u'USLT')) != 0:
+        if len(m.getall(u'USLT')) > 0:
           m.delall(u'USLT')
-          m.add(u'USLT')
       except Exception as e:
-        logger.log(logger.LOG_LEVEL_ERROR, 'Failed to add USLT for file {}; error: {}'.format(song_filepath, str(e)))
+        logger.log(logger.LOG_LEVEL_ERROR, 'Failed to delete USLT for file {}; error: {}'.format(song_filepath, str(e)))
+
+      # try:
+      #   m.add(u'USLT')
+      # except Exception as e:
+      #   logger.log(logger.LOG_LEVEL_ERROR, 'Failed to add USLT for file {}; error: {}'.format(song_filepath, str(e)))
 
       try:
         # Save new lyrics

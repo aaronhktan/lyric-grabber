@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import threading
+import time
 
 try:
   from PyQt5 import QtCore, QtGui, QtMultimedia, QtWidgets
@@ -108,6 +109,7 @@ class LyricGrabberThread (QtCore.QThread):
         return
       try:
         if result.result().succeeded:
+          pass
           if result.result().lyrics:
             if not LyricGrabberThread.interrupt:
               self.setProgressIcon.emit(result.result().filepath, states.COMPLETE)
@@ -141,7 +143,7 @@ class LyricGrabberThread (QtCore.QThread):
         self.setProgressIcon.emit(result.result().filepath, states.COMPLETE)
 
     if not LyricGrabberThread.interrupt:
-      self.notifyComplete.emit(True)
+        self.notifyComplete.emit(True)
 
 class SingleLyricGrabberThread (QtCore.QThread):
   setProgressIcon = QtCore.pyqtSignal([int])
@@ -194,7 +196,7 @@ class SingleLyricGrabberThread (QtCore.QThread):
         # print(result.lyrics)
       except Exception as e:
         logger.log(logger.LOG_LEVEL_ERROR,
-                   ' Exception occurred while getting lyrics for file {filepath}: {error}'.format(self_filepath,
+                   ' Exception occurred while getting lyrics for file {filepath}: {error}'.format(self._filepath,
                                                                                                   error=str(e)))
 
       self.notifyComplete.emit(True)
@@ -247,7 +249,7 @@ class QWidgetItem (QtWidgets.QWidget):
     if utils.IS_MAC:
       self._openButton = QtWidgets.QPushButton('Open in Finder')
     else:
-      self.self._openButton = QtWidgets.QPushButton('Open in File Browser')
+      self._openButton = QtWidgets.QPushButton('Open in File Browser')
     self._openButton.setFixedWidth(125)
     self._openButton.clicked.connect(lambda: self.openfilepath())
     # self._removeButton = QtWidgets.QPushButton('Remove')
@@ -382,7 +384,8 @@ class QWidgetItem (QtWidgets.QWidget):
     if utils.IS_MAC:
       subprocess.run(['open', '-R', self._filepath])
     elif utils.IS_WINDOWS:
-      subprocess.run(['explorer', '/select,', self._filepath])
+      print(self._filepath)
+      subprocess.run('explorer /select,"{}"'.format(self._filepath.replace('/', '\\')))
     # else:
     #   subprocess.run(['xdg-open', self._filepath])
 
@@ -637,25 +640,28 @@ class MainWindow (QtWidgets.QMainWindow):
       logger.log(logger.LOG_LEVEL_ERROR, 'No thread running, exiting!')
 
   def dragEnterEvent(self, event):
-    # print('Something entered')
+    print('Something entered')
     event.accept()
 
   def dragMoveEvent(self, event):
-    # print('Drag moved')
+    print('Drag moved')
     event.accept()
 
   def dropEvent(self, event):
     if event.mimeData().hasUrls:
       event.accept()
-      # print(event.mimeData().urls())
       filepaths = []
       for url in event.mimeData().urls():
-        url = url.toString().replace('file://', '')
+        url = url.toString().replace('file://' if utils.IS_MAC else 'file:///', '')
+        print(url)
         if os.path.isdir(url):
           for root, dirs, files in os.walk(url):
             [filepaths.append(os.path.join(root, file)) for file in files]
         elif os.path.isfile(url):
           filepaths.append(url)
+        else:
+          pass
+      print('Filepaths are {}'.format(filepaths))
       self.generateFilepathList(filepaths)
 
   def keyPressEvent(self, event):
@@ -743,19 +749,21 @@ class MainWindow (QtWidgets.QMainWindow):
       else:
         invalid_filepaths.append(file)
 
-    self.startFetchThread(filepaths)
+    if len(filepaths) > 0:
+      self.startFetchThread(filepaths)
 
     # Show an error message for each invalid filepath found
     if invalid_filepaths and self._settings.get_show_errors():
       self.showError(invalid_filepaths)
 
   def showError(self, filepaths):
+    # with MainWindow.widgetAddingLock:
     self.setEnabled(False)
     self.playErrorSound()
     try:
       if not hasattr(self, '_error_dialog'):
         self._error_dialog = error_dialog.QErrorDialog(self, filepaths)
-        self._error_dialog.exec()
+        self._error_dialog.show()
         del self._error_dialog
     except:
       pass
@@ -763,20 +771,19 @@ class MainWindow (QtWidgets.QMainWindow):
 
   def startFetchThread(self, filepaths):
     # Start another thread for network requests to not block the GUI thread
-    fetch_thread = LyricGrabberThread(self, sorted(filepaths))
-    fetch_thread.start()
+    self._fetch_thread = LyricGrabberThread(self, filepaths)
 
-    fetch_thread.addFileToList.connect(self.addFileToList)
-    fetch_thread.notifyComplete.connect(self.playSuccessSound)
-    fetch_thread.notifyNoMetadata.connect(self.showError)
-    fetch_thread.setLyrics.connect(self.setLyrics)
-    fetch_thread.setProgressIcon.connect(self.setProgressIcon)
+    self._fetch_thread.addFileToList.connect(self.addFileToList)
+    self._fetch_thread.notifyComplete.connect(self.playSuccessSound)
+    self._fetch_thread.notifyNoMetadata.connect(self.showError)
+    self._fetch_thread.setLyrics.connect(self.setLyrics)
+    self._fetch_thread.setProgressIcon.connect(self.setProgressIcon)
+
+    self._fetch_thread.start()
 
   def addFileToList(self, artist, title, art, filepath):
     with MainWindow.widgetAddingLock:
-      if self._removedInstructions:
-        pass
-      else:
+      if not self._removedInstructions:
         self._instructionLabel.setParent(None)
         self._instructionIconLabel.setParent(None)
         self._mainScrollAreaWidgetLayout.removeItem(self._verticalSpacer)
