@@ -2,10 +2,13 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from gui import appearance
 from modules import utils
+from modules import update
 
 class QAboutDialog (QtWidgets.QDialog):
   def __init__(self, parent=None):
     super().__init__(parent)
+
+    self._parent = parent;
 
     # Metadata about Quaver
     self._iconLabel = QtWidgets.QLabel()
@@ -28,7 +31,7 @@ class QAboutDialog (QtWidgets.QDialog):
     # self._projectLinkButton = QtWidgets.QPushButton('See on Github...')
     self._checkUpdatesButton = QtWidgets.QPushButton('Check for updates')
     self._checkUpdatesButton.setFocusPolicy(QtCore.Qt.NoFocus)
-    self._checkUpdatesButton.clicked.connect(lambda: self.openProjectLink())
+    self._checkUpdatesButton.clicked.connect(lambda: self.check_for_updates())
 
     # Credits
     self._creditsLabel = QtWidgets.QLabel(('<center>Made with love by Aaron Tan'
@@ -78,6 +81,12 @@ class QAboutDialog (QtWidgets.QDialog):
         self.setFixedSize(200, self.minimumSizeHint().height())
     self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
-  def openProjectLink(self):
-    # TODO: Actually make this check for updates rather than opening the project link
-    QtGui.QDesktopServices.openUrl(QtCore.QUrl('https://github.com/cheeseisdisgusting/lyric-grabber/releases'))
+  def check_for_updates(self):
+    self._updater_thread = update.UpdateCheckerThread(self)
+    self._updater_thread.notifyComplete.connect(self.openUpdateDialog)
+    self._updater_thread.start()
+
+  def openUpdateDialog(self, update_available):
+    self._parent.openUpdateDialog(update_available,
+      show_if_no_update=True,
+      show_option_to_hide=False)

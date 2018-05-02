@@ -6,7 +6,6 @@ except ImportError:
   raise ImportError('Can\'t find PyQt5; please install it via "pip install pyqt5"')
 
 from gui import main_window
-from gui import update_dialog
 from modules import update
 
 class MainApp (QtWidgets.QApplication):
@@ -17,14 +16,10 @@ class MainApp (QtWidgets.QApplication):
     self._window.show()
     self._window.setWindowTitle('Quaver')
 
-    # Check for updates
-    # update_available = update.check_for_updates()
-    # if update_available and self._window._settings.get_show_updates():
-    #   self._update_dialog = update_dialog.QUpdateDialog(self._window, 
-    #     version=update_available.version,
-    #     url=update_available.url,
-    #     description=update_available.description)
-    #   self._update_dialog.exec()
+    if self._window._settings.get_show_updates():
+      self._updater_thread = update.UpdateCheckerThread(self)
+      self._updater_thread.notifyComplete.connect(self._window.openUpdateDialog)
+      self._updater_thread.start()
 
   def event(self, event):
     if event.type() == QtCore.QEvent.FileOpen:

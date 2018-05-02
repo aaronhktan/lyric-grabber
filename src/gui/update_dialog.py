@@ -5,22 +5,25 @@ from gui import modal_dialog
 from modules import utils
 
 class QUpdateDialog (modal_dialog.QModalDialog):
-  def __init__(self, parent, version, url, description):
+  def __init__(self, parent, title, message, url, description, show_option_to_hide=True):
     super().__init__(parent)
 
     self.setIcon('./assets/update.png')
-    self.setTitle('Version {} of Quaver is available!'.format(version))
-    self.setMessage((
-      'Click "OK" to download the new version of Quaver.'
-      '<br><br>Check "Don\'t show this again" if you do not want to see these update messages.'
-      ' You can re-enable these messages under Settings.'))
+    self.setTitle(title)
+    self.setMessage(message)
 
-    # Release notes
-    self._descriptionQTextEdit = QtWidgets.QTextEdit()
-    self._descriptionQTextEdit.setText(description)
-    self._descriptionQTextEdit.setAlignment(QtCore.Qt.AlignTop)
-    self._descriptionQTextEdit.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
-    self._descriptionQTextEdit.setContentsMargins(10, 10, 0, 10)
+    if description is not None:
+      # Release notes
+      self._descriptionQTextEdit = QtWidgets.QTextEdit()
+      self._descriptionQTextEdit.setText(description)
+      self._descriptionQTextEdit.setAlignment(QtCore.Qt.AlignTop)
+      self._descriptionQTextEdit.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
+      self._descriptionQTextEdit.setContentsMargins(10, 10, 0, 10)
+    else:
+      self._showMoreButton.setVisible(False)
+
+    if not show_option_to_hide:
+      self._showAgainCheckBox.setVisible(False)
 
     # Download update
     self._update_url = url
@@ -54,5 +57,6 @@ class QUpdateDialog (modal_dialog.QModalDialog):
       modal_dialog.QModalDialog.settings.set_show_updates(1)
 
   def okAction(self):
-    QtGui.QDesktopServices.openUrl(QtCore.QUrl(self._update_url))
+    if self._update_url is not None:
+      QtGui.QDesktopServices.openUrl(QtCore.QUrl(self._update_url))
     self.close()

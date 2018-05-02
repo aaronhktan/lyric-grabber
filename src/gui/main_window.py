@@ -3,18 +3,18 @@ import os
 import subprocess
 import sys
 import threading
-import time
 
 try:
   from PyQt5 import QtCore, QtGui, QtMultimedia, QtWidgets
 except ImportError:
-  raise ImportError('Can\'t find requests; please install it via "pip install requests"')
+  raise ImportError('Can\'t find PyQt5; please install it via "pip install PyQt5"')
 
 from gui import about_dialog
 from gui import appearance
 from gui import detail_dialog
 from gui import error_dialog
 from gui import settings_dialog
+from gui import update_dialog
 from modules.logger import logger
 from modules import lyric_grabber
 from modules import settings
@@ -109,7 +109,6 @@ class LyricGrabberThread (QtCore.QThread):
         return
       try:
         if result.result().succeeded:
-          pass
           if result.result().lyrics:
             if not LyricGrabberThread.interrupt:
               self.setProgressIcon.emit(result.result().filepath, states.COMPLETE)
@@ -241,6 +240,7 @@ class QWidgetItem (QtWidgets.QWidget):
 
     # Add buttons
     self._lyricsButton = QtWidgets.QPushButton(QtGui.QIcon(utils.resource_path('./assets/lyrics.png')), 'View Lyrics')
+    self._lyricsButton.setFocusPolicy(QtCore.Qt.NoFocus)
     if utils.IS_MAC:
       self._lyricsButton.pressed.connect(lambda: self._lyricsButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/lyrics_inverted.png'))))
       self._lyricsButton.released.connect(lambda: self._lyricsButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/lyrics.png'))))
@@ -250,6 +250,7 @@ class QWidgetItem (QtWidgets.QWidget):
       self._openButton = QtWidgets.QPushButton('Open in Finder')
     else:
       self._openButton = QtWidgets.QPushButton('Open in File Browser')
+    self._openButton.setFocusPolicy(QtCore.Qt.NoFocus)
     self._openButton.setFixedWidth(125)
     self._openButton.clicked.connect(lambda: self.openfilepath())
     # self._removeButton = QtWidgets.QPushButton('Remove')
@@ -384,7 +385,6 @@ class QWidgetItem (QtWidgets.QWidget):
     if utils.IS_MAC:
       subprocess.run(['open', '-R', self._filepath])
     elif utils.IS_WINDOWS:
-      print(self._filepath)
       subprocess.run('explorer /select,"{}"'.format(self._filepath.replace('/', '\\')))
     # else:
     #   subprocess.run(['xdg-open', self._filepath])
@@ -640,11 +640,11 @@ class MainWindow (QtWidgets.QMainWindow):
       logger.log(logger.LOG_LEVEL_ERROR, 'No thread running, exiting!')
 
   def dragEnterEvent(self, event):
-    print('Something entered')
+    # print('Something entered')
     event.accept()
 
   def dragMoveEvent(self, event):
-    print('Drag moved')
+    # print('Drag moved')
     event.accept()
 
   def dropEvent(self, event):
@@ -653,15 +653,16 @@ class MainWindow (QtWidgets.QMainWindow):
       filepaths = []
       for url in event.mimeData().urls():
         url = url.toString().replace('file://' if utils.IS_MAC else 'file:///', '')
-        print(url)
+        # print(url)
         if os.path.isdir(url):
           for root, dirs, files in os.walk(url):
             [filepaths.append(os.path.join(root, file)) for file in files]
         elif os.path.isfile(url):
           filepaths.append(url)
         else:
+          # print('That is neither a directory nor a file (???)')
           pass
-      print('Filepaths are {}'.format(filepaths))
+      # print('Filepaths are {}'.format(filepaths))
       self.generateFilepathList(filepaths)
 
   def keyPressEvent(self, event):
@@ -757,13 +758,12 @@ class MainWindow (QtWidgets.QMainWindow):
       self.showError(invalid_filepaths)
 
   def showError(self, filepaths):
-    # with MainWindow.widgetAddingLock:
     self.setEnabled(False)
-    self.playErrorSound()
     try:
       if not hasattr(self, '_error_dialog'):
+        self.playErrorSound()
         self._error_dialog = error_dialog.QErrorDialog(self, filepaths)
-        self._error_dialog.show()
+        self._error_dialog.exec()
         del self._error_dialog
     except:
       pass
@@ -872,8 +872,8 @@ class MainWindow (QtWidgets.QMainWindow):
 
   def openAboutDialog(self):
     self.setEnabled(False)
-    self._settings_dialog = about_dialog.QAboutDialog()
-    self._settings_dialog.exec()
+    self._about_dialog = about_dialog.QAboutDialog(self)
+    self._about_dialog.exec()
     self.setEnabled(True)
 
   def openSettingsDialog(self):
@@ -881,6 +881,30 @@ class MainWindow (QtWidgets.QMainWindow):
     self._settings_dialog = settings_dialog.QSettingsDialog()
     self._settings_dialog.exec()
     self.setEnabled(True)
+
+  def openUpdateDialog(self, update_available, show_if_no_update=False, show_option_to_hide=True):
+    show_hide_message = ('Click "OK" to download the new version of Quaver.'
+      '<br><br>Check "Don\'t show this again" if you do not want to see these update messages.'
+      ' You can re-enable these messages under Settings.')
+    do_not_show_hide_message = ('Click "OK" to download the new version of Quaver.'
+      '<br><br>Quaver can automatically check for updates if you check the appropriate option in Settings.')
+
+    if update_available:
+      self._update_dialog = update_dialog.QUpdateDialog(self,
+        title='Version {} of Quaver is available!'.format(update_available.version),
+        message=show_hide_message if show_option_to_hide else do_not_show_hide_message,
+        url=update_available.url,
+        description=update_available.description,
+        show_option_to_hide=show_option_to_hide)
+      self._update_dialog.exec()
+    elif show_if_no_update:
+      self._update_dialog = update_dialog.QUpdateDialog(self,
+        title='You are on the newest version of Quaver!',
+        message=('Quaver can automatically check for updates if you check the appropriate option in Settings.'),
+        url=None,
+        description=None,
+        show_option_to_hide=show_option_to_hide)
+      self._update_dialog.exec()
 
   def playSuccessSound(self):
     # Playing sounded with PyQt causes this to happen when closing:
