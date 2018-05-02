@@ -35,22 +35,23 @@ class UpdateCheckerThread (QtCore.QThread):
       releases = r.json()
 
       for release in releases:
+        # print(release['name'])
         m = re.match(utils.UPDATE_REGEX, release['name'])
 
         platform, version, channel = m.groups()
         # print('{}\n{}\n{}\n'.format(platform, version, channel))
 
         if utils.IS_MAC:
-          if platform != "macOS":
-            break;
+          if 'macOS' not in platform:
+            continue;
         elif utils.IS_WINDOWS:
-          if platform != "Windows":
-            break;
+          if 'Windows' not in platform:
+            continue;
         else:
-          break;
+          continue;
 
         if channel != utils.CHANNEL:
-          break;
+          continue;
 
         fetched_version = re.split('\.', version)
         local_version = re.split('\.', utils.VERSION_NUMBER)
@@ -60,10 +61,19 @@ class UpdateCheckerThread (QtCore.QThread):
         version_parts = zip(local_version, fetched_version)
         for version_part in version_parts:
           if int(version_part[0]) < int(version_part[1]):
-            return RELEASE_TUPLE(version,
-              release['assets'][0]['browser_download_url'],
-              release['body'])
-
+            for file in release['assets']:
+              if utils.IS_MAC:
+                if any(s in file['browser_download_url'] for s in ('.zip', '.dmg')):
+                  return RELEASE_TUPLE(version,
+                    file['browser_download_url'],
+                    # release['html_url'],
+                    release['body'])
+              if utils.IS_WINDOWS:
+                if any(s in file['browser_download_url'] for s in ('.msi', '.exe')):
+                  return RELEASE_TUPLE(version,
+                    file['browser_download_url'],
+                    # release['html_url'],
+                    release['body'])
       return False
     except:
       return False
