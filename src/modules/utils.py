@@ -1,7 +1,7 @@
 import os, sys
 import platform
 
-VERSION_NUMBER = '0.5.513'
+VERSION_NUMBER = '0.5.617'
 CHANNEL = 'alpha'
 UPDATE_URL = 'https://api.github.com/repos/cheeseisdisgusting/lyric-grabber/releases'
 UPDATE_REGEX = r'(.*)\s.?(\d*.{1,})\-(.*)'
