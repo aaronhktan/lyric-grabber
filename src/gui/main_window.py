@@ -913,6 +913,15 @@ class MainWindow (QtWidgets.QMainWindow):
         show_option_to_hide=show_option_to_hide)
       self._update_dialog.exec()
 
+  def openDialog(self, message):
+    self._something_dialog = update_dialog.QUpdateDialog(self,
+      title='sys argv passed in is {}'.format(message),
+      message='WHOA',
+      url=None,
+      description=None,
+      show_option_to_hide=True)
+    self._something_dialog.exec()
+
   def playSuccessSound(self):
     # Playing sounded with PyQt causes this to happen when closing:
     # QCoreApplication::postEvent: Unexpected null receiver

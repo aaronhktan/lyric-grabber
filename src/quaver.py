@@ -22,9 +22,13 @@ class MainApp (QtWidgets.QApplication):
       self._updater_thread.start()
 
     try:
-      filepaths = []
-      [filepaths.append(file) for file in sys.argv[1:]]
-      self._window.generateFilepathList(filepaths)
+      if utils.IS_WINDOWS:
+        filepath = sys.argv[1]
+        self._window.generateFilepathList([filepath])
+      elif utils.IS_LINUX:
+        filepaths = []
+        [filepaths.append(file) for file in sys.argv[1:]]
+        self._window.generateFilepathList(filepaths)
     except:
       pass
 

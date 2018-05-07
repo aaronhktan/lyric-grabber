@@ -33,6 +33,10 @@ MANIFEST
 !*quaver-onedir.spec
 !*quaver-onefile.spec
 
+# Advanced Installer
+*/advancedinstaller/
+*/advancedinstaller-pro/
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
@@ -90,6 +94,7 @@ bin/
 .venv
 env/
 venv/
+*/Scripts/
 ENV/
 env.bak/
 venv.bak/
@@ -111,6 +116,7 @@ share/
 .mypy_cache/
 
 # For testing purposes
+/src/test-songs/
 /src/test_songs
 /src/test_assets
 /src/icons
