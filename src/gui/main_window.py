@@ -247,11 +247,13 @@ class QWidgetItem (QtWidgets.QWidget):
     self._lyricsButton.clicked.connect(lambda: self.openDetailDialog())
     if utils.IS_MAC:
       self._openButton = QtWidgets.QPushButton('Open in Finder')
+    elif utils.IS_WINDOWS:
+      self._openButton = QtWidgets.QPushButton('Open in Explorer')
     else:
       self._openButton = QtWidgets.QPushButton('Open in File Browser')
     self._openButton.setFocusPolicy(QtCore.Qt.NoFocus)
-    self._openButton.setFixedWidth(self._openButton.sizeHint().width())
-    self._lyricsButton.setFixedWidth(self._openButton.sizeHint().width())
+    self._openButton.setFixedWidth(self._lyricsButton.minimumSizeHint().width()+50)
+    self._lyricsButton.setFixedWidth(self._lyricsButton.minimumSizeHint().width()+50)
     self._openButton.clicked.connect(lambda: self.openfilepath())
     # self._removeButton = QtWidgets.QPushButton('Remove')
     # self._removeButton.setMaximumWidth(125)
