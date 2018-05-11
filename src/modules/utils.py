@@ -1,13 +1,14 @@
 import os, sys
 import platform
 
-VERSION_NUMBER = '0.5.502'
+VERSION_NUMBER = '0.5.511'
 CHANNEL = 'alpha'
 UPDATE_URL = 'https://api.github.com/repos/cheeseisdisgusting/lyric-grabber/releases'
 UPDATE_REGEX = r'(.*)\s.?(\d*.{1,})\-(.*)'
 
 IS_MAC = platform.uname().system.startswith('Darw')
 IS_WINDOWS = platform.uname().system.startswith('Windows')
+IS_LINUX = platform.uname().system.startswith('Linux')
 
 SUPPORTED_FILETYPES = ('.mp3', '.mp4', '.m4a', '.m4v', \
                        '.tta', '.ape', '.wma', '.aiff', \

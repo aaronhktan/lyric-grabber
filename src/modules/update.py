@@ -43,15 +43,18 @@ class UpdateCheckerThread (QtCore.QThread):
 
         if utils.IS_MAC:
           if 'macOS' not in platform:
-            continue;
+            continue
         elif utils.IS_WINDOWS:
           if 'Windows' not in platform:
-            continue;
+            continue
+        elif utils.IS_LINUX:
+          if 'Linux' not in platform:
+            continue
         else:
-          continue;
+          break
 
         if channel != utils.CHANNEL:
-          continue;
+          continue
 
         fetched_version = re.split('\.', version)
         local_version = re.split('\.', utils.VERSION_NUMBER)
@@ -68,8 +71,14 @@ class UpdateCheckerThread (QtCore.QThread):
                     file['browser_download_url'],
                     # release['html_url'],
                     release['body'])
-              if utils.IS_WINDOWS:
+              elif utils.IS_WINDOWS:
                 if any(s in file['browser_download_url'] for s in ('.msi', '.exe')):
+                  return RELEASE_TUPLE(version,
+                    file['browser_download_url'],
+                    # release['html_url'],
+                    release['body'])
+              elif utils.IS_LINUX:
+                if any(s in file['browser_download_url'] for s in ('.deb', '.tar.bz2')):
                   return RELEASE_TUPLE(version,
                     file['browser_download_url'],
                     # release['html_url'],
