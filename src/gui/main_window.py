@@ -648,11 +648,12 @@ class MainWindow (QtWidgets.QMainWindow):
     event.accept()
 
   def dropEvent(self, event):
+    # print('Event dropped')
     if event.mimeData().hasUrls:
       event.accept()
       filepaths = []
       for url in event.mimeData().urls():
-        url = url.toString().replace('file://' if utils.IS_MAC else 'file:///', '')
+        url = url.toString().replace('file:///' if utils.IS_WINDOWS else 'file://', '')
         # print(url)
         if os.path.isdir(url):
           for root, dirs, files in os.walk(url):
