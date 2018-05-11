@@ -244,14 +244,14 @@ class QWidgetItem (QtWidgets.QWidget):
     if utils.IS_MAC:
       self._lyricsButton.pressed.connect(lambda: self._lyricsButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/lyrics_inverted.png'))))
       self._lyricsButton.released.connect(lambda: self._lyricsButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/lyrics.png'))))
-    self._lyricsButton.setFixedWidth(125)
     self._lyricsButton.clicked.connect(lambda: self.openDetailDialog())
     if utils.IS_MAC:
       self._openButton = QtWidgets.QPushButton('Open in Finder')
     else:
       self._openButton = QtWidgets.QPushButton('Open in File Browser')
     self._openButton.setFocusPolicy(QtCore.Qt.NoFocus)
-    self._openButton.setFixedWidth(125)
+    self._openButton.setFixedWidth(self._openButton.sizeHint().width())
+    self._lyricsButton.setFixedWidth(self._openButton.sizeHint().width())
     self._openButton.clicked.connect(lambda: self.openfilepath())
     # self._removeButton = QtWidgets.QPushButton('Remove')
     # self._removeButton.setMaximumWidth(125)
@@ -455,7 +455,10 @@ class MainWindow (QtWidgets.QMainWindow):
     # Create and add items to menubar
     self._openAboutAction = QtWidgets.QAction('About Quaver')
     self._openAboutAction.triggered.connect(lambda: self.openAboutDialog())
-    self._openSettingsAction = QtWidgets.QAction('Preferences')
+    if utils.IS_MAC:
+      self._openSettingsAction = QtWidgets.QAction('Preferences')
+    else:
+      self._openSettingsAction = QtWidgets.QAction('Settings')
     self._openSettingsAction.setShortcut('Ctrl+Comma')
     self._openSettingsAction.triggered.connect(lambda: self.openSettingsDialog())
 
