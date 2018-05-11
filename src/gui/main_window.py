@@ -632,7 +632,7 @@ class MainWindow (QtWidgets.QMainWindow):
     # Style main window
     self.setMinimumSize(600, 400)
     self.setUnifiedTitleAndToolBarOnMac(True)
-    if utils.IS_WINDOWS:
+    if not utils.IS_MAC:
       self.setWindowIcon(QtGui.QIcon(utils.resource_path('./assets/icon.png')))
     self.setAcceptDrops(True)
 
