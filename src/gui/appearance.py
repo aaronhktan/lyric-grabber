@@ -19,3 +19,10 @@ elif utils.IS_WINDOWS:
   SMALL_FONT_BOLD = QtGui.QFont('MS Shell Dlg 2', 9, QtGui.QFont.Bold)
   SMALLER_FONT = QtGui.QFont('MS Shell Dlg 2', 8)
   TINY_FONT = QtGui.QFont('MS Shell Dlg 2', 7)
+else:
+  LARGE_FONT = QtGui.QFont('Ubuntu', 16)
+  MEDIUM_FONT = QtGui.QFont('Ubuntu', 14)
+  SMALL_FONT = QtGui.QFont('Ubuntu', 9)
+  SMALL_FONT_BOLD = QtGui.QFont('Ubuntu', 9, QtGui.QFont.Bold)
+  SMALLER_FONT = QtGui.QFont('Ubuntu', 8)
+  TINY_FONT = QtGui.QFont('Ubuntu', 7)

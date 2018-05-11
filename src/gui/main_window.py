@@ -386,8 +386,8 @@ class QWidgetItem (QtWidgets.QWidget):
       subprocess.run(['open', '-R', self._filepath])
     elif utils.IS_WINDOWS:
       subprocess.run('explorer /select,"{}"'.format(self._filepath.replace('/', '\\')))
-    # else:
-    #   subprocess.run(['xdg-open', self._filepath])
+    else:
+      subprocess.run(['xdg-open', os.path.dirname(self._filepath)])
 
   def getLyrics(self, artist=None, title=None, url=None, source=None):
     if artist is None:
@@ -522,13 +522,13 @@ class MainWindow (QtWidgets.QMainWindow):
       self._windowMenu.addSeparator()
       self._windowMenu.addAction(self._showNormalAction)
 
-    if utils.IS_WINDOWS:
+    if not utils.IS_MAC:
       self._toolsMenu = self._menuBar.addMenu('Tools')
       self._toolsMenu.addAction(self._openSettingsAction)
 
     self._helpMenu = self._menuBar.addMenu('Help')
     self._helpMenu.addAction(self._helpAction)
-    if utils.IS_WINDOWS:
+    if not utils.IS_MAC:
       self._helpMenu.addAction(self._openAboutAction)
 
     # Do not create toolbar if not on Mac

@@ -51,6 +51,8 @@ class QModalDialog (QtWidgets.QDialog):
     # Style error dialog
     if utils.IS_WINDOWS:
       self.setWindowIcon(QtGui.QIcon(utils.resource_path('./assets/icon.png')))
+    if not utils.IS_MAC:
+      self.setWindowTitle('Quaver')
     self.setWindowModality(QtCore.Qt.ApplicationModal)
     self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
