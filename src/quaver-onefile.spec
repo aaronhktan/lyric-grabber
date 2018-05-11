@@ -56,7 +56,20 @@ if sys.platform == 'darwin':
             runtime_tmpdir=None,
             console=True,
             icon='assets/icon.icns')
-elif sys.platform == 'win32':
+elif sys.platform == 'win32' or sys.platform == 'win64':
+  exe = EXE(pyz,
+            a.scripts,
+            a.binaries,
+            a.zipfiles,
+            a.datas,
+            name='Quaver',
+            debug=False,
+            strip=False,
+            upx=True,
+            runtime_tmpdir=None,
+            console=False,
+            icon='assets/icon.ico')
+elif sys.platform == 'linux':
   exe = EXE(pyz,
             a.scripts,
             a.binaries,
