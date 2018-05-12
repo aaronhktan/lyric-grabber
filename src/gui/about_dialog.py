@@ -75,7 +75,7 @@ class QAboutDialog (QtWidgets.QDialog):
       self.setWindowIcon(QtGui.QIcon(utils.resource_path('./assets/icon.png')))
     self.setWindowTitle('About Quaver')
     self.setWindowModality(QtCore.Qt.ApplicationModal)
-    if utils.IS_MAC:
+    if not utils.IS_WINDOWS:
         self.setFixedSize(self.minimumSizeHint())
     else:
         self.setFixedSize(200, self.minimumSizeHint().height())
