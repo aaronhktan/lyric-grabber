@@ -21,6 +21,13 @@ class MainApp (QtWidgets.QApplication):
       self._updater_thread.notifyComplete.connect(self._window.openUpdateDialog)
       self._updater_thread.start()
 
+    try:
+      filepaths = []
+      [filepaths.append(file) for file in sys.argv[1:]]
+      self._window.generateFilepathList(filepaths)
+    except:
+      pass
+
   def event(self, event):
     if event.type() == QtCore.QEvent.FileOpen:
       self._window.generateFilepathList([event.url().toString().replace('file://', '')])

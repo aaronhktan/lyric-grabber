@@ -22,7 +22,7 @@ elif utils.IS_WINDOWS:
 else:
   LARGE_FONT = QtGui.QFont('Sans Serif', 16)
   MEDIUM_FONT = QtGui.QFont('Sans Serif', 14)
-  SMALL_FONT = QtGui.QFont('Sans Serif', 11)
-  SMALL_FONT_BOLD = QtGui.QFont('Sans Serif', 11, QtGui.QFont.Bold)
+  SMALL_FONT = QtGui.QFont('Sans Serif', 10)
+  SMALL_FONT_BOLD = QtGui.QFont('Sans Serif', 10, QtGui.QFont.Bold)
   SMALLER_FONT = QtGui.QFont('Sans Serif', 9)
   TINY_FONT = QtGui.QFont('Sans Serif', 8)
