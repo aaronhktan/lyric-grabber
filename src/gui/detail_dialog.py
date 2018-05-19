@@ -324,10 +324,14 @@ class QLyricsDialog (QtWidgets.QDialog):
       title = self._titleLineEdit.text()
       source = self._sourceLabelComboBox.currentText()
       # print(source)
-      self.parent.getLyrics(artist=artist, title=title, source=source)
+      self.parent.getLyrics(artist=artist,
+        title=title, source=source)
 
   def getFilepath(self):
     return self._filepath
 
   def setFilepath(self, filepath):
     self._filepath = filepath
+
+  def setParent(self, parent):
+    self.parent = parent

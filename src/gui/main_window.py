@@ -145,9 +145,9 @@ class LyricGrabberThread (QtCore.QThread):
         self.notifyComplete.emit(True)
 
 class SingleLyricGrabberThread (QtCore.QThread):
-  setProgressIcon = QtCore.pyqtSignal([int])
-  setLyrics = QtCore.pyqtSignal(['QString'])
-  notifyComplete = QtCore.pyqtSignal(bool)
+  setProgressIcon = QtCore.pyqtSignal(int)
+  setLyrics = QtCore.pyqtSignal('QString')
+  setUrl = QtCore.pyqtSignal('QString')
   lock = threading.Lock()
 
   def __init__(self, parent, filepath, artist=None, title=None, url=None, source=None):
@@ -163,9 +163,9 @@ class SingleLyricGrabberThread (QtCore.QThread):
     self.setProgressIcon.emit(states.NOT_STARTED)
 
   def run(self):
+    self.setProgressIcon.emit(states.IN_PROGRESS)
     with SingleLyricGrabberThread.lock:
       try:
-        self.setProgressIcon.emit(states.IN_PROGRESS)
         if self._url is not None: # We have a URL, so scrape the URL
           result = lyric_grabber.scrape_url(artist=self._artist,
                                             title=self._title,
@@ -180,6 +180,7 @@ class SingleLyricGrabberThread (QtCore.QThread):
                                             song_filepath=self._filepath)
 
         if result.succeeded:
+          self.setUrl.emit(result.url)
           self.setLyrics.emit(result.lyrics)
           result = lyric_grabber.write_file(artist=self._artist,
                                             title=self._title,
@@ -197,8 +198,6 @@ class SingleLyricGrabberThread (QtCore.QThread):
         logger.log(logger.LOG_LEVEL_ERROR,
                    ' Exception occurred while getting lyrics for file {filepath}: {error}'.format(self._filepath,
                                                                                                   error=str(e)))
-
-      self.notifyComplete.emit(True)
 
 class QWidgetItem (QtWidgets.QWidget):
   dialog = None;
@@ -363,6 +362,7 @@ class QWidgetItem (QtWidgets.QWidget):
       QWidgetItem.dialog.updateUrl(self._url)
       QWidgetItem.dialog.setFilepath(self._filepath)
       QWidgetItem.dialog.setArtistAndTitle(self._artist, self._title)
+      QWidgetItem.dialog.setParent(self)
       QWidgetItem.dialog.show()
     except Exception as e:
       # self.window().setEnabled(False)
@@ -392,6 +392,7 @@ class QWidgetItem (QtWidgets.QWidget):
       subprocess.run(['xdg-open', os.path.dirname(self._filepath)])
 
   def getLyrics(self, artist=None, title=None, url=None, source=None):
+    self.setProgressIconForSingle(states.IN_PROGRESS)
     if artist is None:
       artist = self._artist
     self._fetch_thread = SingleLyricGrabberThread(parent=self,
@@ -404,7 +405,8 @@ class QWidgetItem (QtWidgets.QWidget):
 
     self._fetch_thread.setProgressIcon.connect(self.setProgressIconForSingle)
     self._fetch_thread.setLyrics.connect(self.setLyrics)
-    self._fetch_thread.notifyComplete.connect(self.parent.playSuccessSound)
+    self._fetch_thread.setUrl.connect(self.setUrl)
+    self._fetch_thread.finished.connect(self.parent.playSuccessSound)
 
   def setLyrics(self, lyrics):
     self._lyrics = lyrics
