@@ -1,5 +1,7 @@
 import sys
 
+from modules import utils
+
 try:
   from PyQt5 import QtCore, QtWidgets
 except ImportError:
