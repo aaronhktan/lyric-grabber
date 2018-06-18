@@ -19,7 +19,7 @@ class QSettingsDialog (QtWidgets.QDialog):
     self._settings = settings.Settings()
 
     # Add settings controls
-    self._sourceLabel = QtWidgets.QLabel('Lyrics Source:')
+    self._sourceLabel = QtWidgets.QLabel('Lyrics source:')
     self._sourceLabel.setAlignment(QtCore.Qt.AlignRight)
     self._sourceComboBox = QtWidgets.QComboBox()
     self._sourceComboBox.setMaximumWidth(150)
@@ -29,7 +29,7 @@ class QSettingsDialog (QtWidgets.QDialog):
     self._sourceComboBox.currentIndexChanged.connect(lambda: self._settings.set_source(self._sourceComboBox.currentText()))
     if index >= 0:
       self._sourceComboBox.setCurrentIndex(index)
-    self._optionsLabel = QtWidgets.QLabel('Lyrics Options:')
+    self._optionsLabel = QtWidgets.QLabel('Lyrics options:')
     self._optionsLabel.setAlignment(QtCore.Qt.AlignRight)
     self._approximateCheckBox = QtWidgets.QCheckBox('Search only by song title and ignore artist')
     self._approximateCheckBox.setChecked(self._settings.get_approximate())
@@ -95,7 +95,10 @@ class QSettingsDialog (QtWidgets.QDialog):
     # Style settings dialog
     if utils.IS_WINDOWS:
       self.setWindowIcon(QtGui.QIcon(utils.resource_path('./assets/icon.png')))
-    self.setWindowTitle('Settings')
+    if utils.IS_MAC:
+      self.setWindowTitle('Preferences')
+    else:
+      self.setWindowTitle('Settings')
     self.setWindowModality(QtCore.Qt.ApplicationModal)
     self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
     self.setFixedSize(self.minimumSizeHint())
