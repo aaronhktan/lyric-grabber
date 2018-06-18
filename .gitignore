@@ -115,6 +115,8 @@ share/
 /src/test_assets
 /src/icons
 /screenshots
+/test_songs/
+/test-songs/
 /test_songs/*.txt
 
 # Pesky Mac things
