@@ -225,6 +225,8 @@ class QWidgetItem (QtWidgets.QWidget):
     self._textTitleLabel.setFont(appearance.MEDIUM_FONT)
     self._textArtistLabel = QtWidgets.QLabel()
     self._textArtistLabel.setFont(appearance.SMALL_FONT)
+    if utils.IS_WINDOWS:
+      self._textArtistLabel.setStyleSheet('color: dimgrey')
 
     self._textVBoxLayout = QtWidgets.QVBoxLayout()
     self._textVBoxLayout.addWidget(self._textTitleLabel)

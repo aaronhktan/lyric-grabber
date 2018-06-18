@@ -14,7 +14,7 @@ if utils.IS_MAC:
   TINY_FONT = QtGui.QFont('.SF NS Text', 10)
 elif utils.IS_WINDOWS:
   LARGE_FONT = QtGui.QFont('Sans Serif', 16)
-  MEDIUM_FONT = QtGui.QFont('Sans Serif', 14)
+  MEDIUM_FONT = QtGui.QFont('Sans Serif', 12)
   SMALL_FONT = QtGui.QFont('Sans Serif', 9)
   SMALL_FONT_BOLD = QtGui.QFont('Sans Serif', 9, QtGui.QFont.Bold)
   SMALLER_FONT = QtGui.QFont('Sans Serif', 8)
