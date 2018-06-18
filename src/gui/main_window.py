@@ -56,7 +56,6 @@ class LyricGrabberThread (QtCore.QThread):
     self._fileWritingResults = []
 
     self._songs = []
-    self._songsBad = []
 
   def run(self):
     for filepath in self._filepaths:
