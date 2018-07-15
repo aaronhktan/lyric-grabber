@@ -816,7 +816,7 @@ class MainWindow (QtWidgets.QMainWindow):
     self._viewPreviousAction.setEnabled(False)
     self._viewNextAction.setEnabled(False)
 
-  def setSelectedWidget(self, filepath):
+  def setSelectedWidget(self, filepath, index=-1):
     if filepath == None:
       MainWindow.selectedWidgetIndex = None
       self._removeCurrentAction.setEnabled(False)
@@ -830,22 +830,29 @@ class MainWindow (QtWidgets.QMainWindow):
         self._viewPreviousAction.setEnabled(False)
         self._viewNextAction.setEnabled(False)
       return
-    for i in range(self._mainScrollAreaWidgetLayout.count()):
-      if self._mainScrollAreaWidgetLayout.itemAt(i).widget().getFilepath() == filepath:
-        MainWindow.selectedWidgetIndex = i
-        self._removeCurrentAction.setEnabled(True)
-        if utils.IS_MAC:
-          self._openFinderAction.setEnabled(True)
-          self._copyLyricsAction.setEnabled(True)
-          self._saveLyricsAction.setEnabled(True)
-          self._removeLyricsAction.setEnabled(True)
-          self._undoAction.setEnabled(True)
-          self._redoAction.setEnabled(True)
-          if i > 0:
-            self._viewPreviousAction.setEnabled(True)
-          if self._mainScrollAreaWidgetLayout.itemAt(i + 1) is not None:
-            self._viewNextAction.setEnabled(True)
-        break
+
+    if index < 0:
+      for i in range(self._mainScrollAreaWidgetLayout.count()):
+        if self._mainScrollAreaWidgetLayout.itemAt(i).widget().getFilepath() == filepath:
+          MainWindow.selectedWidgetIndex = i
+          break
+
+    self._removeCurrentAction.setEnabled(True)
+    if utils.IS_MAC:
+      self._openFinderAction.setEnabled(True)
+      self._copyLyricsAction.setEnabled(True)
+      self._saveLyricsAction.setEnabled(True)
+      self._removeLyricsAction.setEnabled(True)
+      self._undoAction.setEnabled(True)
+      self._redoAction.setEnabled(True)
+      if MainWindow.selectedWidgetIndex > 0:
+        self._viewPreviousAction.setEnabled(True)
+      else:
+        self._viewPreviousAction.setEnabled(False)
+      if self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex + 1) is not None:
+        self._viewNextAction.setEnabled(True)
+      else:
+        self._viewNextAction.setEnabled(False)
 
   def viewPreviousWidget(self):
     if MainWindow.selectedWidgetIndex is not None:
@@ -853,6 +860,7 @@ class MainWindow (QtWidgets.QMainWindow):
       if self._mainScrollAreaWidgetLayout.itemAt(newIndex) is not None:
         MainWindow.selectedWidgetIndex -= 1
         self.resetListColours()
+        self.setSelectedWidget('', MainWindow.selectedWidgetIndex)
         self._mainScrollArea.ensureWidgetVisible(self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget())
         self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget().openDetailDialog()
 
@@ -862,6 +870,7 @@ class MainWindow (QtWidgets.QMainWindow):
         if self._mainScrollAreaWidgetLayout.itemAt(newIndex) is not None:
           MainWindow.selectedWidgetIndex += 1
           self.resetListColours()
+          self.setSelectedWidget('', MainWindow.selectedWidgetIndex)
           self._mainScrollArea.ensureWidgetVisible(self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget())
           self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget().openDetailDialog()
 
