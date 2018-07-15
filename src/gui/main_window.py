@@ -819,30 +819,32 @@ class MainWindow (QtWidgets.QMainWindow):
   def setSelectedWidget(self, filepath):
     if filepath == None:
       MainWindow.selectedWidgetIndex = None
-      self._openFinderAction.setEnabled(False)
       self._removeCurrentAction.setEnabled(False)
-      self._copyLyricsAction.setEnabled(False)
-      self._saveLyricsAction.setEnabled(False)
-      self._removeLyricsAction.setEnabled(False)
-      self._undoAction.setEnabled(False)
-      self._redoAction.setEnabled(False)
-      self._viewPreviousAction.setEnabled(False)
-      self._viewNextAction.setEnabled(False)
+      if utils.IS_MAC:
+        self._openFinderAction.setEnabled(False)
+        self._copyLyricsAction.setEnabled(False)
+        self._saveLyricsAction.setEnabled(False)
+        self._removeLyricsAction.setEnabled(False)
+        self._undoAction.setEnabled(False)
+        self._redoAction.setEnabled(False)
+        self._viewPreviousAction.setEnabled(False)
+        self._viewNextAction.setEnabled(False)
       return
     for i in range(self._mainScrollAreaWidgetLayout.count()):
       if self._mainScrollAreaWidgetLayout.itemAt(i).widget().getFilepath() == filepath:
         MainWindow.selectedWidgetIndex = i
-        self._openFinderAction.setEnabled(True)
         self._removeCurrentAction.setEnabled(True)
-        self._copyLyricsAction.setEnabled(True)
-        self._saveLyricsAction.setEnabled(True)
-        self._removeLyricsAction.setEnabled(True)
-        self._undoAction.setEnabled(True)
-        self._redoAction.setEnabled(True)
-        if i > 0:
-          self._viewPreviousAction.setEnabled(True)
-        if self._mainScrollAreaWidgetLayout.itemAt(i + 1) is not None:
-          self._viewNextAction.setEnabled(True)
+        if utils.IS_MAC:
+          self._openFinderAction.setEnabled(True)
+          self._copyLyricsAction.setEnabled(True)
+          self._saveLyricsAction.setEnabled(True)
+          self._removeLyricsAction.setEnabled(True)
+          self._undoAction.setEnabled(True)
+          self._redoAction.setEnabled(True)
+          if i > 0:
+            self._viewPreviousAction.setEnabled(True)
+          if self._mainScrollAreaWidgetLayout.itemAt(i + 1) is not None:
+            self._viewNextAction.setEnabled(True)
         break
 
   def viewPreviousWidget(self):
@@ -981,12 +983,12 @@ class MainWindow (QtWidgets.QMainWindow):
       # Refresh menu items
       if MainWindow.selectedWidgetIndex is not None:
         i = MainWindow.selectedWidgetIndex
-        if i > 0 and self._viewPreviousAction.enabled == False:
+        if i > 0 and self._viewPreviousAction.isEnabled() == False:
           self._viewPreviousAction.setEnabled(True)
-        if self._mainScrollAreaWidgetLayout.itemAt(i + 1) is not None and self._viewNextAction.enabled == False:
+        if self._mainScrollAreaWidgetLayout.itemAt(i + 1) is not None and self._viewNextAction.isEnabled() == False:
           self._viewNextAction.setEnabled(True)
 
-      if self._mainScrollAreaWidgetLayout.count() < 10:
+      if utils.IS_MAC and self._mainScrollAreaWidgetLayout.count() < 10:
         if self._noLyricsAction.isVisible():
           self._noLyricsAction.setVisible(False)
         self._viewSongsSubMenuAction.setEnabled(True)

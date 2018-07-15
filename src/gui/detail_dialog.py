@@ -26,45 +26,6 @@ class QLyricsDialog (QtWidgets.QDialog):
 
     self._settings = settings.Settings()
 
-    # Add a menubar
-    self._grabAction = QtWidgets.QAction('Re-fetch Lyrics', self)
-    self._grabAction.setShortcut('Ctrl+R')
-    self._grabAction.triggered.connect(lambda: self.grabLyrics())
-    self._openUrlAction = QtWidgets.QAction('Open Lyrics in Browser')
-    self._openUrlAction.setShortcut('Ctrl+K')
-    self._openUrlAction.triggered.connect(lambda: self.openUrl())
-    self._closeAction = QtWidgets.QAction('Close')
-    self._closeAction.setShortcut('Esc')
-    self._closeAction.triggered.connect(lambda: self.close())
-
-    self._saveAction = QtWidgets.QAction('Save Lyrics', self)
-    self._saveAction.setShortcut('Ctrl+S')
-    self._saveAction.triggered.connect(lambda: self.saveLyrics())
-    self._removeAction = QtWidgets.QAction('Remove Lyrics', self)
-    self._removeAction.setShortcut('Ctrl+Backspace')
-    self._removeAction.triggered.connect(lambda: self.removeLyrics())
-
-    self._showNormalAction = QtWidgets.QAction('Bring to Front', self)
-    self._showNormalAction.triggered.connect(lambda: self.showNormal())
-    self._fullScreenAction = QtWidgets.QAction('Enter Fullscreen', self)
-    self._fullScreenAction.setShortcut('Ctrl+Shift+F')
-    self._fullScreenAction.triggered.connect(lambda: self.showFullScreen())
-
-    self._menuBar = QtWidgets.QMenuBar()
-
-    self._fileMenu = self._menuBar.addMenu('File')
-    self._fileMenu.addAction(self._grabAction)
-    self._fileMenu.addAction(self._openUrlAction)
-    self._fileMenu.addSeparator()
-    self._fileMenu.addAction(self._closeAction)
-    self._editMenu = self._menuBar.addMenu('Edit')
-    self._editMenu.addAction(self._saveAction)
-    self._editMenu.addAction(self._removeAction)
-    self._windowMenu = self._menuBar.addMenu('Window')
-    self._windowMenu.addAction(self._fullScreenAction)
-    self._windowMenu.insertSeparator(self._showNormalAction)
-    self._windowMenu.addAction(self._showNormalAction)
-
     # Add filepath
     self._filepath = filepath
 
@@ -75,12 +36,6 @@ class QLyricsDialog (QtWidgets.QDialog):
     self._lyricsQLabel.setAlignment(QtCore.Qt.AlignTop)
     self._lyricsQLabel.setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
     self._lyricsQLabel.setContentsMargins(10, 10, 0, 10)
-
-    # self._lyricsScrollArea = QtWidgets.QScrollArea()
-    # self._lyricsScrollArea.setWidget(self._lyricsQLabel)
-    # self._lyricsScrollArea.setWidgetResizable(True)
-    # self._lyricsScrollArea.setMinimumHeight(400)
-    # self._lyricsScrollArea.setStyleSheet('background:none;');
 
     # Add buttons at bottom of screen
     self._lyricsCopyButton = QtWidgets.QPushButton('Copy lyrics')
@@ -214,23 +169,19 @@ class QLyricsDialog (QtWidgets.QDialog):
     self._lyricsTabWidget.addTab(self._metadataWidget, 'Metadata')
 
     # Add navigation buttons
-    # self._previousSongButton = QtWidgets.QPushButton('Previous Song')
-    # self._songNavigationSpacer = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-    # self._nextSongButton = QtWidgets.QPushButton('Next Song')
-
-    # self._songNavigationWidgetLayout = QtWidgets.QHBoxLayout()
-    # self._songNavigationWidgetLayout.addWidget(self._previousSongButton)
-    # self._songNavigationWidgetLayout.addItem(self._songNavigationSpacer)
-    # self._songNavigationWidgetLayout.addWidget(self._nextSongButton)
-
-    # self._songNavigationWidget = QtWidgets.QWidget()
-    # self._songNavigationWidget.setLayout(self._songNavigationWidgetLayout)
+    self._previousSongButton = QtWidgets.QPushButton('Previous Song')
+    self._previousSongButton.clicked.connect(self.parent.parent.viewPreviousWidget)
+    self._songNavigationSpacer = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+    self._nextSongButton = QtWidgets.QPushButton('Next Song')
+    self._nextSongButton.clicked.connect(self.parent.parent.viewNextWidget)
 
     # Add layouts to main widget
-    self._allQVBoxLayout = QtWidgets.QVBoxLayout()
-    self._allQVBoxLayout.addWidget(self._lyricsTabWidget)
-    # self._allQVBoxLayout.addWidget(self._songNavigationWidget)
-    self.setLayout(self._allQVBoxLayout)
+    self._allQGridLayout = QtWidgets.QGridLayout()
+    self._allQGridLayout.addWidget(self._lyricsTabWidget, 0, 0, 1, 3)
+    self._allQGridLayout.addWidget(self._previousSongButton, 1, 0, 1, 1)
+    self._allQGridLayout.addItem(self._songNavigationSpacer, 1, 1, 1, 1)
+    self._allQGridLayout.addWidget(self._nextSongButton, 1, 2, 1, 1)
+    self.setLayout(self._allQGridLayout)
     self.setSizeGripEnabled(True);
 
     if QLyricsDialog.x_coordinate is not None \
