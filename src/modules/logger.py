@@ -22,7 +22,6 @@ class logger:
       data.append(log)
       string = '\n'.join(data[cutoff:])
       fout.write(string)
-      # fout.writelines(data[cutoff:])
 
   def log(log_level, message):
     date = datetime.datetime.now()
@@ -33,22 +32,22 @@ class logger:
       pass
       # print('Success!')
       # print(logger.SUCCESS + '[SUCCESS] ' + logger.RESET + message)
-      logger.write_to_file(timestamp + '[SUCCESS] ' + message)
+      # logger.write_to_file(timestamp + '[SUCCESS] ' + message)
     elif log_level == logger.LOG_LEVEL_ERROR:
       pass
       # print('Error!')
       # print(logger.ERROR + '[ERROR] ' + logger.RESET + message)
-      logger.write_to_file(timestamp + '[ERROR] ' + message)
+      # logger.write_to_file(timestamp + '[ERROR] ' + message)
     elif log_level == logger.LOG_LEVEL_INFO:
       pass
       # print('Info!')
       # print(logger.INFO + '[INFO] ' + logger.RESET + message)
-      logger.write_to_file(timestamp + '[INFO] ' + message)
+      # logger.write_to_file(timestamp + '[INFO] ' + message)
     elif log_level == logger.LOG_LEVEL_WARNING:
       pass
       # print('Warning!')
       # print(logger.INFO + '[WARNING] ' + logger.RESET + message)
-      logger.write_to_file(timestamp + '[WARNING] ' + message)
+      # logger.write_to_file(timestamp + '[WARNING] ' + message)
 
   def create_message(log_level, message):
     if log_level == logger.LOG_LEVEL_SUCCESS:
