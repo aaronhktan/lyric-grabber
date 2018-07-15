@@ -124,7 +124,6 @@ class QLyricsDialog (QtWidgets.QDialog):
 
     self._viewUrlButton = QtWidgets.QPushButton('View online')
     self._viewUrlButton.clicked.connect(lambda: self.openUrl())
-    self._viewUrlButton.setFocusPolicy(QtCore.Qt.NoFocus)
     self._viewUrlButton.setMaximumWidth(150)
     self._copyUrlButton = QtWidgets.QPushButton(
         QtGui.QIcon(utils.resource_path('./assets/copy.png')), 'Copy URL')
@@ -134,7 +133,6 @@ class QLyricsDialog (QtWidgets.QDialog):
       self._copyUrlButton.released.connect(lambda: self._copyUrlButton.setIcon(
         QtGui.QIcon(utils.resource_path('./assets/copy.png'))))
     self._copyUrlButton.clicked.connect(lambda: self.copyUrl())
-    self._copyUrlButton.setFocusPolicy(QtCore.Qt.NoFocus)
     self._fetchAgainLinkButton = QtWidgets.QPushButton('Grab Lyrics')
     self._fetchAgainLinkButton.setMaximumWidth(150)
     self._fetchAgainLinkButton.clicked.connect(lambda: self.grabLyrics())
@@ -252,6 +250,7 @@ class QLyricsDialog (QtWidgets.QDialog):
 
   def closeEvent(self, event):
     self.parent.resetColours()
+    self.parent.resetSelectedWidgetIndex()
     event.accept()
 
   def keyPressEvent(self, event):
@@ -270,6 +269,14 @@ class QLyricsDialog (QtWidgets.QDialog):
         self.removeLyrics()
     elif key == QtCore.Qt.Key_Escape:
       self.close()
+
+  def undoEvent(self):
+    undoEvent = QtGui.QKeyEvent(QtCore.QEvent.KeyPress, QtCore.Qt.Key_Z, QtCore.Qt.ControlModifier)
+    QtCore.QCoreApplication.sendEvent(self._lyricsQLabel, undoEvent)
+
+  def redoEvent(self):
+    redoEvent = QtGui.QKeyEvent(QtCore.QEvent.KeyPress, QtCore.Qt.Key_Z, QtCore.Qt.ControlModifier | QtCore.Qt.ShiftModifier)
+    QtCore.QCoreApplication.sendEvent(self._lyricsQLabel, redoEvent)
 
   def moveEvent(self, event):
     QLyricsDialog.x_coordinate = event.pos().x()
@@ -318,13 +325,13 @@ class QLyricsDialog (QtWidgets.QDialog):
       title = self._titleLineEdit.text()
       url = self._urlLineEdit.text()
       # print(title, url)
-      self.parent.getLyrics(title=title, url=url)
+      self.parent.fetchLyrics(title=title, url=url)
     else:
       artist = self._artistLineEdit.text()
       title = self._titleLineEdit.text()
       source = self._sourceLabelComboBox.currentText()
       # print(source)
-      self.parent.getLyrics(artist=artist,
+      self.parent.fetchLyrics(artist=artist,
         title=title, source=source)
 
   def getFilepath(self):

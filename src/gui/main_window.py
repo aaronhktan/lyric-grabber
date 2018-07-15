@@ -258,7 +258,7 @@ class QWidgetItem (QtWidgets.QWidget):
     else:
       self._openButton.setFixedWidth(self._openButton.sizeHint().width())
       self._lyricsButton.setFixedWidth(self._openButton.sizeHint().width())
-    self._openButton.clicked.connect(lambda: self.openfilepath())
+    self._openButton.clicked.connect(lambda: self.openFilepath())
     # self._removeButton = QtWidgets.QPushButton('Remove')
     # self._removeButton.setMaximumWidth(125)
     # self._removeButton.clicked.connect(lambda: self.removeFile())
@@ -291,7 +291,7 @@ class QWidgetItem (QtWidgets.QWidget):
     self._title = ''
     self._lyrics = ''
     self._url = ''
-
+ 
   def mousePressEvent(self, QMouseEvent):
     if QMouseEvent.button() == QtCore.Qt.LeftButton:
       self.parent.setSelectedWidget(self._filepath)
@@ -387,7 +387,7 @@ class QWidgetItem (QtWidgets.QWidget):
   def getFilepath(self):
     return self._filepath
 
-  def openfilepath(self):
+  def openFilepath(self):
     # QtGui.QDesktopServices.openUrl(QtCore.QUrl('file://' + self._filepath))
     if utils.IS_MAC:
       subprocess.run(['open', '-R', self._filepath])
@@ -396,7 +396,7 @@ class QWidgetItem (QtWidgets.QWidget):
     else:
       subprocess.run(['xdg-open', os.path.dirname(self._filepath)])
 
-  def getLyrics(self, artist=None, title=None, url=None, source=None):
+  def fetchLyrics(self, artist=None, title=None, url=None, source=None):
     self.setProgressIconForSingle(states.IN_PROGRESS)
     if artist is None:
       artist = self._artist
@@ -412,6 +412,9 @@ class QWidgetItem (QtWidgets.QWidget):
     self._fetch_thread.setLyrics.connect(self.setLyrics)
     self._fetch_thread.setUrl.connect(self.setUrl)
     self._fetch_thread.finished.connect(self.parent.playSuccessSound)
+
+  def getLyrics(self):
+    return self._lyrics
 
   def setLyrics(self, lyrics):
     self._lyrics = lyrics
@@ -448,8 +451,14 @@ class QWidgetItem (QtWidgets.QWidget):
   def resetColours(self):
     self.parent.resetListColours()
 
-  # def removeFile (self):
-  #   self.setParent(None)
+  def resetSelectedWidgetIndex(self):
+    self.parent.setSelectedWidget(None)
+
+  def removeFromList (self):
+    self.setParent(None)
+    QWidgetItem.dialog.close()
+    self.resetColours()
+    self.resetSelectedWidgetIndex()
 
 class MainWindow (QtWidgets.QMainWindow):
   selectedWidgetIndex = None
@@ -480,26 +489,66 @@ class MainWindow (QtWidgets.QMainWindow):
     self._closeAction = QtWidgets.QAction('Close')
     self._closeAction.setShortcut('Ctrl+W')
     self._closeAction.triggered.connect(lambda: self.close())
+    if utils.IS_MAC:
+      self._openFinderAction = QtWidgets.QAction('Open Selected File in Finder', self)
+      self._openFinderAction.triggered.connect(lambda: self.openFinder())
+      self._openFinderAction.setEnabled(False)
 
-    self._removeAllAction = QtWidgets.QAction('Remove all Files')
-    self._removeAllAction.setShortcut('Ctrl+Backspace')
+    self._removeAllAction = QtWidgets.QAction('Remove All Files')
+    self._removeAllAction.setShortcut('Ctrl+Shift+Backspace')
     self._removeAllAction.triggered.connect(lambda: self.removeAllFilesFromList())
-    self._removeCompletedAction = QtWidgets.QAction('Remove Files with Lyrics')
-    self._removeCompletedAction.setShortcut('Ctrl+Shift+Backspace')
+    self._removeCompletedAction = QtWidgets.QAction('Remove All Files with Lyrics')
+    self._removeCompletedAction.setShortcut('Ctrl+Alt+Shift+Backspace')
     self._removeCompletedAction.triggered.connect(lambda: self.removeCompletedFiles())
+    self._removeCurrentAction = QtWidgets.QAction('Remove Selected File')
+    self._removeCurrentAction.setShortcut('Ctrl+Backspace')
+    self._removeCurrentAction.triggered.connect(lambda: self.removeCurrentFile())
+    self._removeCurrentAction.setEnabled(False)
 
     if utils.IS_MAC:
+      self._copyLyricsAction = QtWidgets.QAction('Copy Lyrics')
+      self._copyLyricsAction.setShortcut('Ctrl+C')
+      self._copyLyricsAction.triggered.connect(lambda: self.copyLyrics())
+      self._copyLyricsAction.setEnabled(False)
+      self._saveLyricsAction = QtWidgets.QAction('Save Lyrics')
+      self._saveLyricsAction.setShortcut('Ctrl+S')
+      self._saveLyricsAction.triggered.connect(lambda: self.saveLyrics())
+      self._saveLyricsAction.setEnabled(False)
+      self._removeLyricsAction = QtWidgets.QAction('Remove Lyrics')
+      self._removeLyricsAction.setShortcut('Ctrl+Shift+X')
+      self._removeLyricsAction.triggered.connect(lambda: self.removeLyrics())
+      self._removeLyricsAction.setEnabled(False)
+      self._undoAction = QtWidgets.QAction('Undo Typing')
+      self._undoAction.setShortcut('Ctrl+Z')
+      self._undoAction.triggered.connect(lambda: self.undoLyrics())
+      self._undoAction.setEnabled(False)
+      self._redoAction = QtWidgets.QAction('Redo Typing')
+      self._redoAction.setShortcut('Ctrl+Shift+Z')
+      self._redoAction.triggered.connect(lambda: self.redoLyrics())
+      self._redoAction.setEnabled(False)
+
+      self._viewSongsSubMenuAction = QtWidgets.QAction('View Lyrics For...', self)
+      self._noLyricsAction = QtWidgets.QAction('No songs added', self)
+      self._noLyricsAction.setEnabled(False)
+      self._viewPreviousAction = QtWidgets.QAction('View Previous', self)
+      self._viewPreviousAction.setShortcut('Ctrl+Up')
+      self._viewPreviousAction.triggered.connect(lambda: self.viewPreviousWidget())
+      self._viewPreviousAction.setEnabled(False)
+      self._viewNextAction = QtWidgets.QAction('View Next', self)
+      self._viewNextAction.setShortcut('Ctrl+Down')
+      self._viewNextAction.triggered.connect(lambda: self.viewNextWidget())
+      self._viewNextAction.setEnabled(False)
+      self._toolBarAction = QtWidgets.QAction('Hide Toolbar', self)
+      self._toolBarAction.setShortcut('Ctrl+Alt+T')
+      self._toolBarAction.triggered.connect(lambda: self.toggleToolBar())
+
       self._minimizeAction = QtWidgets.QAction('Minimize', self)
       self._minimizeAction.setShortcut('Ctrl+M')
-      self._minimizeAction.triggered.connect(lambda: self.showMinimized())
+      self._minimizeAction.triggered.connect(lambda: self.toggleMinimized())
       self._maximizeAction = QtWidgets.QAction('Zoom', self)
-      self._maximizeAction.setShortcut('Ctrl+Shift+M')
-      self._maximizeAction.triggered.connect(lambda: self.showMaximized())
+      self._maximizeAction.triggered.connect(lambda: self.toggleMaximized())
       self._showNormalAction = QtWidgets.QAction('Bring to Front', self)
       self._showNormalAction.triggered.connect(lambda: self.showNormal())
-      self._fullScreenAction = QtWidgets.QAction('Enter Fullscreen', self)
-      self._fullScreenAction.setShortcut('Ctrl+Shift+F')
-      self._fullScreenAction.triggered.connect(lambda: self.showFullScreen())
 
     self._helpAction = QtWidgets.QAction('Help', self)
     self._helpAction.triggered.connect(lambda: self.openAboutDialog())
@@ -518,19 +567,40 @@ class MainWindow (QtWidgets.QMainWindow):
     self._fileMenu = self._menuBar.addMenu('File')
     self._fileMenu.addAction(self._openFileAction)
     self._fileMenu.addAction(self._openFolderAction)
+    if utils.IS_MAC:
+      self._fileMenu.addSeparator()
+      self._fileMenu.addAction(self._openFinderAction)
     self._fileMenu.addSeparator()
     self._fileMenu.addAction(self._closeAction)
 
     self._editMenu = self._menuBar.addMenu('Edit')
+    self._editMenu.addAction(self._removeCurrentAction)
+    self._editMenu.addSeparator()
     self._editMenu.addAction(self._removeAllAction)
     self._editMenu.addAction(self._removeCompletedAction)
-    self._editMenu.addSeparator()
 
     if utils.IS_MAC:
+      self._editMenu.addSeparator()
+      self._editMenu.addAction(self._copyLyricsAction)
+      self._editMenu.addAction(self._saveLyricsAction)
+      self._editMenu.addAction(self._removeLyricsAction)
+      self._editMenu.addAction(self._undoAction)
+      self._editMenu.addAction(self._redoAction)
+
+      self._viewMenu = self._menuBar.addMenu('View')
+      self._viewMenu.addAction(self._viewSongsSubMenuAction)
+      self._songsSubMenu = QtWidgets.QMenu(self._menuBar)
+      self._songsSubMenu.addAction(self._noLyricsAction)
+      self._viewSongsSubMenuAction.setMenu(self._songsSubMenu)
+      self._viewMenu.addSeparator()
+      self._viewMenu.addAction(self._viewPreviousAction)
+      self._viewMenu.addAction(self._viewNextAction)
+      self._viewMenu.addSeparator()
+      self._viewMenu.addAction(self._toolBarAction)
+
       self._windowMenu = self._menuBar.addMenu('Window')
       self._windowMenu.addAction(self._minimizeAction)
       self._windowMenu.addAction(self._maximizeAction)
-      self._windowMenu.addAction(self._fullScreenAction)
       self._windowMenu.addSeparator()
       self._windowMenu.addAction(self._showNormalAction)
 
@@ -543,7 +613,7 @@ class MainWindow (QtWidgets.QMainWindow):
     if not utils.IS_MAC:
       self._helpMenu.addAction(self._openAboutAction)
 
-    # Do not create toolbar if not on Mac
+    # Only create toolbar on Mac
     if utils.IS_MAC:
       # Add items to toolbar
       self._leftAlignSpacer = QtWidgets.QSpacerItem(15, 25, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
@@ -585,6 +655,7 @@ class MainWindow (QtWidgets.QMainWindow):
       self._toolBar.addWidget(self._toolBarItems)
       self._toolBar.setFloatable(False)
       self._toolBar.setMovable(False)
+      self._toolBarVisible = True
       self.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
 
     # Create a hint for the user
@@ -645,6 +716,34 @@ class MainWindow (QtWidgets.QMainWindow):
       self.setWindowIcon(QtGui.QIcon(utils.resource_path('./assets/icon.png')))
     self.setAcceptDrops(True)
 
+  def toggleFullScreen(self):
+    if self.isFullScreen():
+      self.showNormal()
+    else:
+      self.showFullScreen()
+
+  def toggleToolBar(self):
+    if self._toolBarVisible:
+      self._toolBarVisible = False
+      self._toolBar.hide()
+      self._toolBarAction.setText('Show Toolbar')
+    else:
+      self._toolBarVisible = True
+      self._toolBar.show()
+      self._toolBarAction.setText('Hide Toolbar')
+
+  def toggleMaximized(self):
+    if self.isMaximized():
+      self.showNormal()
+    else:
+      self.showMaximized()
+
+  def toggleMinimized(self):
+    if self.isMinimized():
+      self.showNormal()
+    else:
+      self.showMinimized()
+
   def closeEvent(self, event):
     try:
       LyricGrabberThread.interrupt = True
@@ -681,51 +780,112 @@ class MainWindow (QtWidgets.QMainWindow):
   def keyPressEvent(self, event):
     key = event.key()
     # Handle modifiers first, then others
-    if event.modifiers() & QtCore.Qt.ShiftModifier and event.modifiers() & QtCore.Qt.ControlModifier:
-      if key == QtCore.Qt.Key_F and utils.IS_MAC:
-        self.showFullScreen()
-      elif key == QtCore.Qt.Key_M and utils.IS_MAC:
-        self.showMaximized()
-      elif key == QtCore.Qt.Key_O:
+    if event.modifiers() & QtCore.Qt.ControlModifier and event.modifiers() & QtCore.Qt.AltModifier and event.modifiers() & QtCore.Qt.ShiftModifier:
+      if key == QtCore.Qt.Key_Backspace:
+        self.removeCompletedFiles()
+    elif event.modifiers() & QtCore.Qt.ControlModifier and event.modifiers() & QtCore.Qt.ShiftModifier:
+      if key == QtCore.Qt.Key_O:
         # Super + shift + O should open folder browser
         self.openFileDialog(QtWidgets.QFileDialog.Directory)
       elif key == QtCore.Qt.Key_Backspace:
-        self.removeCompletedFiles()
+        self.removeAllFilesFromList()
+    elif event.modifiers() & QtCore.Qt.ControlModifier and event.modifiers() & QtCore.Qt.MetaModifier:
+      if key == QtCore.Qt.Key_F:
+        self.toggleFullScreen()
     elif event.modifiers() & QtCore.Qt.ControlModifier:
-      if key == QtCore.Qt.Key_M and utils.IS_MAC:
-        self.showMinimized()
-      elif key == QtCore.Qt.Key_O:
+      if key == QtCore.Qt.Key_O:
         # Super + O should open file browser
         self.openFileDialog(QtWidgets.QFileDialog.ExistingFiles)
       elif key == QtCore.Qt.Key_W:
         self.close()
       elif key == QtCore.Qt.Key_Backspace:
-        self.removeAllFilesFromList()
+        self.removeCurrentFile()
       elif key == QtCore.Qt.Key_Comma:
         self.openSettingsDialog()
     else:
       if key == QtCore.Qt.Key_S or key == QtCore.Qt.Key_Down:
-        if MainWindow.selectedWidgetIndex is not None:
-          newIndex = MainWindow.selectedWidgetIndex + 1
-          if self._mainScrollAreaWidgetLayout.itemAt(newIndex) is not None:
-            MainWindow.selectedWidgetIndex += 1
-            self.resetListColours()
-            self._mainScrollArea.ensureWidgetVisible(self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget())
-            self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget().openDetailDialog()
+        self.viewNextWidget()
       elif key == QtCore.Qt.Key_W or key == QtCore.Qt.Key_Up:
-        if MainWindow.selectedWidgetIndex is not None:
-          newIndex = MainWindow.selectedWidgetIndex - 1
-          if self._mainScrollAreaWidgetLayout.itemAt(newIndex) is not None:
-            MainWindow.selectedWidgetIndex -= 1
-            self.resetListColours()
-            self._mainScrollArea.ensureWidgetVisible(self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget())
-            self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget().openDetailDialog()
+        self.viewPreviousWidget()
+
+  def focusInEvent(self, event):
+    self._viewPreviousAction.setEnabled(True)
+    self._viewNextAction.setEnabled(True)
+
+  def focusOutEvent(self, event):
+    self._viewPreviousAction.setEnabled(False)
+    self._viewNextAction.setEnabled(False)
 
   def setSelectedWidget(self, filepath):
+    if filepath == None:
+      MainWindow.selectedWidgetIndex = None
+      self._openFinderAction.setEnabled(False)
+      self._removeCurrentAction.setEnabled(False)
+      self._copyLyricsAction.setEnabled(False)
+      self._saveLyricsAction.setEnabled(False)
+      self._removeLyricsAction.setEnabled(False)
+      self._undoAction.setEnabled(False)
+      self._redoAction.setEnabled(False)
+      self._viewPreviousAction.setEnabled(False)
+      self._viewNextAction.setEnabled(False)
+      return
     for i in range(self._mainScrollAreaWidgetLayout.count()):
       if self._mainScrollAreaWidgetLayout.itemAt(i).widget().getFilepath() == filepath:
         MainWindow.selectedWidgetIndex = i
+        self._openFinderAction.setEnabled(True)
+        self._removeCurrentAction.setEnabled(True)
+        self._copyLyricsAction.setEnabled(True)
+        self._saveLyricsAction.setEnabled(True)
+        self._removeLyricsAction.setEnabled(True)
+        self._undoAction.setEnabled(True)
+        self._redoAction.setEnabled(True)
+        if i > 0:
+          self._viewPreviousAction.setEnabled(True)
+        if self._mainScrollAreaWidgetLayout.itemAt(i + 1) is not None:
+          self._viewNextAction.setEnabled(True)
         break
+
+  def viewPreviousWidget(self):
+    if MainWindow.selectedWidgetIndex is not None:
+      newIndex = MainWindow.selectedWidgetIndex - 1
+      if self._mainScrollAreaWidgetLayout.itemAt(newIndex) is not None:
+        MainWindow.selectedWidgetIndex -= 1
+        self.resetListColours()
+        self._mainScrollArea.ensureWidgetVisible(self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget())
+        self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget().openDetailDialog()
+
+  def viewNextWidget(self):
+    if MainWindow.selectedWidgetIndex is not None:
+        newIndex = MainWindow.selectedWidgetIndex + 1
+        if self._mainScrollAreaWidgetLayout.itemAt(newIndex) is not None:
+          MainWindow.selectedWidgetIndex += 1
+          self.resetListColours()
+          self._mainScrollArea.ensureWidgetVisible(self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget())
+          self._mainScrollAreaWidgetLayout.itemAt(MainWindow.selectedWidgetIndex).widget().openDetailDialog()
+
+  def openFinder(self):
+    i = self.selectedWidgetIndex
+    self._mainScrollAreaWidgetLayout.itemAt(i).widget().openFilepath()
+
+  def copyLyrics(self):
+    i = self.selectedWidgetIndex
+    self._mainScrollAreaWidgetLayout.itemAt(i).widget().dialog.copyLyrics()
+
+  def saveLyrics(self):
+    i = self.selectedWidgetIndex
+    self._mainScrollAreaWidgetLayout.itemAt(i).widget().dialog.saveLyrics()
+
+  def removeLyrics(self):
+    i = self.selectedWidgetIndex
+    self._mainScrollAreaWidgetLayout.itemAt(i).widget().dialog.removeLyrics()
+
+  def undoLyrics(self):
+    i = self.selectedWidgetIndex
+    self._mainScrollAreaWidgetLayout.itemAt(i).widget().dialog.undoEvent()
+
+  def redoLyrics(self):
+    i = self.selectedWidgetIndex
+    self._mainScrollAreaWidgetLayout.itemAt(i).widget().dialog.redoEvent()
 
   def openFileDialog(self, fileMode):
     # fileMode parameter is QtWidgets.QFileDialog.Directory or QtWidgets.QFileDialog.ExistingFiles
@@ -763,19 +923,19 @@ class MainWindow (QtWidgets.QMainWindow):
       else:
         invalid_filepaths.append(file)
 
-    if len(filepaths) > 0:
-      self.startFetchThread(filepaths)
-
     # Show an error message for each invalid filepath found
     if invalid_filepaths and self._settings.get_show_errors():
       self.showError(invalid_filepaths)
+
+    if len(filepaths) > 0:
+      self.startFetchThread(filepaths)
 
   def showError(self, filepaths):
     self.setEnabled(False)
     try:
       if not hasattr(self, '_error_dialog'):
-        self.playErrorSound()
         self._error_dialog = error_dialog.QErrorDialog(self, filepaths)
+        self.playErrorSound()
         self._error_dialog.exec()
         del self._error_dialog
     except:
@@ -817,6 +977,22 @@ class MainWindow (QtWidgets.QMainWindow):
         listWidgetItem.setBackgroundColor(QtCore.Qt.white)
       # Add ListWidgetItem into mainScrollAreaWidgetLayout
       self._mainScrollAreaWidgetLayout.addWidget(listWidgetItem)
+
+      # Refresh menu items
+      if MainWindow.selectedWidgetIndex is not None:
+        i = MainWindow.selectedWidgetIndex
+        if i > 0 and self._viewPreviousAction.enabled == False:
+          self._viewPreviousAction.setEnabled(True)
+        if self._mainScrollAreaWidgetLayout.itemAt(i + 1) is not None and self._viewNextAction.enabled == False:
+          self._viewNextAction.setEnabled(True)
+
+      if self._mainScrollAreaWidgetLayout.count() < 10:
+        if self._noLyricsAction.isVisible():
+          self._noLyricsAction.setVisible(False)
+        self._viewSongsSubMenuAction.setEnabled(True)
+        openItemAction = QtWidgets.QAction(title + ' - ' + artist, self)
+        openItemAction.triggered.connect(lambda: listWidgetItem.openDetailDialog())
+        self._songsSubMenu.addAction(openItemAction)
 
   def setProgressIcon(self, filepath, state):
     for i in range(self._mainScrollAreaWidgetLayout.count()):
@@ -882,6 +1058,13 @@ class MainWindow (QtWidgets.QMainWindow):
             widget.setParent(None)
             widget = None
       self.resetListColours()
+
+  def removeCurrentFile(self):
+    i = MainWindow.selectedWidgetIndex
+    if self._mainScrollAreaWidgetLayout.itemAt(i).widget().getState() == states.COMPLETE:
+      self._all_filepaths.remove(self._mainScrollAreaWidgetLayout.itemAt(i).widget().getFilepath())
+      self._mainScrollAreaWidgetLayout.itemAt(i).widget().removeFromList()
+    MainWindow.selectedWidgetIndex = None
 
   def openAboutDialog(self):
     self.setEnabled(False)
