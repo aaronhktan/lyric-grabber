@@ -7,26 +7,37 @@ from modules import utils
 # Blame PyQt for that!
 # Keeping consistency with PyQt camelCase is prioritised.
 
-class QLyricsDialog (QtWidgets.QDialog):
-  # smallFont = QtGui.QFont('San Francisco', 12)
+class QLyricsDialog (QtWidgets.QWidget):
   x_coordinate = None
   y_coordinate = None
 
   def __init__(self, parent, artist, title, lyrics, url, filepath):
-    super().__init__(parent)
+    """This is the dialog that shows more details about a particular song
+    
+    Args:
+        parent (QWidget): The song widget that cause this dialog to pop up
+        artist (string): Song artist
+        title (string): Song title
+        lyrics (string): Song lyrics
+        url (string): Source for the song lyrics
+        filepath (string): Filepath for the song
+    """
+    super().__init__(parent, QtCore.Qt.Window)
+    # Must pass QtCore.Qt.Window as parameter to ensure that widget is displayed in new window
+    # rather than added as child of the song widget that caused it to open
 
-    # Set parent object
     self.parent = parent
 
     # Style lyrics dialog
-    # self.setFixedSize(QtCore.QSize(300, 700))
-    self.setModal(False)
     self.setWindowTitle('{artist} - {title}'.format(artist=artist, title=title))
     self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
+    flags = self.windowFlags() | QtCore.Qt.CustomizeWindowHint
+    flags &= ~(QtCore.Qt.WindowMinMaxButtonsHint | QtCore.Qt.WindowFullscreenButtonHint)
+    self.setWindowFlags(flags)
+
     self._settings = settings.Settings()
 
-    # Add filepath
     self._filepath = filepath
 
     # Add lyrics label and scroll area
@@ -182,8 +193,12 @@ class QLyricsDialog (QtWidgets.QDialog):
     self._allQGridLayout.addItem(self._songNavigationSpacer, 1, 1, 1, 1)
     self._allQGridLayout.addWidget(self._nextSongButton, 1, 2, 1, 1)
     self.setLayout(self._allQGridLayout)
-    self.setSizeGripEnabled(True);
 
+    # Set allowable sizes for this dialog
+    self.resize(self.sizeHint())
+    self.setMinimumSize(self.sizeHint())
+
+    # Move dialog to last position on macOS, otherwise move it to match vertical position of parent window
     if QLyricsDialog.x_coordinate is not None \
     and QLyricsDialog.y_coordinate is not None \
     and utils.IS_MAC:
@@ -212,8 +227,6 @@ class QLyricsDialog (QtWidgets.QDialog):
     elif event.modifiers() & QtCore.Qt.ControlModifier:
       if key == QtCore.Qt.Key_K:
         self.openUrl()
-      elif key == QtCore.Qt.Key_R:
-        self.grabLyrics()
       elif key == QtCore.Qt.Key_S:
         self.saveLyrics()
       elif key == QtCore.Qt.Key_Backspace:
