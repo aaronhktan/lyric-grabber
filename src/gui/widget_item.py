@@ -12,13 +12,12 @@ from modules import utils
 from threads.single_lyric_grabber_thread import SingleLyricGrabberThread
 from threads.states import states
 
-class QWidgetItem (QtWidgets.QWidget):
+class QSongWidget (QtWidgets.QWidget):
   dialog = None;
 
   def __init__(self, parent):
     super().__init__(parent)
 
-    # Set parent
     self.parent = parent
 
     # Add progress label
@@ -75,12 +74,12 @@ class QWidgetItem (QtWidgets.QWidget):
     self._openButton.clicked.connect(lambda: self.openFilepath())
     # self._removeButton = QtWidgets.QPushButton('Remove')
     # self._removeButton.setMaximumWidth(125)
-    # self._removeButton.clicked.connect(lambda: self.removeFile())
+    # self._removeButton.clicked.connect(lambda: self.removeFromList())
 
     self._buttonVBoxLayout = QtWidgets.QVBoxLayout()
     self._buttonVBoxLayout.addWidget(self._lyricsButton)
     self._buttonVBoxLayout.addWidget(self._openButton)
-    # self._buttonVBoxLayout.addWidget(self.removeButton)
+    # self._buttonVBoxLayout.addWidget(self._removeButton)
     self._buttonVBoxLayout.setSpacing(0)
 
     # Layout containing all elements
@@ -92,7 +91,6 @@ class QWidgetItem (QtWidgets.QWidget):
     self._allHBoxLayout.addWidget(self._albumArtLabel, 1)
     self._allHBoxLayout.addLayout(self._textVBoxLayout, 2)
     self._allHBoxLayout.addLayout(self._buttonVBoxLayout, 3)
-    # Add a spacer on the right side for Windows
     if utils.IS_WINDOWS:
       self._rightSpacer = QtWidgets.QSpacerItem(10, 25, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
       self._allHBoxLayout.addItem(self._rightSpacer)
@@ -112,6 +110,11 @@ class QWidgetItem (QtWidgets.QWidget):
       self.mouseReleaseEvent = self.openDetailDialog()
 
   def setBackgroundColor(self, backgroundColor):
+    """Sets background color of a song widget
+    
+    Args:
+        backgroundColor (Qt.GlobalColor): A Qt named colour
+    """
     self._pal = QtGui.QPalette()
     self._pal.setColor(QtGui.QPalette.Background, backgroundColor)
     self.setAutoFillBackground(True)
@@ -146,6 +149,12 @@ class QWidgetItem (QtWidgets.QWidget):
       return states.NOT_STARTED
 
   def setAlbumArt(self, imageData, deviceRatio):
+    """Sets album art in song widget
+    
+    Args:
+        imageData (bytes): A bytes literal containing embedded album art
+        deviceRatio (int): Pixel ratio of the screen that this program runs on
+    """
     try:
       if imageData == b'' or imageData is None:
         albumImage = QtGui.QImage(utils.resource_path('./assets/art_empty.png'))
@@ -158,9 +167,9 @@ class QWidgetItem (QtWidgets.QWidget):
       self._iconWidth = deviceRatio * (self._albumArtLabel.width() - 10)
       self._iconHeight = deviceRatio * (self._albumArtLabel.height() - 10)
       self._albumArtLabel.setPixmap(albumIcon.scaled(self._iconWidth,
-                                                           self._iconHeight,
-                                                           QtCore.Qt.KeepAspectRatio,
-                                                           QtCore.Qt.SmoothTransformation))
+                                                     self._iconHeight,
+                                                     QtCore.Qt.KeepAspectRatio,
+                                                     QtCore.Qt.SmoothTransformation))
     except:
       logger.log(logger.LOG_LEVEL_ERROR, 'Error setting album art.')
 
@@ -176,24 +185,22 @@ class QWidgetItem (QtWidgets.QWidget):
     self.resetColours()
     self.setBackgroundColor(appearance.HIGHLIGHT_COLOUR)
     try:
-      QWidgetItem.dialog.setWindowTitle('{artist} - {title}'.format(artist=self._artist, title=self._title))
-      QWidgetItem.dialog.updateLyrics(self._lyrics)
-      QWidgetItem.dialog.updateUrl(self._url)
-      QWidgetItem.dialog.setFilepath(self._filepath)
-      QWidgetItem.dialog.setArtistAndTitle(self._artist, self._title)
-      QWidgetItem.dialog.setParent(self)
-      QWidgetItem.dialog.show()
+      QSongWidget.dialog.setWindowTitle('{artist} - {title}'.format(artist=self._artist, title=self._title))
+      QSongWidget.dialog.updateLyrics(self._lyrics)
+      QSongWidget.dialog.updateUrl(self._url)
+      QSongWidget.dialog.setFilepath(self._filepath)
+      QSongWidget.dialog.setArtistAndTitle(self._artist, self._title)
+      # QSongWidget.dialog.setParent(self)
+      QSongWidget.dialog.show()
     except Exception as e:
-      # self.window().setEnabled(False)
-      QWidgetItem.dialog = detail_dialog.QLyricsDialog(parent=self,
+      QSongWidget.dialog = detail_dialog.QLyricsDialog(parent=self,
                                                        artist=self._artist,
                                                        title=self._title,
                                                        lyrics=self._lyrics,
                                                        url=self._url,
                                                        filepath=self._filepath)
-      QWidgetItem.dialog.show()
+      QSongWidget.dialog.show()
       self.activateWindow()
-      # self.window().setEnabled(True)
 
   def setfilepath(self, filepath):
     self._filepath = filepath
@@ -211,6 +218,14 @@ class QWidgetItem (QtWidgets.QWidget):
       subprocess.run(['xdg-open', os.path.dirname(self._filepath)])
 
   def fetchLyrics(self, artist=None, title=None, url=None, source=None):
+    """Grab lyrics again from the Internet
+    
+    Args:
+        artist (string, optional): Song artist
+        title (string, optional): Song title
+        url (string, optional): Source URL
+        source (string, optional): Source name (e.g. 'Genius')
+    """
     self.setProgressIconForSingle(states.IN_PROGRESS)
     if artist is None:
       artist = self._artist
@@ -233,9 +248,9 @@ class QWidgetItem (QtWidgets.QWidget):
   def setLyrics(self, lyrics):
     self._lyrics = lyrics
     try:
-      if QWidgetItem.dialog is not None:
-        if QWidgetItem.dialog.getFilepath() == self._filepath:
-          QWidgetItem.dialog.updateLyrics(lyrics)
+      if QSongWidget.dialog is not None:
+        if QSongWidget.dialog.getFilepath() == self._filepath:
+          QSongWidget.dialog.updateLyrics(lyrics)
     except Exception as e:
       logger.log(logger.LOG_LEVEL_ERROR, str(e))
 
@@ -256,9 +271,9 @@ class QWidgetItem (QtWidgets.QWidget):
   def setUrl(self, url):
     self._url = url
     try:
-      if QWidgetItem.dialog is not None:
-        if QWidgetItem.dialog.getFilepath() == self._filepath:
-          QWidgetItem.dialog.updateUrl(url)
+      if QSongWidget.dialog is not None:
+        if QSongWidget.dialog.getFilepath() == self._filepath:
+          QSongWidget.dialog.updateUrl(url)
     except Exception as e:
       logger.log(logger.LOG_LEVEL_ERROR, str(e))
 
@@ -268,8 +283,8 @@ class QWidgetItem (QtWidgets.QWidget):
   def resetSelectedWidgetIndex(self):
     self.parent.setSelectedWidget(None)
 
-  def removeFromList (self):
+  def removeFromList(self):
     self.setParent(None)
-    QWidgetItem.dialog.close()
+    QSongWidget.dialog.close()
     self.resetColours()
     self.resetSelectedWidgetIndex()

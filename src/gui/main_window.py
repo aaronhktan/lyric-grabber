@@ -12,7 +12,7 @@ from gui import appearance
 from gui import error_dialog
 from gui import settings_dialog
 from gui import update_dialog
-from gui.widget_item import QWidgetItem
+from gui.widget_item import QSongWidget
 from modules import settings
 from modules import utils
 from threads.lyric_grabber_thread import LyricGrabberThread
@@ -587,7 +587,7 @@ class MainWindow (QtWidgets.QMainWindow):
         self._removedInstructions = True
 
       # Create WidgetItem for each item
-      listWidgetItem = QWidgetItem(self)
+      listWidgetItem = QSongWidget(self)
       listWidgetItem.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
       listWidgetItem.setProgressIcon(states.NOT_STARTED, self.devicePixelRatio())
       listWidgetItem.setAlbumArt(art, self.devicePixelRatio())
@@ -656,7 +656,7 @@ class MainWindow (QtWidgets.QMainWindow):
 
   def removeAllFilesFromList(self):
     try:
-      QWidgetItem.dialog.close()
+      QSongWidget.dialog.close()
       self._fetch_thread.exit()
     except:
       pass
@@ -676,7 +676,7 @@ class MainWindow (QtWidgets.QMainWindow):
 
   def removeCompletedFiles(self):
     try:
-      QWidgetItem.dialog.close()
+      QSongWidget.dialog.close()
     except:
       pass
     finally:
