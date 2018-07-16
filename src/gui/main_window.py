@@ -12,7 +12,7 @@ from gui import appearance
 from gui import error_dialog
 from gui import settings_dialog
 from gui import update_dialog
-from gui.widget_item import QSongWidget
+from gui.widget_item import SongWidget
 from modules import settings
 from modules import utils
 from threads.lyric_grabber_thread import LyricGrabberThread
@@ -547,7 +547,7 @@ class MainWindow (QtWidgets.QMainWindow):
       except:
         pass
 
-    self._error_dialog = error_dialog.QErrorDialog(self, filepaths)
+    self._error_dialog = error_dialog.ErrorDialog(self, filepaths)
     self.playErrorSound()
     self._error_dialog.show()
 
@@ -587,18 +587,18 @@ class MainWindow (QtWidgets.QMainWindow):
         self._removedInstructions = True
 
       # Create WidgetItem for each item
-      listWidgetItem = QSongWidget(self)
-      listWidgetItem.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-      listWidgetItem.setProgressIcon(states.NOT_STARTED, self.devicePixelRatio())
-      listWidgetItem.setAlbumArt(art, self.devicePixelRatio())
-      listWidgetItem.setArtistText(artist)
-      listWidgetItem.setTitleText(title)
-      listWidgetItem.setfilepath(filepath)
+      songWidget = SongWidget(self)
+      songWidget.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+      songWidget.setProgressIcon(states.NOT_STARTED, self.devicePixelRatio())
+      songWidget.setAlbumArt(art, self.devicePixelRatio())
+      songWidget.setArtistText(artist)
+      songWidget.setTitleText(title)
+      songWidget.setfilepath(filepath)
       if self._mainScrollAreaWidgetLayout.count() % 2:
-        listWidgetItem.setBackgroundColor(appearance.ALTERNATE_COLOUR_ONE)
+        songWidget.setBackgroundColor(appearance.ALTERNATE_COLOUR_ONE)
       else:
-        listWidgetItem.setBackgroundColor(QtCore.Qt.white)
-      self._mainScrollAreaWidgetLayout.addWidget(listWidgetItem)
+        songWidget.setBackgroundColor(QtCore.Qt.white)
+      self._mainScrollAreaWidgetLayout.addWidget(songWidget)
 
       # Refresh menu items to enable/disable 'Navigate to previous/next' entries
       if self.selectedWidgetIndex is not None:
@@ -612,9 +612,11 @@ class MainWindow (QtWidgets.QMainWindow):
         if self._noLyricsAction.isVisible():
           self._noLyricsAction.setVisible(False)
         self._viewSongsSubMenuAction.setEnabled(True)
-        openItemAction = QtWidgets.QAction(title + ' - ' + artist, self)
-        openItemAction.triggered.connect(lambda: listWidgetItem.openDetailDialog())
-        self._songsSubMenu.addAction(openItemAction)
+        songWidget.openItemAction = QtWidgets.QAction(title + ' - ' + artist, self)
+        songWidget.openItemAction.setData(filepath)
+        songWidget.openItemAction.triggered.connect(songWidget.openDetailDialog)
+        songWidget.openItemAction.triggered.connect(lambda: self.setSelectedWidget(filepath))
+        self._songsSubMenu.addAction(songWidget.openItemAction)
 
   def setProgressIcon(self, filepath, state):
     """Sets traffic light indicator for state
@@ -643,6 +645,7 @@ class MainWindow (QtWidgets.QMainWindow):
         widgetItem.setUrl(url)
 
   def resetListColours(self):
+    """Removes selected colour, resets to default white/grey alternating pattern"""
     for i in range(self._mainScrollAreaWidgetLayout.count()):
       if self._mainScrollAreaWidgetLayout.itemAt(i).widget() is self._instructionIconLabel \
       or self._mainScrollAreaWidgetLayout.itemAt(i).widget() is self._instructionLabel \
@@ -655,12 +658,16 @@ class MainWindow (QtWidgets.QMainWindow):
           self._mainScrollAreaWidgetLayout.itemAt(i).widget().setBackgroundColor(QtCore.Qt.white)
 
   def removeAllFilesFromList(self):
+    """Removes all widget items from the list"""
     try:
-      QSongWidget.dialog.close()
+      SongWidget.dialog.close()
       self._fetch_thread.exit()
     except:
       pass
     finally:
+      # Iterate through all widgets, ignoring welcome text
+      # Clear list of filepaths that have been added
+      # Remove all actions from the "View" submenu
       for i in reversed(range(self._mainScrollAreaWidgetLayout.count())):
         if self._mainScrollAreaWidgetLayout.itemAt(i).widget() is self._instructionIconLabel \
         or self._mainScrollAreaWidgetLayout.itemAt(i).widget() is self._instructionLabel \
@@ -673,48 +680,81 @@ class MainWindow (QtWidgets.QMainWindow):
           widget = None
       if hasattr(self, '_all_filepaths'):
         self._all_filepaths.clear()
+      for i in self._songsSubMenu.actions():
+        self._songsSubMenu.removeAction(i)
+      self._songsSubMenu.addAction(self._noLyricsAction)
+      self._noLyricsAction.setVisible(True)
 
   def removeCompletedFiles(self):
+    """Removes only widget items with lyrics"""
     try:
-      QSongWidget.dialog.close()
+      SongWidget.dialog.close()
     except:
       pass
-    finally:
-      for i in reversed(range(self._mainScrollAreaWidgetLayout.count())):
-        if self._mainScrollAreaWidgetLayout.itemAt(i).widget() is self._instructionIconLabel \
-        or self._mainScrollAreaWidgetLayout.itemAt(i).widget() is self._instructionLabel \
-        or self._mainScrollAreaWidgetLayout.itemAt(i) is self._verticalSpacer:
-          pass
-        else:
-          if self._mainScrollAreaWidgetLayout.itemAt(i).widget().getState() == states.COMPLETE:
-            self._all_filepaths.remove(self._mainScrollAreaWidgetLayout.itemAt(i).widget().getFilepath())
-            widget = self._mainScrollAreaWidgetLayout.itemAt(i).widget()
-            widget.deleteLater()
-            widget.setParent(None)
-            widget = None
-      self.resetListColours()
+
+    # Iterate through all widgets, ignoring welcome text
+    # Remove filepath from list of filepaths that have been added
+    # Remove action from the "View" submenu if data (i.e. filepath) corresponds
+    for i in reversed(range(self._mainScrollAreaWidgetLayout.count())):
+      if self._mainScrollAreaWidgetLayout.itemAt(i).widget() is self._instructionIconLabel \
+      or self._mainScrollAreaWidgetLayout.itemAt(i).widget() is self._instructionLabel \
+      or self._mainScrollAreaWidgetLayout.itemAt(i) is self._verticalSpacer:
+        pass
+      else:
+        if self._mainScrollAreaWidgetLayout.itemAt(i).widget().getState() == states.COMPLETE:
+          self._all_filepaths.remove(self._mainScrollAreaWidgetLayout.itemAt(i).widget().getFilepath())
+          widget = self._mainScrollAreaWidgetLayout.itemAt(i).widget()
+          if utils.IS_MAC:
+            for i in self._songsSubMenu.actions():
+              if i.data() == widget.getFilepath():
+                self._songsSubMenu.removeAction(i)
+          widget.deleteLater()
+          widget.setParent(None)
+          widget = None
+    self.resetListColours()
 
   def removeCurrentFile(self):
+    """Remove file currently selected by user"""
     i = self.selectedWidgetIndex
-    if self._mainScrollAreaWidgetLayout.itemAt(i).widget().getState() == states.COMPLETE:
+    if self._mainScrollAreaWidgetLayout.itemAt(i).widget().getState() == states.COMPLETE \
+    or self._mainScrollAreaWidgetLayout.itemAt(i).widget().getState() == states.ERROR:
       self._all_filepaths.remove(self._mainScrollAreaWidgetLayout.itemAt(i).widget().getFilepath())
-      self._mainScrollAreaWidgetLayout.itemAt(i).widget().removeFromList()
+      songWidget = self._mainScrollAreaWidgetLayout.itemAt(i).widget()
+      songWidget.removeFromList()
+      if utils.IS_MAC and i < 10:
+        # Replace entry in the "View lyrics for..." submenu with the 10th song
+        try:
+          self._songsSubMenu.removeAction(songWidget.openItemAction)
+        except Exception as e:
+          print(e)
+        if self._mainScrollAreaWidgetLayout.itemAt(8) is not None:
+          nextWidget = self._mainScrollAreaWidgetLayout.itemAt(8).widget()
+          nextWidget.openItemAction = QtWidgets.QAction(nextWidget.getTitleText() + ' - ' + nextWidget.getArtistText(), self)
+          nextWidget.openItemAction.setData(nextWidget.getFilepath())
+          nextWidget.openItemAction.triggered.connect(nextWidget.openDetailDialog)
+          nextWidget.openItemAction.triggered.connect(lambda: self.setSelectedWidget(nextWidget.getFilepath()))
+          print(nextWidget.openItemAction)
+          self._songsSubMenu.addAction(nextWidget.openItemAction)
+        if self._songsSubMenu.isEmpty():
+          self._noLyricsAction.setVisible(True)
     self.selectedWidgetIndex = None
 
   def openAboutDialog(self):
+    """Opens dialog showing information about program, with ability to check for updates"""
     self.setEnabled(False)
     self._about_dialog = about_dialog.QAboutDialog(self)
     self._about_dialog.exec()
     self.setEnabled(True)
 
   def openSettingsDialog(self):
+    """Opens dialog showing settings"""
     self.setEnabled(False)
     self._settings_dialog = settings_dialog.QSettingsDialog()
     self._settings_dialog.exec()
     self.setEnabled(True)
 
   def openUpdateDialog(self, update_available, show_if_no_update=False, show_option_to_hide=True):
-    """Opens the update dialog
+    """Opens dialog alerting user of an available update
     
     Args:
         update_available (bool): Is an update available?
@@ -723,14 +763,14 @@ class MainWindow (QtWidgets.QMainWindow):
         show_option_to_hide (bool, optional): When true, shows option to supress update notifications.
           Is set to false when user explicitly checks for updates.
     """
-    show_hide_message = ('Click "OK" to download the new version of Quaver.'
+    show_hide_message = ('Click "Download" to download the new version of Quaver.'
       '<br><br>Check "Don\'t show this again" if you do not want to see these update messages.'
       ' You can re-enable these messages under Settings.')
     do_not_show_hide_message = ('Click "OK" to download the new version of Quaver.'
       '<br><br>Quaver can automatically check for updates if you check the appropriate option in Settings.')
 
     if update_available:
-      self._update_dialog = update_dialog.QUpdateDialog(self,
+      self._update_dialog = update_dialog.UpdateDialog(self,
         title='Version {} of Quaver is available!'.format(update_available.version),
         message=show_hide_message if show_option_to_hide else do_not_show_hide_message,
         url=update_available.url,
@@ -738,7 +778,7 @@ class MainWindow (QtWidgets.QMainWindow):
         show_option_to_hide=show_option_to_hide)
       self._update_dialog.exec()
     elif show_if_no_update:
-      self._update_dialog = update_dialog.QUpdateDialog(self,
+      self._update_dialog = update_dialog.UpdateDialog(self,
         title='You are on the newest version of Quaver!',
         message=('Quaver can automatically check for updates if you check the appropriate option in Settings.'),
         url=None,
@@ -748,7 +788,7 @@ class MainWindow (QtWidgets.QMainWindow):
 
   def openDialog(self, message):
     """Used for debugging."""
-    self._something_dialog = update_dialog.QUpdateDialog(self,
+    self._something_dialog = update_dialog.UpdateDialog(self,
       title='sys argv passed in is {}'.format(message),
       message='WHOA',
       url=None,

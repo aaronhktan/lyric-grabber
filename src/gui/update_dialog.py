@@ -4,20 +4,28 @@ from gui import appearance
 from gui import modal_dialog
 from modules import utils
 
-class QUpdateDialog (modal_dialog.QModalDialog):
+class UpdateDialog (modal_dialog.ModalDialog):
   def __init__(self, parent, title, message, url, description, show_option_to_hide=True):
+    """This is the dialog that notifies the user of a software update.
+    
+    Args:
+        parent (MainWindow): The main window of the application
+        title (string): The string that should be shown in the title bar
+        message (string): The body text of the dialog (in HIG terms, 'Informative Text')
+        url (string): The URL that leads to an update. Set to None if no update available.
+        description (string): Description of update, displayed in the QTextEdit.
+          Set to None if no update.
+        show_option_to_hide (bool, optional): Control display of suppression checkbox.
+          Set to False when user causes update check.
+    """
     super().__init__(parent)
 
     self.setIcon('./assets/update.png')
     self.setTitle(title)
     self.setMessage(message)
 
-    flags = self.windowFlags() | QtCore.Qt.CustomizeWindowHint
-    flags &= ~(QtCore.Qt.WindowMinMaxButtonsHint | QtCore.Qt.WindowFullscreenButtonHint)
-    self.setWindowFlags(flags)
-
+    # Release notes
     if description is not None:
-      # Release notes
       self._descriptionQTextEdit = QtWidgets.QTextEdit()
       self._descriptionQTextEdit.setText(description)
       self._descriptionQTextEdit.setAlignment(QtCore.Qt.AlignTop)
@@ -29,8 +37,23 @@ class QUpdateDialog (modal_dialog.QModalDialog):
     if not show_option_to_hide:
       self._showAgainCheckBox.setVisible(False)
 
-    # Download update
+    # Set the download URL if available
     self._update_url = url
+    if url is not None:
+      self.setWindowTitle('Software Update')
+      self._okButton.setText('Download')
+    else:
+      self._okButton.setText('OK')
+      self._noButton.setVisible(False)
+
+  def showAgainAction(self, state):
+    if state:
+      modal_dialog.ModalDialog.settings.set_show_updates(0)
+    else:
+      modal_dialog.ModalDialog.settings.set_show_updates(1)
+
+  def noAction(self):
+    self.close()
 
   def showDetails(self):
     self._dialogGridLayout.addWidget(self._descriptionQTextEdit, 4, 1, 1, -1)
@@ -53,12 +76,6 @@ class QUpdateDialog (modal_dialog.QModalDialog):
     animation.setDuration(150)
     animation.setEndValue(self.sizeHint())
     animation.start();
-
-  def showAgainAction(self, state):
-    if state:
-      modal_dialog.QModalDialog.settings.set_show_updates(0)
-    else:
-      modal_dialog.QModalDialog.settings.set_show_updates(1)
 
   def okAction(self):
     if self._update_url is not None:

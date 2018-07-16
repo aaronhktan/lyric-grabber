@@ -12,7 +12,15 @@ from modules import utils
 from threads.single_lyric_grabber_thread import SingleLyricGrabberThread
 from threads.states import states
 
-class QSongWidget (QtWidgets.QWidget):
+class SongWidget (QtWidgets.QWidget):
+
+  """SongWidget represents a widget for a song in the list view.
+  
+  Attributes:
+      dialog (LyricsDialog): The single dialog window that is opened when a song is selected
+      parent (MainWindow): The window that contains this song widget
+  """
+  
   dialog = None;
 
   def __init__(self, parent):
@@ -20,7 +28,7 @@ class QSongWidget (QtWidgets.QWidget):
 
     self.parent = parent
 
-    # Add progress label
+    # Add label for progress icon
     self._progressLabel = QtWidgets.QLabel()
     self._progressLabel.setFixedWidth(15)
     self._progressLabel.setAlignment(QtCore.Qt.AlignCenter)
@@ -177,29 +185,36 @@ class QSongWidget (QtWidgets.QWidget):
     self._title = text
     self._textTitleLabel.setText(text)
 
+  def getTitleText(self):
+    return self._title
+
   def setArtistText(self, text):
     self._artist = text
     self._textArtistLabel.setText(text)
+
+  def getArtistText(self):
+    return self._artist
 
   def openDetailDialog(self):
     self.resetColours()
     self.setBackgroundColor(appearance.HIGHLIGHT_COLOUR)
     try:
-      QSongWidget.dialog.setWindowTitle('{artist} - {title}'.format(artist=self._artist, title=self._title))
-      QSongWidget.dialog.updateLyrics(self._lyrics)
-      QSongWidget.dialog.updateUrl(self._url)
-      QSongWidget.dialog.setFilepath(self._filepath)
-      QSongWidget.dialog.setArtistAndTitle(self._artist, self._title)
-      # QSongWidget.dialog.setParent(self)
-      QSongWidget.dialog.show()
+      SongWidget.dialog.setWindowTitle('{artist} - {title}'.format(artist=self._artist, title=self._title))
+      SongWidget.dialog.updateLyrics(self._lyrics)
+      SongWidget.dialog.updateUrl(self._url)
+      SongWidget.dialog.setFilepath(self._filepath)
+      SongWidget.dialog.setArtistAndTitle(self._artist, self._title)
+      SongWidget.dialog.raise_()
+      SongWidget.dialog.show()
     except Exception as e:
-      QSongWidget.dialog = detail_dialog.QLyricsDialog(parent=self,
+      SongWidget.dialog = detail_dialog.LyricsDialog(parent=self,
                                                        artist=self._artist,
                                                        title=self._title,
                                                        lyrics=self._lyrics,
                                                        url=self._url,
                                                        filepath=self._filepath)
-      QSongWidget.dialog.show()
+      SongWidget.dialog.raise_()
+      SongWidget.dialog.show()
       self.activateWindow()
 
   def setfilepath(self, filepath):
@@ -248,9 +263,9 @@ class QSongWidget (QtWidgets.QWidget):
   def setLyrics(self, lyrics):
     self._lyrics = lyrics
     try:
-      if QSongWidget.dialog is not None:
-        if QSongWidget.dialog.getFilepath() == self._filepath:
-          QSongWidget.dialog.updateLyrics(lyrics)
+      if SongWidget.dialog is not None:
+        if SongWidget.dialog.getFilepath() == self._filepath:
+          SongWidget.dialog.updateLyrics(lyrics)
     except Exception as e:
       logger.log(logger.LOG_LEVEL_ERROR, str(e))
 
@@ -271,9 +286,9 @@ class QSongWidget (QtWidgets.QWidget):
   def setUrl(self, url):
     self._url = url
     try:
-      if QSongWidget.dialog is not None:
-        if QSongWidget.dialog.getFilepath() == self._filepath:
-          QSongWidget.dialog.updateUrl(url)
+      if SongWidget.dialog is not None:
+        if SongWidget.dialog.getFilepath() == self._filepath:
+          SongWidget.dialog.updateUrl(url)
     except Exception as e:
       logger.log(logger.LOG_LEVEL_ERROR, str(e))
 
@@ -285,6 +300,6 @@ class QSongWidget (QtWidgets.QWidget):
 
   def removeFromList(self):
     self.setParent(None)
-    QSongWidget.dialog.close()
+    SongWidget.dialog.close()
     self.resetColours()
     self.resetSelectedWidgetIndex()

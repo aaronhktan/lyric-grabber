@@ -4,7 +4,14 @@ from gui import appearance
 from modules import utils
 from modules import settings
 
-class QModalDialog (QtWidgets.QDialog):
+class ModalDialog (QtWidgets.QDialog):
+
+  """A modal dialog with some virtual functions that blocks user input.
+  
+  Attributes:
+      settings (Settings): A settings object
+  """
+  
   settings = settings.Settings()
 
   def __init__(self, parent):
@@ -27,14 +34,16 @@ class QModalDialog (QtWidgets.QDialog):
     self._showAgainCheckBox.setChecked(False)
 
     # Buttons
+    self._noButton = QtWidgets.QPushButton('Cancel')
+    self._noButton.setMaximumWidth(125)
+    self._noButton.clicked.connect(self.noAction)
     self._showMoreButton = QtWidgets.QPushButton('Show Details')
-    self._showMoreButton.setFocusPolicy(QtCore.Qt.NoFocus)
     self._showMoreButton.setMaximumWidth(125)
-    self._showMoreButton.clicked.connect(lambda: self.showDetails())
+    self._showMoreButton.clicked.connect(self.showDetails)
     self._okButton = QtWidgets.QPushButton('OK')
-    self._okButton.setFocusPolicy(QtCore.Qt.NoFocus)
+    self._okButton.setDefault(True)
     self._okButton.setMaximumWidth(125)
-    self._okButton.clicked.connect(lambda: self.okAction())
+    self._okButton.clicked.connect(self.okAction)
 
     self._dialogGridLayout = QtWidgets.QGridLayout()
     # self._dialogGridLayout.setSpacing(0)
@@ -43,8 +52,9 @@ class QModalDialog (QtWidgets.QDialog):
     self._dialogGridLayout.addWidget(self._titleLabel, 1, 1, 1, -1)
     self._dialogGridLayout.addWidget(self._messageLabel, 2, 1, 1, -1)
     self._dialogGridLayout.addWidget(self._showAgainCheckBox, 6, 1, 1, 1)
-    self._dialogGridLayout.addWidget(self._showMoreButton, 6, 2, 1, 1)
-    self._dialogGridLayout.addWidget(self._okButton, 6, 3, 1, 1)
+    self._dialogGridLayout.addWidget(self._noButton, 7, 1, 1, 1)
+    self._dialogGridLayout.addWidget(self._showMoreButton, 7, 2, 1, 1)
+    self._dialogGridLayout.addWidget(self._okButton, 7, 3, 1, 1)
 
     self.setLayout(self._dialogGridLayout)
 
@@ -55,6 +65,10 @@ class QModalDialog (QtWidgets.QDialog):
       self.setWindowTitle('Quaver')
     self.setWindowModality(QtCore.Qt.ApplicationModal)
     self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+
+    flags = self.windowFlags() | QtCore.Qt.CustomizeWindowHint | QtCore.Qt.WindowTitleHint
+    flags &= ~(QtCore.Qt.WindowMinMaxButtonsHint | QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowFullscreenButtonHint)
+    self.setWindowFlags(flags)
 
   def setIcon(self, url):
     icon = QtGui.QPixmap(utils.resource_path(url))
@@ -70,13 +84,16 @@ class QModalDialog (QtWidgets.QDialog):
   def setMessage(self, message):
     self._messageLabel.setText(message)
 
+  def showAgainAction(self, state):
+    raise NotImplementedError('Must implement this in your child class!')
+
+  def noAction(self):
+    raise NotImplementedError('Must implement this in your child class!')
+
   def showDetails(self):
     raise NotImplementedError('Must implement this in your child class!')
 
   def hideDetails(self):
-    raise NotImplementedError('Must implement this in your child class!')
-
-  def showAgainAction(self, state):
     raise NotImplementedError('Must implement this in your child class!')
 
   def okAction(self):

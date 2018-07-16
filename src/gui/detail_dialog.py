@@ -7,7 +7,7 @@ from modules import utils
 # Blame PyQt for that!
 # Keeping consistency with PyQt camelCase is prioritised.
 
-class QLyricsDialog (QtWidgets.QWidget):
+class LyricsDialog (QtWidgets.QWidget):
   x_coordinate = None
   y_coordinate = None
 
@@ -199,14 +199,14 @@ class QLyricsDialog (QtWidgets.QWidget):
     self.setMinimumSize(self.sizeHint())
 
     # Move dialog to last position on macOS, otherwise move it to match vertical position of parent window
-    if QLyricsDialog.x_coordinate is not None \
-    and QLyricsDialog.y_coordinate is not None \
+    if LyricsDialog.x_coordinate is not None \
+    and LyricsDialog.y_coordinate is not None \
     and utils.IS_MAC:
-      # print('Read as {}, {}'.format(QLyricsDialog.x_coordinate, QLyricsDialog.y_coordinate))
+      # print('Read as {}, {}'.format(LyricsDialog.x_coordinate, LyricsDialog.y_coordinate))
       # if utils.IS_MAC:
-      self.move(QLyricsDialog.x_coordinate, QLyricsDialog.y_coordinate - 11 * self.devicePixelRatio())
+      self.move(LyricsDialog.x_coordinate, LyricsDialog.y_coordinate - 11 * self.devicePixelRatio())
       # elif utils.IS_WINDOWS:
-      #   self.move(QLyricsDialog.x_coordinate - 8 * self.devicePixelRatio(), QLyricsDialog.y_coordinate - 31 * self.devicePixelRatio())
+      #   self.move(LyricsDialog.x_coordinate - 8 * self.devicePixelRatio(), LyricsDialog.y_coordinate - 31 * self.devicePixelRatio())
     else:
       x = parent.size().width() + self.mapToGlobal(parent.parent.pos()).x() + 25 * self.devicePixelRatio()
       y = self.mapToGlobal(parent.parent.pos()).y() - (25 * self.devicePixelRatio() if utils.IS_MAC else 0)
@@ -243,9 +243,9 @@ class QLyricsDialog (QtWidgets.QWidget):
     QtCore.QCoreApplication.sendEvent(self._lyricsQLabel, redoEvent)
 
   def moveEvent(self, event):
-    QLyricsDialog.x_coordinate = event.pos().x()
-    QLyricsDialog.y_coordinate = event.pos().y()
-    # print('Set as {}, {}'.format(QLyricsDialog.x_coordinate, QLyricsDialog.y_coordinate))
+    LyricsDialog.x_coordinate = event.pos().x()
+    LyricsDialog.y_coordinate = event.pos().y()
+    # print('Set as {}, {}'.format(LyricsDialog.x_coordinate, LyricsDialog.y_coordinate))
 
   def updateMetadata(self, artist, title):
     self.setWindowTitle('{artist} - {title}'.format(artist=artist, title=title))
