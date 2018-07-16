@@ -12,6 +12,10 @@ class QUpdateDialog (modal_dialog.QModalDialog):
     self.setTitle(title)
     self.setMessage(message)
 
+    flags = self.windowFlags() | QtCore.Qt.CustomizeWindowHint
+    flags &= ~(QtCore.Qt.WindowMinMaxButtonsHint | QtCore.Qt.WindowFullscreenButtonHint)
+    self.setWindowFlags(flags)
+
     if description is not None:
       # Release notes
       self._descriptionQTextEdit = QtWidgets.QTextEdit()

@@ -15,6 +15,9 @@ class QErrorDialog (modal_dialog.QModalDialog):
       ' and that it hasn\'t already been added.'
       '<br><br>Check "Don\'t show this again" if you do not want to see these error messages.'
       ' You can re-enable these messages under Settings.'))
+    flags = self.windowFlags() | QtCore.Qt.CustomizeWindowHint
+    flags &= ~(QtCore.Qt.WindowMinMaxButtonsHint | QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowFullscreenButtonHint)
+    self.setWindowFlags(flags)
 
     # List of files that couldn't be added
     self._filepathsListView = QtWidgets.QListView()

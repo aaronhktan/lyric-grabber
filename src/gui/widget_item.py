@@ -10,12 +10,7 @@ from gui import detail_dialog
 from modules.logger import logger
 from modules import utils
 from threads.single_lyric_grabber_thread import SingleLyricGrabberThread
-
-class states:
-  NOT_STARTED = 0
-  ERROR = 1
-  IN_PROGRESS = 2
-  COMPLETE = 3
+from threads.states import states
 
 class QWidgetItem (QtWidgets.QWidget):
   dialog = None;

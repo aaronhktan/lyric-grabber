@@ -9,12 +9,7 @@ except ImportError:
 from modules.logger import logger
 from modules import lyric_grabber
 from modules import settings
-
-class states:
-  NOT_STARTED = 0
-  ERROR = 1
-  IN_PROGRESS = 2
-  COMPLETE = 3
+from threads.states import states
 
 class SingleLyricGrabberThread (QtCore.QThread):
   setProgressIcon = QtCore.pyqtSignal(int)

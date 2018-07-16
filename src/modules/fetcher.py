@@ -126,10 +126,10 @@ def genius_search_for_url(artist, title):
   if (genius_key == ''):
     url_artist = unidecode.unidecode(artist)   
     url_artist = url_artist.replace(' ', '-').lower()
-    url_artist = re.sub('[^a-zA-z-]', '', url_artist)
+    url_artist = re.sub('[^a-zA-z0-9-]', '', url_artist)
     url_title = unidecode.unidecode(title)
     url_title = url_title.replace(' ', '-').lower()
-    url_title = re.sub('[^a-zA-z-]', '', url_title)
+    url_title = re.sub('[^a-zA-z0-9-]', '', url_title)
     url = 'https://genius.com/' + url_artist + '-' + url_title + '-lyrics'
     # print(url)
   else:
