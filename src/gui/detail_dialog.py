@@ -49,16 +49,16 @@ class LyricsDialog (QtWidgets.QWidget):
     self._lyricsQLabel.setContentsMargins(10, 10, 0, 10)
 
     # Add buttons at bottom of screen
-    self._lyricsCopyButton = QtWidgets.QPushButton('Copy lyrics')
+    self._lyricsCopyButton = QtWidgets.QPushButton('Copy')
     self._lyricsCopyButton.setMaximumWidth(125)
     self._lyricsCopyButton.clicked.connect(lambda: self.copyLyrics())
-    self._lyricsSaveButton = QtWidgets.QPushButton('Save lyrics')
+    self._lyricsSaveButton = QtWidgets.QPushButton('Save')
     self._lyricsSaveButton.setMaximumWidth(125)
     self._lyricsHorizontalSpacer = QtWidgets.QSpacerItem(0, 0,
                                                          QtWidgets.QSizePolicy.Expanding,
                                                          QtWidgets.QSizePolicy.Minimum)
     self._lyricsSaveButton.clicked.connect(lambda: self.saveLyrics())
-    self._lyricsClearButton = QtWidgets.QPushButton('Remove lyrics')
+    self._lyricsClearButton = QtWidgets.QPushButton('Remove')
     self._lyricsClearButton.setMaximumWidth(125)
     self._lyricsClearButton.clicked.connect(lambda: self.removeLyrics())
 
@@ -168,7 +168,7 @@ class LyricsDialog (QtWidgets.QWidget):
     self._metadataLayout.addItem(self._verticalSpacer, 12, 0, 1, -1)
     self._metadataLayout.addItem(self._fetchAgainSpacer, 13, 0, 1, -1)
     self._metadataLayout.addWidget(self._fetchAgainMetadataButton, 13, 2, 1, -1)
-    # self._metadataLayout.setSpacing(0)
+    self._metadataLayout.setSpacing(10)
     # self._metadataLayout.setContentsMargins(10, 10, 10, 10)
 
     self._metadataWidget = QtWidgets.QWidget()
@@ -180,10 +180,10 @@ class LyricsDialog (QtWidgets.QWidget):
     self._lyricsTabWidget.addTab(self._metadataWidget, 'Metadata')
 
     # Add navigation buttons
-    self._previousSongButton = QtWidgets.QPushButton('Previous Song')
+    self._previousSongButton = QtWidgets.QPushButton('Previous')
     self._previousSongButton.clicked.connect(self.parent.parent.viewPreviousWidget)
     self._songNavigationSpacer = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-    self._nextSongButton = QtWidgets.QPushButton('Next Song')
+    self._nextSongButton = QtWidgets.QPushButton('Next')
     self._nextSongButton.clicked.connect(self.parent.parent.viewNextWidget)
 
     # Add layouts to main widget
@@ -204,7 +204,7 @@ class LyricsDialog (QtWidgets.QWidget):
     and utils.IS_MAC:
       # print('Read as {}, {}'.format(LyricsDialog.x_coordinate, LyricsDialog.y_coordinate))
       # if utils.IS_MAC:
-      self.move(LyricsDialog.x_coordinate, LyricsDialog.y_coordinate - 11 * self.devicePixelRatio())
+      self.move(LyricsDialog.x_coordinate, LyricsDialog.y_coordinate)
       # elif utils.IS_WINDOWS:
       #   self.move(LyricsDialog.x_coordinate - 8 * self.devicePixelRatio(), LyricsDialog.y_coordinate - 31 * self.devicePixelRatio())
     else:
