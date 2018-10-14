@@ -39,8 +39,8 @@ class SingleLyricGrabberThread (QtCore.QThread):
                                             url=self._url,
                                             song_filepath=self._filepath)
         else: # No URL, so fetch based on artist and title
-          result = lyric_grabber.get_lyrics(approximate=self._settings.get_approximate(),
-                                            keep_brackets=not self._settings.get_remove_brackets(),
+          result = lyric_grabber.get_lyrics(approximate=self._settings.approximate,
+                                            keep_brackets=not self._settings.remove_brackets,
                                             artist=self._artist,
                                             title=self._title,
                                             source=self._source.lower(),
@@ -51,9 +51,9 @@ class SingleLyricGrabberThread (QtCore.QThread):
           self.setLyrics.emit(result.lyrics)
           result = lyric_grabber.write_file(artist=self._artist,
                                             title=self._title,
-                                            write_info=self._settings.get_info(),
-                                            write_metadata=self._settings.get_metadata(),
-                                            write_text=self._settings.get_text(),
+                                            write_info=self._settings.info,
+                                            write_metadata=self._settings.metadata,
+                                            write_text=self._settings.text,
                                             lyrics=result.lyrics,
                                             song_filepath=self._filepath)
           logger.log(logger.LOG_LEVEL_SUCCESS, result.message)

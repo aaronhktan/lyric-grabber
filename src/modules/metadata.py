@@ -3,7 +3,6 @@ from collections import namedtuple
 import mutagen
 
 from modules.logger import logger
-from modules import settings
 from modules import utils
 
 METADATA_TUPLE = namedtuple('metadata', ['succeeded', 'artist', 'title', 'art', 'filepath'])

@@ -25,7 +25,7 @@ class LyricGrabberThread (QtCore.QThread):
     self._settings = settings.Settings()
 
     self._metadataExecutor = futures.ThreadPoolExecutor(max_workers=20)
-    if self._settings.get_source() == 'azlyrics' or self._settings.get_source() == 'musixmatch':
+    if self._settings.source == 'azlyrics' or self._settings.source == 'musixmatch':
       self._lyricsExecutor = futures.ThreadPoolExecutor(max_workers=3)
     else:
       self._lyricsExecutor = futures.ThreadPoolExecutor(max_workers=10)
@@ -75,11 +75,11 @@ class LyricGrabberThread (QtCore.QThread):
         return
       self.setProgressIcon.emit(result.result().filepath, states.IN_PROGRESS)
       self._lyricsResults.append(self._lyricsExecutor.submit(lyric_grabber.get_lyrics,
-                                                             approximate=self._settings.get_approximate(),
-                                                             keep_brackets=not self._settings.get_remove_brackets(),
+                                                             approximate=self._settings.approximate,
+                                                             keep_brackets=not self._settings.remove_brackets,
                                                              artist=song.artist,
                                                              title=song.title,
-                                                             source=self._settings.get_source().lower(),
+                                                             source=self._settings.source.lower(),
                                                              song_filepath=song.filepath))
 
     for result in futures.as_completed(self._lyricsResults):
@@ -97,9 +97,9 @@ class LyricGrabberThread (QtCore.QThread):
               self._fileWritingResults.append(self._fileWritingExecutor.submit(lyric_grabber.write_file,
                                                                              artist=result.result().artist,
                                                                              title=result.result().title,
-                                                                             write_info=self._settings.get_info(),
-                                                                             write_metadata=self._settings.get_metadata(),
-                                                                             write_text=self._settings.get_text(),
+                                                                             write_info=self._settings.info,
+                                                                             write_metadata=self._settings.metadata,
+                                                                             write_text=self._settings.text,
                                                                              lyrics=result.result().lyrics,
                                                                              song_filepath=result.result().filepath))
         else:

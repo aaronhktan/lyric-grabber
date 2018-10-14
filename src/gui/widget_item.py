@@ -275,9 +275,9 @@ class SongWidget (QtWidgets.QWidget):
       self._settings = settings.Settings()
       lyric_grabber.write_file(artist=self._artist,
                                title=self._title,
-                               write_info=self._settings.get_info(),
-                               write_metadata=self._settings.get_metadata(),
-                               write_text=self._settings.get_text(),
+                               write_info=self._settings.info,
+                               write_metadata=self._settings.metadata,
+                               write_text=self._settings.text,
                                lyrics=lyrics,
                                song_filepath=self._filepath)
     except Exception as e:

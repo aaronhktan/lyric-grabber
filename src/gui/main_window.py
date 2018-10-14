@@ -528,7 +528,7 @@ class MainWindow (QtWidgets.QMainWindow):
         invalid_filepaths.append(file)
 
     # Show an error message for each invalid filepath found
-    if invalid_filepaths and self._settings.get_show_errors():
+    if invalid_filepaths and self._settings.show_errors:
       self.showError(invalid_filepaths)
 
     if len(filepaths) > 0:
@@ -801,9 +801,9 @@ class MainWindow (QtWidgets.QMainWindow):
     # QCoreApplication::postEvent: Unexpected null receiver
     # I have no idea why and it doesn't seem to negatively affect UX
     # since it's closing anyway...
-    if self._settings.get_play_sounds():
+    if self._settings.play_sounds:
       QtMultimedia.QSound.play(utils.resource_path('./assets/success.wav'))
 
   def playErrorSound(self):
-    if self._settings.get_play_sounds():
+    if self._settings.play_sounds:
       QtMultimedia.QSound.play(utils.resource_path('./assets/error.wav'))

@@ -48,9 +48,9 @@ class UpdateDialog (modal_dialog.ModalDialog):
 
   def showAgainAction(self, state):
     if state:
-      modal_dialog.ModalDialog.settings.set_show_updates(0)
+      modal_dialog.ModalDialog.settings.show_updates = 0
     else:
-      modal_dialog.ModalDialog.settings.set_show_updates(1)
+      modal_dialog.ModalDialog.settings.show_updates = 1
 
   def noAction(self):
     self.close()

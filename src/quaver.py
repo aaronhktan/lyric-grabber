@@ -18,7 +18,7 @@ class MainApp (QtWidgets.QApplication):
     self._window.show()
     self._window.setWindowTitle('Quaver')
 
-    if self._window._settings.get_show_updates():
+    if self._window._settings.show_updates:
       self._updater_thread = update.UpdateCheckerThread(self)
       self._updater_thread.notifyComplete.connect(self._window.openUpdateDialog)
       self._updater_thread.start()

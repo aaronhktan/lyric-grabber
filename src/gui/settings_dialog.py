@@ -18,6 +18,34 @@ class QSettingsDialog (QtWidgets.QDialog):
     # Get settings from settings.ini file
     self._settings = settings.Settings()
 
+    # Wrapper for settings class
+    def set_source():
+      self._settings.source = self._sourceComboBox.currentText()
+
+    def set_approximate(state):
+      self._settings.approximate = state
+
+    def set_remove_brackets(state):
+      self._settings.remove_brackets = state
+
+    def set_info(state):
+      self._settings.info = state
+
+    def set_metadata(state):
+      self._settings.metadata = state
+
+    def set_text(state):
+      self._settings.text = state
+
+    def set_sounds(state):
+      self._settings.play_sounds = state
+
+    def set_errors(state):
+      self._settings.show_errors = state
+
+    def set_updates(state):
+      self._settings.show_updates = state
+
     # Add settings controls
     self._sourceLabel = QtWidgets.QLabel('Lyrics source:')
     self._sourceLabel.setAlignment(QtCore.Qt.AlignRight)
@@ -25,29 +53,29 @@ class QSettingsDialog (QtWidgets.QDialog):
     self._sourceComboBox.setMaximumWidth(150)
     for source in utils.SUPPORTED_SOURCES:
       self._sourceComboBox.addItem(source)
-    index = self._sourceComboBox.findText(self._settings.get_source(), QtCore.Qt.MatchFixedString)
-    self._sourceComboBox.currentIndexChanged.connect(lambda: self._settings.set_source(self._sourceComboBox.currentText()))
+    index = self._sourceComboBox.findText(self._settings.source, QtCore.Qt.MatchFixedString)
+    self._sourceComboBox.currentIndexChanged.connect(set_source)
     if index >= 0:
       self._sourceComboBox.setCurrentIndex(index)
     self._optionsLabel = QtWidgets.QLabel('Lyrics options:')
     self._optionsLabel.setAlignment(QtCore.Qt.AlignRight)
     self._approximateCheckBox = QtWidgets.QCheckBox('Search only by song title and ignore artist')
-    self._approximateCheckBox.setChecked(self._settings.get_approximate())
-    self._approximateCheckBox.stateChanged.connect(lambda state: self._settings.set_approximate(1) if state else self._settings.set_approximate(0))
+    self._approximateCheckBox.setChecked(self._settings.approximate)
+    self._approximateCheckBox.stateChanged.connect(lambda state: set_approximate(state))
     self._bracketCheckBox = QtWidgets.QCheckBox('Remove parts of song title and artist in brackets\nwhen searching for lyrics')
     self._bracketCheckBox.setStyleSheet('QCheckBox::indicator { subcontrol-position: left top; }')
-    self._bracketCheckBox.stateChanged.connect(lambda state: self._settings.set_remove_brackets(1) if state else self._settings.set_remove_brackets(0))
-    self._bracketCheckBox.setChecked(self._settings.get_remove_brackets())
+    self._bracketCheckBox.stateChanged.connect(lambda state: set_remove_brackets(state))
+    self._bracketCheckBox.setChecked(self._settings.remove_brackets)
     self._infoCheckBox = QtWidgets.QCheckBox('Add title and artist to top of saved lyrics')
-    self._infoCheckBox.stateChanged.connect(lambda state: self._settings.set_info(1) if state else self._settings.set_info(0))
-    self._infoCheckBox.setChecked(self._settings.get_info())
+    self._infoCheckBox.stateChanged.connect(lambda state: set_info(state))
+    self._infoCheckBox.setChecked(self._settings.info)
     self._metadataCheckBox = QtWidgets.QCheckBox('Save lyrics to song metadata\n(e.g. for display in music apps on phone)')
     self._metadataCheckBox.setStyleSheet('QCheckBox::indicator { subcontrol-position: left top; }')
-    self._metadataCheckBox.stateChanged.connect(lambda state: self._settings.set_metadata(1) if state else self._settings.set_metadata(0))
-    self._metadataCheckBox.setChecked(self._settings.get_metadata())
+    self._metadataCheckBox.stateChanged.connect(lambda state: set_metadata(state))
+    self._metadataCheckBox.setChecked(self._settings.metadata)
     self._textCheckBox = QtWidgets.QCheckBox('Save lyrics to a text file')
-    self._textCheckBox.stateChanged.connect(lambda state: self._settings.set_text(1) if state else self._settings.set_text(0))
-    self._textCheckBox.setChecked(self._settings.get_text())
+    self._textCheckBox.stateChanged.connect(lambda state: set_text(state))
+    self._textCheckBox.setChecked(self._settings.text)
 
     # Separator Line
     self._separatorLineFrame = QtWidgets.QFrame()
@@ -57,14 +85,14 @@ class QSettingsDialog (QtWidgets.QDialog):
     # Other controls
     self._playSoundsLabel = QtWidgets.QLabel('Sounds and dialogs:')
     self._playSoundsCheckBox = QtWidgets.QCheckBox('Enable sound effects')
-    self._playSoundsCheckBox.stateChanged.connect(lambda state: self._settings.set_play_sounds(1) if state else self._settings.set_play_sounds(0))
-    self._playSoundsCheckBox.setChecked(self._settings.get_play_sounds())
+    self._playSoundsCheckBox.stateChanged.connect(lambda state: set_sounds(state))
+    self._playSoundsCheckBox.setChecked(self._settings.play_sounds)
     self._showErrorCheckBox = QtWidgets.QCheckBox('Show error messages')
-    self._showErrorCheckBox.stateChanged.connect(lambda state: self._settings.set_show_errors(1) if state else self._settings.set_show_errors(0))
-    self._showErrorCheckBox.setChecked(self._settings.get_show_errors())
+    self._showErrorCheckBox.stateChanged.connect(lambda state: set_errors(state))
+    self._showErrorCheckBox.setChecked(self._settings.show_errors)
     self._showUpdatesCheckBox = QtWidgets.QCheckBox('Show update messages')
-    self._showUpdatesCheckBox.stateChanged.connect(lambda state: self._settings.set_show_updates(1) if state else self._settings.set_show_updates(0))
-    self._showUpdatesCheckBox.setChecked(self._settings.get_show_updates())
+    self._showUpdatesCheckBox.stateChanged.connect(lambda state: set_updates(state))
+    self._showUpdatesCheckBox.setChecked(self._settings.show_updates)
 
     # For testing
     # self._approximateCheckBox.setChecked(True)

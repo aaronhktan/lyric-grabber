@@ -126,7 +126,7 @@ class LyricsDialog (QtWidgets.QWidget):
     self._sourceLabelComboBox.setMaximumWidth(150)
     for source in utils.SUPPORTED_SOURCES:
       self._sourceLabelComboBox.addItem(source)
-    index = self._sourceLabelComboBox.findText(self._settings.get_source(), QtCore.Qt.MatchFixedString)
+    index = self._sourceLabelComboBox.findText(self._settings.source, QtCore.Qt.MatchFixedString)
     if index >= 0:
       self._sourceLabelComboBox.setCurrentIndex(index)
 
