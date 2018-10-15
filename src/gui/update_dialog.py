@@ -42,6 +42,7 @@ class UpdateDialog (modal_dialog.ModalDialog):
     if url is not None:
       self.setWindowTitle('Software Update')
       self._okButton.setText('Download')
+      self._noButton.setText('Not now')
     else:
       self._okButton.setText('OK')
       self._noButton.setVisible(False)
