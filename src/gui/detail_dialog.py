@@ -43,7 +43,13 @@ class LyricsDialog (QtWidgets.QWidget):
     # Add lyrics label and scroll area
     self._lyricsQLabel = QtWidgets.QTextEdit()
     self._lyricsQLabel.setText(lyrics)
-    # self._lyricsQLabel.setStyleSheet('background-color:white;');
+    if utils.IS_MACOS_DARK_MODE:
+      self._lyricsQLabel.verticalScrollBar().setStyleSheet('\
+        QScrollBar::handle:vertical { \
+          background: #696969; \
+          min-height: 0px; \
+        }')
+      self._lyricsQLabel.setStyleSheet('background-color:dimgrey;')
     self._lyricsQLabel.setAlignment(QtCore.Qt.AlignTop)
     self._lyricsQLabel.setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
     self._lyricsQLabel.setContentsMargins(10, 10, 0, 10)
@@ -79,6 +85,8 @@ class LyricsDialog (QtWidgets.QWidget):
     # Lyrics URL sections
     self._urlLabel = QtWidgets.QLabel('Lyrics URL:')
     self._urlLineEdit = QtWidgets.QLineEdit()
+    if utils.IS_MACOS_DARK_MODE:
+      self._urlLineEdit.setStyleSheet('background-color:dimgrey;');
 
     self._urlLineEdit.setText(url)
     self._urlLineEdit.setAttribute(QtCore.Qt.WA_MacShowFocusRect, False)
@@ -91,13 +99,17 @@ class LyricsDialog (QtWidgets.QWidget):
     self._viewUrlButton = QtWidgets.QPushButton('View online')
     self._viewUrlButton.clicked.connect(lambda: self.openUrl())
     self._viewUrlButton.setMaximumWidth(150)
-    self._copyUrlButton = QtWidgets.QPushButton(
-        QtGui.QIcon(utils.resource_path('./assets/copy.png')), 'Copy URL')
-    if utils.IS_MAC:
-      self._copyUrlButton.pressed.connect(lambda: self._copyUrlButton.setIcon(
-        QtGui.QIcon(utils.resource_path('./assets/copy_inverted.png'))))
-      self._copyUrlButton.released.connect(lambda: self._copyUrlButton.setIcon(
-        QtGui.QIcon(utils.resource_path('./assets/copy.png'))))
+    if utils.IS_MAC and not utils.IS_MACOS_DARK_MODE:
+      self._copyUrlButton = QtWidgets.QPushButton(
+          QtGui.QIcon(utils.resource_path('./assets/copy.png')), 'Copy URL')
+      if utils.IS_MAC:
+        self._copyUrlButton.pressed.connect(lambda: self._copyUrlButton.setIcon(
+          QtGui.QIcon(utils.resource_path('./assets/copy_inverted.png'))))
+        self._copyUrlButton.released.connect(lambda: self._copyUrlButton.setIcon(
+          QtGui.QIcon(utils.resource_path('./assets/copy.png'))))
+    elif utils.IS_MACOS_DARK_MODE:
+      self._copyUrlButton = QtWidgets.QPushButton(
+          QtGui.QIcon(utils.resource_path('./assets/copy_inverted.png')), 'Copy URL')
     self._copyUrlButton.clicked.connect(lambda: self.copyUrl())
     self._fetchAgainLinkButton = QtWidgets.QPushButton('Grab Lyrics')
     self._fetchAgainLinkButton.setMaximumWidth(150)
@@ -112,11 +124,15 @@ class LyricsDialog (QtWidgets.QWidget):
     # Actual metadata
     self._titleLabel = QtWidgets.QLabel('Title:')
     self._titleLineEdit = QtWidgets.QLineEdit()
+    if utils.IS_MACOS_DARK_MODE:
+      self._titleLineEdit.setStyleSheet('background-color:dimgrey;');
     self._titleLineEdit.setText(title)
     self._titleLineEdit.setAttribute(QtCore.Qt.WA_MacShowFocusRect, False)
 
     self._artistLabel = QtWidgets.QLabel('Artist:')
     self._artistLineEdit = QtWidgets.QLineEdit()
+    if utils.IS_MACOS_DARK_MODE:
+      self._artistLineEdit.setStyleSheet('background-color:dimgrey;');
     self._artistLineEdit.setText(artist)
     self._artistLineEdit.setAttribute(QtCore.Qt.WA_MacShowFocusRect, False)
 

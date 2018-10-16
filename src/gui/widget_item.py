@@ -62,9 +62,11 @@ class SongWidget (QtWidgets.QWidget):
     # Add buttons
     self._lyricsButton = QtWidgets.QPushButton(QtGui.QIcon(utils.resource_path('./assets/lyrics.png')), 'View Lyrics')
     self._lyricsButton.setFocusPolicy(QtCore.Qt.NoFocus)
-    if utils.IS_MAC:
+    if utils.IS_MAC and not utils.IS_MACOS_DARK_MODE:
       self._lyricsButton.pressed.connect(lambda: self._lyricsButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/lyrics_inverted.png'))))
       self._lyricsButton.released.connect(lambda: self._lyricsButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/lyrics.png'))))
+    elif utils.IS_MACOS_DARK_MODE:
+      self._lyricsButton.setIcon(QtGui.QIcon(utils.resource_path('./assets/lyrics_inverted.png')))
     self._lyricsButton.clicked.connect(lambda: self.openDetailDialog())
     if utils.IS_MAC:
       self._openButton = QtWidgets.QPushButton('Open in Finder')

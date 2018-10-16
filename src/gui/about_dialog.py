@@ -34,17 +34,29 @@ class QAboutDialog (QtWidgets.QDialog):
     self._checkUpdatesButton.clicked.connect(lambda: self.check_for_updates())
 
     # Credits
-    self._creditsLabel = QtWidgets.QLabel(('<center>Made with love by Aaron Tan'
-      '<br>Free under the <a href=https://github.com/cheeseisdisgusting/lyric-grabber/blob/master/LICENSE style="color: black; text-decoration: none">MIT License</a>'
-      '<br>Check it out on <a href=https://github.com/cheeseisdisgusting/lyric-grabber>Github</a>!</center>'))
+    if utils.IS_MAC and utils.IS_MACOS_DARK_MODE:
+        self._creditsLabel = QtWidgets.QLabel(('<center>Made with love by Aaron Tan'
+          '<br>Free under the <a href=https://github.com/cheeseisdisgusting/lyric-grabber/blob/master/LICENSE style="color: white; text-decoration: none">MIT License</a>'
+          '<br>Check it out on <a href=https://github.com/cheeseisdisgusting/lyric-grabber style="color: white; text-decoration: none">Github</a>!</center>'))
+        self._iconsCreditsLabel = QtWidgets.QLabel(('<center>UI icons from <a href=https://feathericons.com style="color: white; text-decoration: none">Feather Icons</a>'
+          '<br>Quaver icon based on <a href=https://commons.wikimedia.org/wiki/File:Eighth_rest.svg style="color: white; text-decoration: none">Marmelad</a>'
+          '<br>Warning icon from <a href=https://openclipart.org/detail/29833/warning-icon style="color: white; text-decoration: none">matthewgarysmith</a>'
+          '<br>Download icon from <a href=https://openclipart.org/detail/218662/download-icon style="color: white; text-decoration: none">qubodup</a>'
+          '<br>Sounds contributed by <a href=https://sonniss.com style="color: white; text-decoration: none">Sonniss</a>'
+          '<br><br>Built with <a href=https://www.python.org style="color: white; text-decoration: none">Python</a>'
+          ' and <a href=https://riverbankcomputing.com/software/pyqt/intro style="color: white; text-decoration: none">PyQt</a></center>'))
+    else:
+        self._creditsLabel = QtWidgets.QLabel(('<center>Made with love by Aaron Tan'
+          '<br>Free under the <a href=https://github.com/cheeseisdisgusting/lyric-grabber/blob/master/LICENSE style="color: black; text-decoration: none">MIT License</a>'
+          '<br>Check it out on <a href=https://github.com/cheeseisdisgusting/lyric-grabber>Github</a>!</center>'))
+        self._iconsCreditsLabel = QtWidgets.QLabel(('<center>UI icons from <a href=https://feathericons.com style="color: black; text-decoration: none">Feather Icons</a>'
+          '<br>Quaver icon based on <a href=https://commons.wikimedia.org/wiki/File:Eighth_rest.svg style="color: black; text-decoration: none">Marmelad</a>'
+          '<br>Warning icon from <a href=https://openclipart.org/detail/29833/warning-icon style="color: black; text-decoration: none">matthewgarysmith</a>'
+          '<br>Download icon from <a href=https://openclipart.org/detail/218662/download-icon style="color: black; text-decoration: none">qubodup</a>'
+          '<br>Sounds contributed by <a href=https://sonniss.com style="color: black; text-decoration: none">Sonniss</a>'
+          '<br><br>Built with <a href=https://www.python.org style="color: black; text-decoration: none">Python</a>'
+          ' and <a href=https://riverbankcomputing.com/software/pyqt/intro style="color: black; text-decoration: none">PyQt</a></center>'))
     self._creditsLabel.setOpenExternalLinks(True)
-    self._iconsCreditsLabel = QtWidgets.QLabel(('<center>UI icons from <a href=https://feathericons.com style="color: black; text-decoration: none">Feather Icons</a>'
-      '<br>Quaver icon based on <a href=https://commons.wikimedia.org/wiki/File:Eighth_rest.svg style="color: black; text-decoration: none">Marmelad</a>'
-      '<br>Warning icon from <a href=https://openclipart.org/detail/29833/warning-icon style="color: black; text-decoration: none">matthewgarysmith</a>'
-      '<br>Download icon from <a href=https://openclipart.org/detail/218662/download-icon style="color: black; text-decoration: none">qubodup</a>'
-      '<br>Sounds contributed by <a href=https://sonniss.com style="color: black; text-decoration: none">Sonniss</a>'
-      '<br><br>Built with <a href=https://www.python.org style="color: black; text-decoration: none">Python</a>'
-      ' and <a href=https://riverbankcomputing.com/software/pyqt/intro style="color: black; text-decoration: none">PyQt</a></center>'))
     self._iconsCreditsLabel.setOpenExternalLinks(True)
     self._iconsCreditsLabel.setFont(appearance.TINY_FONT)
     self._versionLabel = QtWidgets.QLabel('Build {}-{}'.format(utils.VERSION_NUMBER, utils.CHANNEL))

@@ -2,8 +2,14 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from modules import utils
 
-HIGHLIGHT_COLOUR = QtGui.QColor(186, 221, 244)
-ALTERNATE_COLOUR_ONE = QtGui.QColor(245, 245, 245)
+if utils.IS_MACOS_DARK_MODE:
+  HIGHLIGHT_COLOUR = QtGui.QColor(14, 92, 205)
+  ALTERNATE_COLOUR_ONE = QtGui.QColor(41, 45, 47)
+  ALTERNATE_COLOUR_TWO = QtGui.QColor(30, 35, 37)
+else:
+  HIGHLIGHT_COLOUR = QtGui.QColor(186, 221, 244)
+  ALTERNATE_COLOUR_ONE = QtGui.QColor(245, 245, 245)
+  ALTERNATE_COLOUR_TWO = QtGui.QColor(255, 255, 255)
 
 if utils.IS_MAC:
   LARGE_FONT = QtGui.QFont('.SF NS Text', 24)

@@ -40,7 +40,10 @@ class ModalDialog (QtWidgets.QDialog):
     self._messageLabel.setMinimumHeight(self._messageLabel.minimumSizeHint().height())
     self._messageLabel.setWordWrap(True)
     self._messageLabel.setFont(appearance.SMALLER_FONT)
-    self._messageLabel.setStyleSheet('color: dimgrey')
+    if utils.IS_MAC and utils.IS_MACOS_DARK_MODE:
+      self._messageLabel.setStyleSheet('color: grey')
+    else:
+      self._messageLabel.setStyleSheet('color: dimgrey')
 
     # Option to suppress further errors
     self._showAgainCheckBox = QtWidgets.QCheckBox('Do not show this message again')
