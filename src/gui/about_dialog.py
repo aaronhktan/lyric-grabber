@@ -81,6 +81,11 @@ class QAboutDialog (QtWidgets.QDialog):
         self.setFixedSize(200, self.minimumSizeHint().height())
     self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
+    # Center dialog in relation to parent
+    self.resize(self.minimumSizeHint())
+    self.move(parent.x() + (parent.width() - self.width()) / 2,
+      parent.y() + (parent.height() - self.height()) / 2)
+
   def check_for_updates(self):
     self._updater_thread = update.UpdateCheckerThread(self)
     self._updater_thread.notifyComplete.connect(self.openUpdateDialog)

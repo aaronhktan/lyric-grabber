@@ -7,38 +7,57 @@ from modules import utils
 current_version = 1
 
 class Settings(object):
-  _source = 'genius'
-  _approximate = False
-  _info = False
-  _remove_brackets = True
-  _metadata = True
-  _text = False
-  _play_sounds = True
-  _show_errors = True
-  _show_updates = True
+  _source = None
+  _approximate = None
+  _info = None
+  _remove_brackets = None
+  _metadata = None
+  _text = None
+  _play_sounds = None
+  _show_errors = None
+  _show_updates = None
 
   def __init__ (self, parent=None):
     config = configparser.ConfigParser()
     config.read(utils.resource_path('./modules/settings.ini'))
     config_settings = config['SETTINGS']
+
     if 'source' in config_settings:
-      self._source = config_settings['source']
+      Settings._source = config_settings['source']
+    else:
+      Settings._source = 'genius'
     if 'approximate' in config_settings:
-      self._approximate = config_settings.getboolean('approximate')
+      Settings._approximate = config_settings.getboolean('approximate')
+    else:
+      Settings._approximate = False
     if 'info' in config_settings:
-      self._info = config_settings.getboolean('info')
+      Settings._info = config_settings.getboolean('info')
+    else:
+      Settings._info = False
     if 'remove_brackets' in config_settings:
-      self._remove_brackets = config_settings.getboolean('remove_brackets')
+      Settings._remove_brackets = config_settings.getboolean('remove_brackets')
+    else:
+      Settings._remove_brackets = True
     if 'metadata' in config_settings:
-      self._metadata = config_settings.getboolean('metadata')
+      Settings._metadata = config_settings.getboolean('metadata')
+    else:
+      Settings._metadata = True
     if 'text' in config_settings:
-      self._text = config_settings.getboolean('text')
+      Settings._text = config_settings.getboolean('text')
+    else:
+      Settings._text = False
     if 'play_sounds' in config_settings:
-      self._play_sounds = config_settings.getboolean('play_sounds')
+      Settings._play_sounds = config_settings.getboolean('play_sounds')
+    else:
+      Settings._play_sounds = True
     if 'show_errors' in config_settings:
-      self._show_errors = config_settings.getboolean('show_errors')
+      Settings._show_errors = config_settings.getboolean('show_errors')
+    else:
+      Settings._show_errors = True
     if 'show_updates' in config_settings:
-      self._show_updates = config_settings.getboolean('show_updates')
+      Settings._show_updates = config_settings.getboolean('show_updates')
+    else:
+      Settings._show_updates = True
 
   @property 
   def source(self):
@@ -46,8 +65,9 @@ class Settings(object):
 
   @source.setter
   def source(self, source_flag):
-    Settings._source = str(source_flag)
-    self.save_settings()
+    if source_flag is not None:
+      Settings._source = str(source_flag)
+      self.save_settings()
 
   @property
   def approximate(self):
@@ -55,8 +75,9 @@ class Settings(object):
 
   @approximate.setter
   def approximate(self, approximate_flag):
-    Settings._approximate = bool(approximate_flag)
-    self.save_settings()
+    if approximate_flag is not None:
+      Settings._approximate = bool(approximate_flag)
+      self.save_settings()
 
   @property
   def info(self):
@@ -64,8 +85,9 @@ class Settings(object):
 
   @info.setter
   def info(self, info_flag):
-    Settings._info = bool(info_flag)
-    self.save_settings()
+    if info_flag is not None:
+      Settings._info = bool(info_flag)
+      self.save_settings()
 
   @property
   def remove_brackets(self):
@@ -73,8 +95,9 @@ class Settings(object):
 
   @remove_brackets.setter
   def remove_brackets(self, remove_brackets_flag):
-    Settings._remove_brackets = bool(remove_brackets_flag)
-    self.save_settings()
+    if remove_brackets_flag is not None:
+      Settings._remove_brackets = bool(remove_brackets_flag)
+      self.save_settings()
 
   @property
   def metadata(self):
@@ -82,8 +105,9 @@ class Settings(object):
 
   @metadata.setter
   def metadata(self, metadata_flag):
-    Settings._metadata = bool(metadata_flag)
-    self.save_settings()
+    if metadata_flag is not None:
+      Settings._metadata = bool(metadata_flag)
+      self.save_settings()
 
   @property
   def text(self):
@@ -91,8 +115,9 @@ class Settings(object):
 
   @text.setter
   def text(self, text_flag):
-    Settings._text = bool(text_flag)
-    self.save_settings()
+    if text_flag is not None:
+      Settings._text = bool(text_flag)
+      self.save_settings()
 
   @property
   def play_sounds(self):
@@ -100,8 +125,9 @@ class Settings(object):
 
   @play_sounds.setter
   def play_sounds(self, play_sounds_flag):
-    Settings._play_sounds = bool(play_sounds_flag)
-    self.save_settings()
+    if play_sounds_flag is not None:
+      Settings._play_sounds = bool(play_sounds_flag)
+      self.save_settings()
 
   @property
   def show_errors(self):
@@ -109,8 +135,9 @@ class Settings(object):
 
   @show_errors.setter
   def show_errors(self, show_errors_flag):
-    Settings._show_errors = bool(show_errors_flag)
-    self.save_settings()
+    if show_errors_flag is not None:
+      Settings._show_errors = bool(show_errors_flag)
+      self.save_settings()
 
   @property
   def show_updates(self):
@@ -118,8 +145,9 @@ class Settings(object):
 
   @show_updates.setter
   def show_updates(self, show_updates_flag):
-    Settings._show_updates = bool(show_updates_flag)
-    self.save_settings()
+    if show_updates_flag is not None:
+      Settings._show_updates = bool(show_updates_flag)
+      self.save_settings()
 
   def save_settings(self):
     config = configparser.ConfigParser()
