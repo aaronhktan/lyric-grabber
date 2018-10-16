@@ -749,7 +749,7 @@ class MainWindow (QtWidgets.QMainWindow):
   def openSettingsDialog(self):
     """Opens dialog showing settings"""
     self.setEnabled(False)
-    self._settings_dialog = settings_dialog.QSettingsDialog()
+    self._settings_dialog = settings_dialog.QSettingsDialog(self)
     self._settings_dialog.exec()
     self.setEnabled(True)
 
@@ -766,7 +766,7 @@ class MainWindow (QtWidgets.QMainWindow):
     show_hide_message = ('Click "Download" to download the new version of Quaver.'
       '<br><br>Check "Don\'t show this again" if you do not want to see these update messages.'
       ' You can re-enable these messages under Settings.')
-    do_not_show_hide_message = ('Click "OK" to download the new version of Quaver.'
+    do_not_show_hide_message = ('Click "Download" to download the new version of Quaver.'
       '<br><br>Quaver can automatically check for updates if you check the appropriate option in Settings.')
 
     if update_available:

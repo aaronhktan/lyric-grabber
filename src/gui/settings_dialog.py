@@ -130,3 +130,8 @@ class QSettingsDialog (QtWidgets.QDialog):
     self.setWindowModality(QtCore.Qt.ApplicationModal)
     self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
     self.setFixedSize(self.minimumSizeHint())
+
+    # Center dialog in relation to parent
+    self.resize(self.minimumSizeHint())
+    self.move(parent.x() + (parent.width() - self.width()) / 2,
+      parent.y() + (parent.height() - self.height()) / 2)

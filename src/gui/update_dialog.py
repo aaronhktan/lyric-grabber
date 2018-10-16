@@ -17,6 +17,9 @@ class UpdateDialog (modal_dialog.ModalDialog):
           Set to None if no update.
         show_option_to_hide (bool, optional): Control display of suppression checkbox.
           Set to False when user causes update check.
+
+    Attributes:
+        _descriptionQTextEdit (QtWidgets.QTextEdit): Accessory view text box displaying release notes
     """
     super().__init__(parent)
 
@@ -24,7 +27,8 @@ class UpdateDialog (modal_dialog.ModalDialog):
     self.setTitle(title)
     self.setMessage(message)
 
-    # Release notes
+    # Show release notes in text area if applicable
+    # Otherwise, hide the button that allows showing release notes
     if description is not None:
       self._descriptionQTextEdit = QtWidgets.QTextEdit()
       self._descriptionQTextEdit.setText(description)
@@ -34,10 +38,12 @@ class UpdateDialog (modal_dialog.ModalDialog):
     else:
       self._showMoreButton.setVisible(False)
 
+    # Check whether to allow user to suppress dialogs
     if not show_option_to_hide:
       self._showAgainCheckBox.setVisible(False)
 
     # Set the download URL if available
+    # If available, then also change text on affirmative and negative response buttons
     self._update_url = url
     if url is not None:
       self.setWindowTitle('Software Update')
@@ -46,6 +52,11 @@ class UpdateDialog (modal_dialog.ModalDialog):
     else:
       self._okButton.setText('OK')
       self._noButton.setVisible(False)
+
+    # Center dialog in relation to parent
+    self.resize(self.sizeHint())
+    self.move(parent.x() + (parent.width() - self.width()) / 2,
+      parent.y() + (parent.height() - self.height()) / 2)
 
   def showAgainAction(self, state):
     if state:
@@ -60,7 +71,7 @@ class UpdateDialog (modal_dialog.ModalDialog):
     self._dialogGridLayout.addWidget(self._descriptionQTextEdit, 4, 1, 1, -1)
     self._descriptionQTextEdit.show()
     self._showMoreButton.setText('Hide Details')
-    self._showMoreButton.clicked.connect(lambda: self.hideDetails())
+    self._showMoreButton.clicked.connect(self.hideDetails)
 
     animation = QtCore.QPropertyAnimation(self, b'size', self)
     animation.setDuration(150)
@@ -71,7 +82,7 @@ class UpdateDialog (modal_dialog.ModalDialog):
     self._dialogGridLayout.removeWidget(self._descriptionQTextEdit)
     self._descriptionQTextEdit.hide()
     self._showMoreButton.setText('Show Details')
-    self._showMoreButton.clicked.connect(lambda: self.showDetails())
+    self._showMoreButton.clicked.connect(self.showDetails)
 
     animation = QtCore.QPropertyAnimation(self, b'size', self)
     animation.setDuration(150)

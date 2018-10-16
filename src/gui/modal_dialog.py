@@ -7,9 +7,22 @@ from modules import settings
 class ModalDialog (QtWidgets.QDialog):
 
   """A modal dialog with some virtual functions that blocks user input.
-  
+  By default, has icon, message, informative text, suppression checkbox,
+  affirmative/negative repsonse button, and show more button.
+
+  Can be inherited from to customize and add more elements or remove elements.
+  If used as base class, inheritor must implement virtual functions,
+  corresponding to slots for the signals emitted by buttons/checkboxes.
+
   Attributes:
       settings (Settings): A settings object
+      _iconLabel (QtWidgets.QLabel): Label used to display icon on left
+      _titleLabel (QtWidgets.QLabel): Label used to display HIG message
+      _messageLabel (QtWidgets.QLabel): Label used to display HIG informative text
+      _showAgainCheckBox (QtWidgets.QCheckBox): Checkbox used has HIG suppression checkbox
+      _noButton (QtWidget.QPushButton): Button used as negative response button
+      _okButton (QtWidget.QPushButton): Button used as positive response button
+      _showMoreButton (QtWidget.QPushButton): Button used to expand an HIG accessory view
   """
   
   settings = settings.Settings()
@@ -29,7 +42,7 @@ class ModalDialog (QtWidgets.QDialog):
     self._messageLabel.setFont(appearance.SMALLER_FONT)
 
     # Option to suppress further errors
-    self._showAgainCheckBox = QtWidgets.QCheckBox('Don\'t show this again')
+    self._showAgainCheckBox = QtWidgets.QCheckBox('Do not show this message again')
     self._showAgainCheckBox.stateChanged.connect(lambda state: self.showAgainAction(state))
     self._showAgainCheckBox.setChecked(False)
 
@@ -52,8 +65,8 @@ class ModalDialog (QtWidgets.QDialog):
     self._dialogGridLayout.addWidget(self._titleLabel, 1, 1, 1, -1)
     self._dialogGridLayout.addWidget(self._messageLabel, 2, 1, 1, -1)
     self._dialogGridLayout.addWidget(self._showAgainCheckBox, 6, 1, 1, 1)
-    self._dialogGridLayout.addWidget(self._noButton, 7, 1, 1, 1)
-    self._dialogGridLayout.addWidget(self._showMoreButton, 7, 2, 1, 1)
+    self._dialogGridLayout.addWidget(self._showMoreButton, 7, 1, 1, 1)
+    self._dialogGridLayout.addWidget(self._noButton, 7, 2, 1, 1)
     self._dialogGridLayout.addWidget(self._okButton, 7, 3, 1, 1)
 
     self.setLayout(self._dialogGridLayout)
