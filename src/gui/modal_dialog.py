@@ -36,10 +36,11 @@ class ModalDialog (QtWidgets.QDialog):
     self._titleLabel = QtWidgets.QLabel()
     self._titleLabel.setFont(appearance.SMALL_FONT_BOLD)
     self._messageLabel = QtWidgets.QLabel()
-    self._messageLabel.setMinimumWidth(300)
+    self._messageLabel.setFixedWidth(375)
     self._messageLabel.setMinimumHeight(self._messageLabel.minimumSizeHint().height())
     self._messageLabel.setWordWrap(True)
     self._messageLabel.setFont(appearance.SMALLER_FONT)
+    self._messageLabel.setStyleSheet('color: dimgrey')
 
     # Option to suppress further errors
     self._showAgainCheckBox = QtWidgets.QCheckBox('Do not show this message again')
@@ -64,10 +65,10 @@ class ModalDialog (QtWidgets.QDialog):
     self._dialogGridLayout.setAlignment(self._iconLabel, QtCore.Qt.AlignTop)
     self._dialogGridLayout.addWidget(self._titleLabel, 1, 1, 1, -1)
     self._dialogGridLayout.addWidget(self._messageLabel, 2, 1, 1, -1)
-    self._dialogGridLayout.addWidget(self._showAgainCheckBox, 6, 1, 1, 1)
+    self._dialogGridLayout.addWidget(self._showAgainCheckBox, 6, 1, 1, -1)
     self._dialogGridLayout.addWidget(self._showMoreButton, 7, 1, 1, 1)
-    self._dialogGridLayout.addWidget(self._noButton, 7, 2, 1, 1)
-    self._dialogGridLayout.addWidget(self._okButton, 7, 3, 1, 1)
+    self._dialogGridLayout.addWidget(self._noButton, 7, 3, 1, 1)
+    self._dialogGridLayout.addWidget(self._okButton, 7, 4, 1, 1)
 
     self.setLayout(self._dialogGridLayout)
 

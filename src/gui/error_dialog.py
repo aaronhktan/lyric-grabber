@@ -39,8 +39,8 @@ class ErrorDialog (modal_dialog.ModalDialog):
     # Appearance adjustments for error dialog:
     # Do not show a negative response button; OK button should dismiss alert
     self._noButton.setVisible(False)
-    self._dialogGridLayout.addWidget(self._showMoreButton, 7, 2, 1, 1)
-    self._dialogGridLayout.addWidget(self._okButton, 7, 3, 1, 1)
+    self._dialogGridLayout.addWidget(self._showMoreButton, 7, 3, 1, 1)
+    self._dialogGridLayout.addWidget(self._okButton, 7, 4, 1, 1)
 
     # Center dialog in relation to parent
     self.resize(self.sizeHint())

@@ -764,8 +764,8 @@ class MainWindow (QtWidgets.QMainWindow):
           Is set to false when user explicitly checks for updates.
     """
     show_hide_message = ('Click "Download" to download the new version of Quaver.'
-      '<br><br>Check "Don\'t show this again" if you do not want to see these update messages.'
-      ' You can re-enable these messages under Settings.')
+      '<br>Check "Don\'t show this again" if you do not want to see these update messages.'
+      ' You can re-enable these messages in settings.')
     do_not_show_hide_message = ('Click "Download" to download the new version of Quaver.'
       '<br><br>Quaver can automatically check for updates if you check the appropriate option in Settings.')
 
