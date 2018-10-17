@@ -97,6 +97,7 @@ venv/
 */Scripts/
 ENV/
 env.bak/
+include/
 venv.bak/
 pip-selfcheck.json
 pyvenv.cfg
