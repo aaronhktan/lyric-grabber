@@ -1,14 +1,14 @@
 import sys
 
-from modules import utils
-
 try:
-  from PyQt5 import QtCore, QtWidgets
+  from PyQt5 import QtCore, QtGui, QtWidgets
 except ImportError:
   raise ImportError('Can\'t find PyQt5; please install it via "pip install pyqt5"')
 
+from gui import appearance
 from gui import main_window
 from modules import update
+from modules import utils
 
 class MainApp (QtWidgets.QApplication):
   def __init__(self, argv):
@@ -45,6 +45,11 @@ class MainApp (QtWidgets.QApplication):
     return True
 
 def main():
+  if '--dark' in sys.argv:
+    utils.IS_MACOS_DARK_MODE = True
+    appearance.HIGHLIGHT_COLOUR = QtGui.QColor(14, 92, 205)
+    appearance.ALTERNATE_COLOUR_ONE = QtGui.QColor(41, 45, 47)
+    appearance.ALTERNATE_COLOUR_TWO = QtGui.QColor(30, 35, 37)
   QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
   QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
   app = MainApp(sys.argv)

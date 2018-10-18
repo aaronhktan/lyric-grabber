@@ -10,10 +10,12 @@ IS_MAC = platform.uname().system.startswith('Darw')
 IS_WINDOWS = platform.uname().system.startswith('Windows')
 IS_LINUX = platform.uname().system.startswith('Linux')
 
-if IS_MAC:
-  IS_MACOS_DARK_MODE = (os.system('defaults read -g AppleInterfaceStyle') == 0)
-else:
-  IS_MACOS_DARK_MODE = False
+# Currently disable dark mode detection because it's a little bit broken
+# At least with PyQt 5.11.3 and PyInstaller 3.4
+# if IS_MAC:
+#   IS_MACOS_DARK_MODE = (os.system('defaults read -g AppleInterfaceStyle') == 0)
+# else:
+IS_MACOS_DARK_MODE = False
 
 SUPPORTED_FILETYPES = ('.mp3', '.mp4', '.m4a', '.m4v', \
                        '.tta', '.ape', '.wma', '.aiff', \
