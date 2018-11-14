@@ -28,7 +28,7 @@ class TestGetLyrics(unittest.TestCase):
                                       source='A source that doesn\'t exist',
                                       song_filepath='filepath.mp3')
     self.assertFalse(result.succeeded)
-    self.assertEqual(result.message, '\033[31;1m' + '[ERROR] ' + '\033[0m' + 'Source not valid! (choose from \'azlyrics\', \'genius\', \'lyricsfreak\', \'lyricwiki\', \'metrolyrics\', \'musixmatch\')')
+    self.assertEqual(result.message, '[ERROR] ' + 'Source not valid! (choose from \'azlyrics\', \'genius\', \'lyricsfreak\', \'lyricwiki\', \'metrolyrics\', \'musixmatch\')')
     self.assertEqual(result.filepath, 'filepath.mp3')
 
   def test_get_lyrics(self):
@@ -64,7 +64,7 @@ class TestWriteFile(unittest.TestCase):
                                       song_filepath=self.filepath)
     self.assertTrue(result.succeeded)
     self.assertEqual(result.filepath, self.filepath)
-    self.assertEqual(result.message, '\033[32;1m' + '[SUCCESS] ' + '\033[0m' + 'Got lyrics for file: {file}'.format(file=self.title))
+    self.assertEqual(result.message, '[SUCCESS] ' + 'Got lyrics for file: {file}'.format(file=self.title))
 
     file = open('test_file.mp3'[:'test_file.mp3'.rfind('.')] + '.txt', 'r')
     result = file.read()
@@ -86,7 +86,7 @@ class TestWriteFile(unittest.TestCase):
                                       song_filepath=self.filepath)
     self.assertTrue(result.succeeded)
     self.assertEqual(result.filepath, self.filepath)
-    self.assertEqual(result.message, '\033[32;1m' + '[SUCCESS] ' + '\033[0m' + 'Got lyrics for file: {file}'.format(file=self.title))
+    self.assertEqual(result.message, '[SUCCESS] ' + 'Got lyrics for file: {file}'.format(file=self.title))
 
     file = open('test_file.mp3'[:'test_file.mp3'.rfind('.')] + '.txt', 'r')
     result = file.read()
@@ -109,7 +109,7 @@ class TestWriteFile(unittest.TestCase):
                                       song_filepath=self.filepath)
     self.assertTrue(result.succeeded)
     self.assertEqual(result.filepath, 'test_file.mp3')
-    self.assertEqual(result.message, '\033[93;1m' + '[INFO] ' + '\033[0m' + 'No lyrics found for file: {file}'.format(file=self.title))
+    self.assertEqual(result.message, '[INFO] ' + 'No lyrics found for file: {file}'.format(file=self.title))
 
 if __name__ == '__main__':
   unittest.main()
