@@ -1,0 +1,23 @@
+Manual testing:
+- Menus
+  - Open File/Open Folder
+    - Check with errors
+  - Remove
+    - Remove all
+    - Remove all with lyrics
+    - Remove selected file
+  - View
+    - View Lyrics
+      - Check that entries are removed and populated again properly
+    - View Previous/View Next enabled and disabled properly
+    - Show/hide toolbar
+  - Window
+    - Minimize/Zoom
+  - Lyrics Window
+    - Copy/Save/Remove
+    - Editing options: undo, redo
+    - Lyrics view online/copy URL
+    - Grab lyrics from new URL
+    - Title/Artist/Source grab new metadata
+    - Previous/next buttons
+  - Preferences
