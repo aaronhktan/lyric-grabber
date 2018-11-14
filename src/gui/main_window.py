@@ -792,7 +792,7 @@ class MainWindow (QtWidgets.QMainWindow):
     elif show_if_no_update:
       self._update_dialog = update_dialog.UpdateDialog(self,
         title='You are on the newest version of Quaver!',
-        message=('Quaver can automatically check for updates if you check the appropriate option in Settings.'),
+        message=('Quaver can automatically check for updates if you check the appropriate option in settings.'),
         url=None,
         description=None,
         show_option_to_hide=show_option_to_hide)
