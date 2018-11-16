@@ -99,7 +99,7 @@ class LyricsDialog (QtWidgets.QWidget):
     self._viewUrlButton = QtWidgets.QPushButton('View online')
     self._viewUrlButton.clicked.connect(lambda: self.openUrl())
     self._viewUrlButton.setMaximumWidth(150)
-    if utils.IS_MAC and not utils.IS_MACOS_DARK_MODE:
+    if not utils.IS_MACOS_DARK_MODE:
       self._copyUrlButton = QtWidgets.QPushButton(
           QtGui.QIcon(utils.resource_path('./assets/copy.png')), 'Copy URL')
       if utils.IS_MAC:

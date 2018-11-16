@@ -1,4 +1,5 @@
 import subprocess
+import os
 
 try:
   from PyQt5 import QtCore, QtGui, QtWidgets

@@ -102,6 +102,7 @@ venv.bak/
 pip-selfcheck.json
 pyvenv.cfg
 share/
+get-pip.py
 
 # Spyder project settings
 .spyderproject
