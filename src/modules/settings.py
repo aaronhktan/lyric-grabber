@@ -1,10 +1,20 @@
 import configparser
+import os
+import sys
 
 from modules import utils
 
 # This class should be the single source of truth for settings
 
 current_version = 1
+
+if utils.IS_MAC:
+  if hasattr(sys, '_MEIPASS'):
+    config_path = os.path.realpath(sys.argv[0] + '/../../Resources/settings.ini')
+  else:
+    config_path = './modules/settings.ini'
+else:
+  config_path = utils.resource_path('./modules/settings.ini')
 
 class Settings(object):
   _source = None
@@ -19,7 +29,11 @@ class Settings(object):
 
   def __init__ (self, parent=None):
     config = configparser.ConfigParser()
-    config.read(utils.resource_path('./modules/settings.ini'))
+    config.read(config_path)
+
+    if 'SETTINGS' not in config:
+      return
+
     config_settings = config['SETTINGS']
 
     if 'source' in config_settings:
@@ -161,5 +175,6 @@ class Settings(object):
                           'show_errors': Settings._show_errors,
                           'show_updates': Settings._show_updates}
     config['ABOUT'] = {'version': 1}
-    with open(utils.resource_path('./modules/settings.ini'), 'w') as configfile:
+
+    with open(config_path, 'w') as configfile:
       config.write(configfile)
