@@ -24,6 +24,16 @@ SUPPORTED_FILETYPES = ('.mp3', '.mp4', '.m4a', '.m4v', \
 SUPPORTED_SOURCES = ('AZLyrics', 'Genius', 'LyricsFreak', \
                      'LyricWiki', 'Metrolyrics', 'Musixmatch')
 
+if hasattr(sys, '_MEIPASS'):
+  if IS_MAC:
+    CONFIG_PATH = os.path.realpath(sys.argv[0] + '/../../Resources/settings.ini')
+  elif IS_LINUX:
+    CONFIG_PATH = '/usr/share/quaver/settings.ini'
+  elif IS_WINDOWS:
+    CONFIG_PATH = utils.resource_path('./modules/settings.ini')
+else:
+    CONFIG_PATH = './modules/settings.ini'
+
 def resource_path(relative_path):
      if hasattr(sys, '_MEIPASS'):
          return os.path.join(sys._MEIPASS, relative_path)

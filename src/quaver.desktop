@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=0.5.114
+Type=Application
+Name=Quaver
+GenericName=Lyrics Finder
+Comment=Quickly find lyrics for your songs.
+Exec=/usr/local/bin/Quaver %F
+Terminal=false
+MimeType=audio/x-mp3;audio/mp4;audio/x-m4a;video/x-m4v;audio/x-tta;audio/x-ape;audio/x-ms-wma;audio/x-pn-aiff;audio/x-flac;audio/ogg
+Icon=/usr/share/quaver/quaver.svg
+Keywords=Quaver;Audio;Lyrics;Finder;Editor;Songs;
+Categories=Audio;Music;Editor;AudioVideo;
+StartupNotify=true

@@ -1,0 +1,9 @@
+Package: quaver
+Version: 0.5-1114
+Section: base
+Priority: optional
+Architecture: amd64
+Maintainer: Aaron Tan <hi@aaronhktan.com>
+Installed-Size: 69900
+Description: Quaver: Quickly find lyrics for your songs
+  Quaver lets you quickly find lyrics for your songs by downloading lyrics from popular sites like Genius or AZLyrics, and embedding them in your files.

@@ -8,14 +8,6 @@ from modules import utils
 
 current_version = 1
 
-if utils.IS_MAC:
-  if hasattr(sys, '_MEIPASS'):
-    config_path = os.path.realpath(sys.argv[0] + '/../../Resources/settings.ini')
-  else:
-    config_path = './modules/settings.ini'
-else:
-  config_path = utils.resource_path('./modules/settings.ini')
-
 class Settings(object):
   _source = None
   _approximate = None
@@ -29,7 +21,7 @@ class Settings(object):
 
   def __init__ (self, parent=None):
     config = configparser.ConfigParser()
-    config.read(config_path)
+    config.read(utils.CONFIG_PATH)
 
     if 'SETTINGS' not in config:
       return
@@ -176,5 +168,5 @@ class Settings(object):
                           'show_updates': Settings._show_updates}
     config['ABOUT'] = {'version': 1}
 
-    with open(config_path, 'w') as configfile:
+    with open(utils.CONFIG_PATH, 'w') as configfile:
       config.write(configfile)
