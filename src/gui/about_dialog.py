@@ -36,8 +36,8 @@ class QAboutDialog (QtWidgets.QDialog):
     # Credits
     if utils.IS_MAC and utils.IS_MACOS_DARK_MODE:
         self._creditsLabel = QtWidgets.QLabel(('<center>Made with love by Aaron Tan'
-          '<br>Free under the <a href=https://github.com/cheeseisdisgusting/lyric-grabber/blob/master/LICENSE style="color: white; text-decoration: none">MIT License</a>'
-          '<br>Check it out on <a href=https://github.com/cheeseisdisgusting/lyric-grabber style="color: white; text-decoration: none">Github</a>!</center>'))
+          '<br>Free under the <a href=https://github.com/aaronhktan/lyric-grabber/blob/master/LICENSE style="color: white; text-decoration: none">MIT License</a>'
+          '<br>Check it out on <a href=https://github.com/aaronhktan/lyric-grabber style="color: white; text-decoration: none">Github</a>!</center>'))
         self._iconsCreditsLabel = QtWidgets.QLabel(('<center>UI icons from <a href=https://feathericons.com style="color: white; text-decoration: none">Feather Icons</a>'
           '<br>Quaver icon based on <a href=https://commons.wikimedia.org/wiki/File:Eighth_rest.svg style="color: white; text-decoration: none">Marmelad</a>'
           '<br>Warning icon from <a href=https://openclipart.org/detail/29833/warning-icon style="color: white; text-decoration: none">matthewgarysmith</a>'
@@ -47,8 +47,8 @@ class QAboutDialog (QtWidgets.QDialog):
           ' and <a href=https://riverbankcomputing.com/software/pyqt/intro style="color: white; text-decoration: none">PyQt</a></center>'))
     else:
         self._creditsLabel = QtWidgets.QLabel(('<center>Made with love by Aaron Tan'
-          '<br>Free under the <a href=https://github.com/cheeseisdisgusting/lyric-grabber/blob/master/LICENSE style="color: black; text-decoration: none">MIT License</a>'
-          '<br>Check it out on <a href=https://github.com/cheeseisdisgusting/lyric-grabber>Github</a>!</center>'))
+          '<br>Free under the <a href=https://github.com/aaronhktan/lyric-grabber/blob/master/LICENSE style="color: black; text-decoration: none">MIT License</a>'
+          '<br>Check it out on <a href=https://github.com/aaronhktan/lyric-grabber>Github</a>!</center>'))
         self._iconsCreditsLabel = QtWidgets.QLabel(('<center>UI icons from <a href=https://feathericons.com style="color: black; text-decoration: none">Feather Icons</a>'
           '<br>Quaver icon based on <a href=https://commons.wikimedia.org/wiki/File:Eighth_rest.svg style="color: black; text-decoration: none">Marmelad</a>'
           '<br>Warning icon from <a href=https://openclipart.org/detail/29833/warning-icon style="color: black; text-decoration: none">matthewgarysmith</a>'
