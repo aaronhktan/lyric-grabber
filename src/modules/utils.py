@@ -3,7 +3,7 @@ import platform
 
 VERSION_NUMBER = '0.5.1114'
 CHANNEL = 'alpha'
-UPDATE_URL = 'https://api.github.com/repos/cheeseisdisgusting/lyric-grabber/releases'
+UPDATE_URL = 'https://api.github.com/repos/aaronhktan/lyric-grabber/releases'
 UPDATE_REGEX = r'(.*)\s.?(\d*.{1,})\-(.*)'
 
 IS_MAC = platform.uname().system.startswith('Darw')
@@ -30,7 +30,7 @@ if hasattr(sys, '_MEIPASS'):
   elif IS_LINUX:
     CONFIG_PATH = '/usr/share/quaver/settings.ini'
   elif IS_WINDOWS:
-    CONFIG_PATH = utils.resource_path('./modules/settings.ini')
+    CONFIG_PATH = os.path.realpath(os.path.dirname(sys.argv[0]) + '/settings.ini')
 else:
     CONFIG_PATH = './modules/settings.ini'
 
