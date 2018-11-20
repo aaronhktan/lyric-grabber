@@ -352,8 +352,10 @@ class MainWindow (QtWidgets.QMainWindow):
       event.accept()
       filepaths = []
       for url in event.mimeData().urls():
-        url = unquote(url.toString(QtCore.QUrl.RemoveScheme))
-        # print(url)
+        if utils.IS_WINDOWS:
+          url = url.toString().replace('file:///', '')
+        else:
+          url = unquote(url.toString(QtCore.QUrl.RemoveScheme))
         if os.path.isdir(url):
           for root, dirs, files in os.walk(url):
             [filepaths.append(os.path.join(root, file)) for file in files]
