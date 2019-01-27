@@ -694,10 +694,11 @@ class MainWindow (QtWidgets.QMainWindow):
           widget = None
       if hasattr(self, '_all_filepaths'):
         self._all_filepaths.clear()
-      for i in self._songsSubMenu.actions():
-        self._songsSubMenu.removeAction(i)
-      self._songsSubMenu.addAction(self._noLyricsAction)
-      self._noLyricsAction.setVisible(True)
+      if utils.IS_MAC:
+        for i in self._songsSubMenu.actions():
+          self._songsSubMenu.removeAction(i)
+        self._songsSubMenu.addAction(self._noLyricsAction)
+        self._noLyricsAction.setVisible(True)
 
   def removeCompletedFiles(self):
     """Removes only widget items with lyrics"""

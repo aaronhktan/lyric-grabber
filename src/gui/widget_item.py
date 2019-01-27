@@ -117,7 +117,6 @@ class SongWidget (QtWidgets.QWidget):
  
   def mousePressEvent(self, QMouseEvent):
     if QMouseEvent.button() == QtCore.Qt.LeftButton:
-      self.parent.setSelectedWidget(self._filepath)
       self.mouseReleaseEvent = self.openDetailDialog()
 
   def setBackgroundColor(self, backgroundColor):
@@ -199,6 +198,7 @@ class SongWidget (QtWidgets.QWidget):
     return self._artist
 
   def openDetailDialog(self):
+    self.parent.setSelectedWidget(self._filepath)
     self.resetColours()
     self.setBackgroundColor(appearance.HIGHLIGHT_COLOUR)
     try:
