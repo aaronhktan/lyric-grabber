@@ -542,7 +542,7 @@ class MainWindow (QtWidgets.QMainWindow):
         invalid_filepaths.append(file)
 
     # Show an error message for each invalid filepath found
-    if invalid_filepaths and self._settings.show_errors:
+    if invalid_filepaths:
       self.showError(invalid_filepaths)
 
     if len(filepaths) > 0:
@@ -554,6 +554,9 @@ class MainWindow (QtWidgets.QMainWindow):
     Args:
         filepaths ([string]): List of filepaths that could not be added
     """
+    if not self._settings.show_errors:
+      return
+
     if hasattr(self, '_error_dialog'):
       try:
         if self._error_dialog.isVisible():
