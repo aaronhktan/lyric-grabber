@@ -207,15 +207,16 @@ class SongWidget (QtWidgets.QWidget):
       SongWidget.dialog.updateUrl(self._url)
       SongWidget.dialog.setFilepath(self._filepath)
       SongWidget.dialog.setArtistAndTitle(self._artist, self._title)
+      SongWidget.dialog.setParent(self)
       SongWidget.dialog.raise_()
       SongWidget.dialog.show()
     except Exception as e:
       SongWidget.dialog = detail_dialog.LyricsDialog(parent=self,
-                                                       artist=self._artist,
-                                                       title=self._title,
-                                                       lyrics=self._lyrics,
-                                                       url=self._url,
-                                                       filepath=self._filepath)
+                                                     artist=self._artist,
+                                                     title=self._title,
+                                                     lyrics=self._lyrics,
+                                                     url=self._url,
+                                                     filepath=self._filepath)
       SongWidget.dialog.raise_()
       SongWidget.dialog.show()
       self.activateWindow()
