@@ -63,6 +63,8 @@ class UpdateCheckerThread (QtCore.QThread):
         # print(fetched_version)
         version_parts = zip(local_version, fetched_version)
         for version_part in version_parts:
+          if int(version_part[0]) > int(version_part[1]):
+            break;
           if int(version_part[0]) < int(version_part[1]):
             for file in release['assets']:
               if utils.IS_MAC:
