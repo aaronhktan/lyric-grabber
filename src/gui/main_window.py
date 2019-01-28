@@ -431,6 +431,7 @@ class MainWindow (QtWidgets.QMainWindow):
 
     # Apply changes to menu based on selected widget index
     self._removeCurrentAction.setEnabled(True)
+    self._mainScrollArea.ensureWidgetVisible(self._mainScrollAreaWidgetLayout.itemAt(self.selectedWidgetIndex).widget())
     if utils.IS_MAC:
       self._openFinderAction.setEnabled(True)
       self._copyLyricsAction.setEnabled(True)
@@ -455,7 +456,6 @@ class MainWindow (QtWidgets.QMainWindow):
         self.selectedWidgetIndex -= 1
         self.resetListColours()
         self.setSelectedWidget('', self.selectedWidgetIndex)
-        self._mainScrollArea.ensureWidgetVisible(self._mainScrollAreaWidgetLayout.itemAt(self.selectedWidgetIndex).widget())
         self._mainScrollAreaWidgetLayout.itemAt(self.selectedWidgetIndex).widget().openDetailDialog()
 
   def viewNextWidget(self):
@@ -465,7 +465,6 @@ class MainWindow (QtWidgets.QMainWindow):
           self.selectedWidgetIndex += 1
           self.resetListColours()
           self.setSelectedWidget('', self.selectedWidgetIndex)
-          self._mainScrollArea.ensureWidgetVisible(self._mainScrollAreaWidgetLayout.itemAt(self.selectedWidgetIndex).widget())
           self._mainScrollAreaWidgetLayout.itemAt(self.selectedWidgetIndex).widget().openDetailDialog()
 
   def openFinder(self):
