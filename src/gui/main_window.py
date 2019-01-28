@@ -618,7 +618,7 @@ class MainWindow (QtWidgets.QMainWindow):
       self._mainScrollAreaWidgetLayout.addWidget(songWidget)
 
       # Refresh menu items to enable/disable 'Navigate to previous/next' entries
-      if self.selectedWidgetIndex is not None:
+      if utils.IS_MAC and self.selectedWidgetIndex is not None:
         i = self.selectedWidgetIndex
         if i > 0 and self._viewPreviousAction.isEnabled() == False:
           self._viewPreviousAction.setEnabled(True)
