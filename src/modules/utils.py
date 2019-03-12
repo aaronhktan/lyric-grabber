@@ -1,7 +1,7 @@
 import os, sys
 import platform
 
-VERSION_NUMBER = '0.5.1328'
+VERSION_NUMBER = '0.19.0311'
 CHANNEL = 'alpha'
 UPDATE_URL = 'https://api.github.com/repos/aaronhktan/lyric-grabber/releases'
 UPDATE_REGEX = r'(.*)\s.?(\d*.{1,})\-(.*)'
@@ -10,12 +10,10 @@ IS_MAC = platform.uname().system.startswith('Darw')
 IS_WINDOWS = platform.uname().system.startswith('Windows')
 IS_LINUX = platform.uname().system.startswith('Linux')
 
-# Currently disable dark mode detection because it's a little bit broken
-# At least with PyQt 5.11.3 and PyInstaller 3.4
-# if IS_MAC:
-#   IS_MACOS_DARK_MODE = (os.system('defaults read -g AppleInterfaceStyle') == 0)
-# else:
-IS_MACOS_DARK_MODE = False
+if IS_MAC:
+  IS_MACOS_DARK_MODE = (os.system('defaults read -g AppleInterfaceStyle') == 0)
+else:
+  IS_MACOS_DARK_MODE = False
 
 SUPPORTED_FILETYPES = ('.mp3', '.mp4', '.m4a', '.m4v', \
                        '.tta', '.ape', '.wma', '.aiff', \
