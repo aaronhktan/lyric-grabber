@@ -64,7 +64,7 @@ class UpdateCheckerThread (QtCore.QThread):
         version_parts = zip(local_version, fetched_version)
         for version_part in version_parts:
           if int(version_part[0]) > int(version_part[1]):
-            break;
+            break
           if int(version_part[0]) < int(version_part[1]):
             for file in release['assets']:
               if utils.IS_MAC:
@@ -85,6 +85,7 @@ class UpdateCheckerThread (QtCore.QThread):
                     file['browser_download_url'],
                     # release['html_url'],
                     release['body'])
+            break;
       return False
     except:
       return False
