@@ -195,7 +195,7 @@ def lyricsfreak_search_for_url(title):
              'type':    'song', \
              'q':       title}
   search_url = LYRICSFREAK_URL_BASE + '/search.php?' + urlencode(payload, quote_via=quote_plus)
-  # print(url)
+  # print(search_url)
 
   r = requests.get(search_url, timeout=10, proxies=proxy)
 
@@ -217,8 +217,9 @@ def lyricsfreak_scrape_url(url, title):
 
   try:
     document = BeautifulSoup(r.text, 'html.parser')
-    lyrics = document.find('div', id='content_h')
+    lyrics = document.find('div', id='content')
 
+    # print(lyrics)
     [elem.replace_with('\n') for elem in lyrics.find_all('br')]                                 # Remove <br> tags and reformat them into \n line breaks 
     return LYRICS_TUPLE(lyrics.get_text(), url)
   except:
