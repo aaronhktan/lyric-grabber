@@ -39,18 +39,18 @@ SEARCH_ERROR = 'No results from {source} for song {file}'
 PARSE_ERROR = 'Could not parse lyrics from {source} for song {file}'
 
 USER_AGENTS = [
-  'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0',
-  'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',
-  'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.1 Safari/537.36',
-  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.0 Safari/537.36',
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246',
-  'Opera/9.80 (X11; Linux i686; Ubuntu/14.10) Presto/2.12.388 Version/12.16',
-  'Opera/9.80 (Windows NT 6.0) Presto/2.12.388 Version/12.14',
-  'Opera/9.80 (Macintosh; Intel Mac OS X 10.6.8; U; fr) Presto/2.9.168 Version/11.52',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.75.14 (KHTML, like Gecko) Version/7.0.3 Safari/7046A194A',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.13+ (KHTML, like Gecko) Version/5.1.7 Safari/534.57.2'
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:79.0) Gecko/20100101 Firefox/79.0',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:79.0) Gecko/20100101 Firefox/79.0',
+  'Mozilla/5.0 (X11; Linux i686; rv:79.0) Gecko/20100101 Firefox/79.0',
+  'Mozilla/5.0 (Linux x86_64; rv:79.0) Gecko/20100101 Firefox/79.0',
+  'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:79.0) Gecko/20100101 Firefox/79.0',
+  'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:79.0) Gecko/20100101 Firefox/79.0',
+  'Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:79.0) Gecko/20100101 Firefox/79.0',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36'
   ]
 
 def azlyrics_search_for_url(artist, title):
@@ -164,14 +164,33 @@ def genius_scrape_url(url, title):
 
   try:
     document = BeautifulSoup(r.text, 'html.parser')
-    lyrics_div = document.find('div', class_='lyrics')
-    
-    lyrics_paragraphs = []
-    [lyrics_paragraphs.append(elem.get_text()) for elem in lyrics_div.find_all('p')]
 
-    lyrics = ''.join(lyrics_paragraphs)
+    # Genius seems to be returning two types of content
+    # One has a 'lyrics' div, the other has Lyrics__Container
+    lyrics_div = document.find('div', class_='lyrics')
+    if lyrics_div:
+      lyrics_paragraphs = []
+      [lyrics_paragraphs.append(elem.get_text()) for elem in lyrics_div.find_all('p')]
+
+      lyrics = ''.join(lyrics_paragraphs)
     
-    return LYRICS_TUPLE(lyrics.strip(), url)
+      return LYRICS_TUPLE(lyrics.strip(), url)
+
+    lyrics_container = document.find('div', class_=re.compile('Lyrics__Container*'))
+    if lyrics_container:
+      # Genius puts annotations nested with the actual lyrics spans
+      # In order to extract the lyrics correctly, need to replace HTML line breaks
+      # with \n line breaks
+      for br in lyrics_container.find_all('br'):
+        br.replace_with('\n')
+      lyrics = lyrics_container.text
+      return LYRICS_TUPLE(lyrics, url)
+
+    lyrics_container = document.find('div', class_=re.compile('LyricsPlaceholder__Message*'))
+    if lyrics_container:
+      # When the song is an instrumental, Genius sometimes puts a LyricsPlaceholder div
+      lyrics = '[Instrumental]'
+      return LYRICS_TUPLE(lyrics, url)
   except:
     if genius_key == '':
       logger.log(logger.LOG_LEVEL_INFO, SEARCH_ERROR.format(source='Genius', file=title))

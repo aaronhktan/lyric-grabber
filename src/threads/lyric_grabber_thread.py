@@ -26,7 +26,7 @@ class LyricGrabberThread (QtCore.QThread):
 
     self._metadataExecutor = futures.ThreadPoolExecutor(max_workers=20)
     if self._settings.source == 'azlyrics' or self._settings.source == 'musixmatch':
-      self._lyricsExecutor = futures.ThreadPoolExecutor(max_workers=3)
+      self._lyricsExecutor = futures.ThreadPoolExecutor(max_workers=2)
     else:
       self._lyricsExecutor = futures.ThreadPoolExecutor(max_workers=10)
     self._fileWritingExecutor = futures.ThreadPoolExecutor(max_workers=10)
