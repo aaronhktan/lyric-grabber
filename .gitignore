@@ -126,6 +126,7 @@ get-pip.py
 /test_songs/
 /test-songs/
 /test_songs/*.txt
+src/tests/test_files/*
 
 # Pesky Mac things
 .DS_Store
