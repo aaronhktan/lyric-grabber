@@ -11,6 +11,10 @@ IS_WINDOWS = platform.uname().system.startswith('Windows')
 IS_LINUX = platform.uname().system.startswith('Linux')
 
 if IS_MAC:
+  major, minor, _ = platform.mac_ver()[0].split('.')
+  IS_MAC_OLD = int(major) <= 10 and int(minor) <= 14
+
+if IS_MAC:
   IS_MACOS_DARK_MODE = (os.system('defaults read -g AppleInterfaceStyle') == 0)
 else:
   IS_MACOS_DARK_MODE = False

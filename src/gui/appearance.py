@@ -12,12 +12,20 @@ else:
   ALTERNATE_COLOUR_TWO = QtGui.QColor(255, 255, 255)
 
 if utils.IS_MAC:
-  LARGE_FONT = QtGui.QFont('.SF NS Text', 24)
-  MEDIUM_FONT = QtGui.QFont('.SF NS Text', 18)
-  SMALL_FONT = QtGui.QFont('.SF NS Text', 13)
-  SMALL_FONT_BOLD = QtGui.QFont('.SF NS Text', 13, QtGui.QFont.Bold)
-  SMALLER_FONT = QtGui.QFont('.SF NS Text', 12)
-  TINY_FONT = QtGui.QFont('.SF NS Text', 10)
+  if utils.IS_MAC_OLD:
+    LARGE_FONT = QtGui.QFont('.SF NS Text', 24)
+    MEDIUM_FONT = QtGui.QFont('.SF NS Text', 18)
+    SMALL_FONT = QtGui.QFont('.SF NS Text', 13)
+    SMALL_FONT_BOLD = QtGui.QFont('.SF NS Text', 13, QtGui.QFont.Bold)
+    SMALLER_FONT = QtGui.QFont('.SF NS Text', 12)
+    TINY_FONT = QtGui.QFont('.SF NS Text', 10)
+  else:
+    LARGE_FONT = QtGui.QFont('.SF NS', 24)
+    MEDIUM_FONT = QtGui.QFont('.SF NS', 18)
+    SMALL_FONT = QtGui.QFont('.SF NS', 13)
+    SMALL_FONT_BOLD = QtGui.QFont('.SF NS', 13, QtGui.QFont.Bold)
+    SMALLER_FONT = QtGui.QFont('.SF NS', 12)
+    TINY_FONT = QtGui.QFont('.SF NS', 10)
 elif utils.IS_WINDOWS:
   LARGE_FONT = QtGui.QFont('Sans Serif', 16)
   MEDIUM_FONT = QtGui.QFont('Sans Serif', 12)
