@@ -176,14 +176,16 @@ def genius_scrape_url(url, title):
     
       return LYRICS_TUPLE(lyrics.strip(), url)
 
-    lyrics_container = document.find('div', class_=re.compile('Lyrics__Container*'))
-    if lyrics_container:
-      # Genius puts annotations nested with the actual lyrics spans
-      # In order to extract the lyrics correctly, need to replace HTML line breaks
-      # with \n line breaks
-      for br in lyrics_container.find_all('br'):
-        br.replace_with('\n')
-      lyrics = lyrics_container.text
+    lyrics_containers = document.find_all('div', class_=re.compile('Lyrics__Container*'))
+    if lyrics_containers:
+      lyrics = ''
+      for lyrics_container in lyrics_containers:
+        # Genius puts annotations nested with the actual lyrics spans
+        # In order to extract the lyrics correctly, need to replace HTML line breaks
+        # with \n line breaks
+        for br in lyrics_container.find_all('br'):
+          br.replace_with('\n')
+        lyrics += lyrics_container.text
       return LYRICS_TUPLE(lyrics, url)
 
     lyrics_container = document.find('div', class_=re.compile('LyricsPlaceholder__Message*'))
