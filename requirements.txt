@@ -3,7 +3,7 @@ certifi==2018.1.18
 chardet>=3.0.4
 idna==2.6
 mutagen==1.40.0
-PyQt5==5.12
+PyQt5==5.15
 requests>=2.20.0
 sip>=4.19.8
 Unidecode==1.0.22

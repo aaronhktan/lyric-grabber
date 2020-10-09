@@ -15,7 +15,9 @@ if IS_MAC:
   IS_MAC_OLD = int(major) <= 10 and int(minor) <= 14
 
 if IS_MAC:
-  IS_MACOS_DARK_MODE = (os.system('defaults read -g AppleInterfaceStyle') == 0)
+#  IS_MACOS_DARK_MODE = (os.system('defaults read -g AppleInterfaceStyle') == 0)
+#  This is broken on 10.15; just set to false for now
+  IS_MACOS_DARK_MODE = False
 else:
   IS_MACOS_DARK_MODE = False
 

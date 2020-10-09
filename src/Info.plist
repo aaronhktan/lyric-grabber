@@ -45,7 +45,5 @@
 <string>0</string>
 <key>NSHighResolutionCapable</key>
 <string>True</string>
-<key>NSRequiresAquaSystemAppearance</key>
-<string>False</string>
 </dict>
 </plist>
