@@ -9,7 +9,9 @@ except ImportError:
 from gui import appearance
 from gui import detail_dialog
 from modules.logger import logger
+from modules import lyric_grabber
 from modules import utils
+from modules import settings
 from threads.single_lyric_grabber_thread import SingleLyricGrabberThread
 from threads.states import states
 
